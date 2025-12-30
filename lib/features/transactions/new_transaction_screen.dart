@@ -128,6 +128,7 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
         categoryName: _selectedCategoryName!,
         categoryIcon: _selectedCategoryIcon!,
         createdAt: _selectedDate,
+        updatedAt: DateTime.now(),
       );
 
       await ref.read(firestoreServiceProvider).addTransaction(transaction);

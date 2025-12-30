@@ -7,6 +7,7 @@ class UserModel {
   final String? photoUrl;
   final String? phoneNumber;
   final DateTime createdAt;
+  final DateTime updatedAt;
 
   UserModel({
     required this.uid,
@@ -17,6 +18,7 @@ class UserModel {
     this.photoUrl,
     this.phoneNumber,
     required this.createdAt,
+    required this.updatedAt,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> data) {
@@ -31,6 +33,11 @@ class UserModel {
       createdAt: data['createdAt'] != null
           ? (data['createdAt']).toDate()
           : DateTime.now(),
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt']).toDate()
+          : (data['createdAt'] != null
+                ? (data['createdAt']).toDate()
+                : DateTime.now()),
     );
   }
 
@@ -44,6 +51,7 @@ class UserModel {
       'photoUrl': photoUrl,
       'phoneNumber': phoneNumber,
       'createdAt': createdAt,
+      'updatedAt': updatedAt,
     };
   }
 
@@ -56,6 +64,7 @@ class UserModel {
     String? photoUrl,
     String? phoneNumber,
     DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -66,6 +75,7 @@ class UserModel {
       photoUrl: photoUrl ?? this.photoUrl,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 

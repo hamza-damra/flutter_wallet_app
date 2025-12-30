@@ -9,8 +9,10 @@ import '../../core/theme/app_colors.dart';
 import '../../core/localization/localization_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
+import '../../services/sync_service.dart';
 import 'widgets/balance_card.dart';
 import 'widgets/recent_transactions.dart';
+import '../../core/widgets/connectivity_indicator.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -36,6 +38,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen for sync conflicts
+    ref.listen(syncConflictProvider, (previous, next) {
+      if (next != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.primary,
+          ),
+        );
+        ref.read(syncConflictProvider.notifier).setMessage(null);
+      }
+    });
+
     final user = ref.watch(authServiceProvider).currentUser;
     final transactionsAsync = ref.watch(transactionsProvider(user?.uid ?? ''));
     final l10n = AppLocalizations.of(context);
@@ -321,6 +337,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
+              const SizedBox(height: 8),
+              const ConnectivityIndicator(),
             ],
           ),
         ),

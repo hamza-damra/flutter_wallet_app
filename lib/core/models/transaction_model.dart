@@ -9,6 +9,7 @@ class TransactionModel {
   final String categoryName; // Denormalized for easier display
   final String categoryIcon; // Denormalized
   final DateTime createdAt;
+  final DateTime updatedAt;
 
   TransactionModel({
     required this.id,
@@ -21,6 +22,7 @@ class TransactionModel {
     required this.categoryName,
     required this.categoryIcon,
     required this.createdAt,
+    required this.updatedAt,
   });
 
   factory TransactionModel.fromMap(String id, Map<String, dynamic> data) {
@@ -37,6 +39,11 @@ class TransactionModel {
       createdAt: data['createdAt'] != null
           ? (data['createdAt']).toDate()
           : DateTime.now(),
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt']).toDate()
+          : (data['createdAt'] != null
+                ? (data['createdAt']).toDate()
+                : DateTime.now()),
     );
   }
 
@@ -51,6 +58,7 @@ class TransactionModel {
       'categoryName': categoryName,
       'categoryIcon': categoryIcon,
       'createdAt': createdAt,
+      'updatedAt': updatedAt,
     };
   }
 }

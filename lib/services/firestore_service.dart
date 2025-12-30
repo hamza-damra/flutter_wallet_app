@@ -1,58 +1,68 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/models/user_model.dart';
 import '../core/models/transaction_model.dart';
 import '../core/models/category_model.dart';
+import '../core/models/user_model.dart';
+import '../data/repositories/transaction_repository.dart';
+import '../data/repositories/category_repository.dart';
+import '../data/remote/firestore_service.dart' as remote;
 import 'auth_service.dart';
 
-class FirestoreService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+// Bridge providers for backwards compatibility with existing UI
+final transactionsProvider = transactionsStreamProvider;
+final categoriesProvider = categoriesStreamProvider;
 
-  // User Operations
-  Future<void> createUser(UserModel user) async {
-    await _firestore.collection('users').doc(user.uid).set(user.toMap());
+final userProfileProvider = StreamProvider<UserModel?>((ref) {
+  final authState = ref.watch(authStateProvider);
+  final uid = authState.value?.uid;
+  if (uid == null) return Stream.value(null);
+  return ref.watch(remote.firestoreServiceProvider).getUserStream(uid);
+});
+
+final firestoreServiceProvider = Provider((ref) => FirestoreBridge(ref));
+
+class FirestoreBridge {
+  final Ref _ref;
+  FirestoreBridge(this._ref);
+
+  Future<void> addTransaction(TransactionModel transaction) {
+    return _ref.read(transactionRepositoryProvider).addTransaction(transaction);
   }
 
-  Future<void> updateUser(UserModel user) async {
-    await _firestore.collection('users').doc(user.uid).update(user.toMap());
-  }
-
-  Future<UserModel?> getUser(String uid) async {
-    final doc = await _firestore.collection('users').doc(uid).get();
-    if (doc.exists) {
-      return UserModel.fromMap(doc.data()!);
+  Future<void> updateTransaction(TransactionModel transaction, {int? localId}) {
+    if (localId != null) {
+      return _ref
+          .read(transactionRepositoryProvider)
+          .updateTransaction(transaction, localId);
     }
-    return null;
+    return Future.value();
   }
 
-  Stream<UserModel?> getUserStream(String uid) {
-    return _firestore
-        .collection('users')
-        .doc(uid)
-        .snapshots()
-        .map((doc) => doc.exists ? UserModel.fromMap(doc.data()!) : null);
+  Future<void> deleteTransaction(String id) {
+    return _ref.read(transactionRepositoryProvider).deleteTransaction(id);
   }
 
-  // Transaction Operations
-  Future<void> addTransaction(TransactionModel transaction) async {
-    await _firestore.collection('transactions').add(transaction.toMap());
+  Future<void> seedDefaultCategories(String userId) {
+    return _ref.read(categoryRepositoryProvider).seedDefaultCategories(userId);
   }
 
-  Future<void> deleteTransaction(String transactionId) async {
-    await _firestore.collection('transactions').doc(transactionId).delete();
+  Future<void> addCategory(CategoryModel category) {
+    return _ref.read(categoryRepositoryProvider).addCategory(category);
   }
 
-  Stream<List<TransactionModel>> getTransactions(String userId) {
-    return _firestore
-        .collection('transactions')
-        .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => TransactionModel.fromMap(doc.id, doc.data()))
-              .toList(),
-        );
+  Future<void> updateCategory(CategoryModel category) {
+    return _ref.read(categoryRepositoryProvider).updateCategory(category);
+  }
+
+  Future<void> deleteCategory(String id) {
+    return _ref.read(categoryRepositoryProvider).deleteCategory(id);
+  }
+
+  Future<void> createUser(UserModel user) {
+    return _ref.read(remote.firestoreServiceProvider).createUser(user);
+  }
+
+  Future<void> updateUser(UserModel user) {
+    return _ref.read(remote.firestoreServiceProvider).updateUser(user);
   }
 
   Stream<List<TransactionModel>> getFilteredTransactions(
@@ -60,180 +70,38 @@ class FirestoreService {
     DateTime start,
     DateTime end,
   ) {
-    // To include the entire end day, we adjust it to the last millisecond
-    final adjustedEnd = DateTime(end.year, end.month, end.day, 23, 59, 59, 999);
-    final adjustedStart = DateTime(
-      start.year,
-      start.month,
-      start.day,
-      0,
-      0,
-      0,
-      0,
-    );
+    return _ref
+        .read(transactionRepositoryProvider)
+        .watchTransactions(userId)
+        .map((list) {
+          final adjustedEnd = DateTime(
+            end.year,
+            end.month,
+            end.day,
+            23,
+            59,
+            59,
+            999,
+          );
+          final adjustedStart = DateTime(
+            start.year,
+            start.month,
+            start.day,
+            0,
+            0,
+            0,
+            0,
+          );
 
-    return _firestore
-        .collection('transactions')
-        .where('userId', isEqualTo: userId)
-        .where('createdAt', isGreaterThanOrEqualTo: adjustedStart)
-        .where('createdAt', isLessThanOrEqualTo: adjustedEnd)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => TransactionModel.fromMap(doc.id, doc.data()))
-              .toList(),
-        );
-  }
-
-  // Category Operations
-  Stream<List<CategoryModel>> getCategories(String userId) {
-    return _firestore
-        .collection('categories')
-        .where('userId', isEqualTo: userId)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => CategoryModel.fromMap(doc.id, doc.data()))
-              .toList(),
-        );
-  }
-
-  Future<void> addCategory(CategoryModel category) async {
-    await _firestore.collection('categories').add(category.toMap());
-  }
-
-  Future<void> updateCategory(CategoryModel category) async {
-    await _firestore
-        .collection('categories')
-        .doc(category.id)
-        .update(category.toMap());
-  }
-
-  Future<void> deleteCategory(String categoryId) async {
-    await _firestore.collection('categories').doc(categoryId).delete();
-  }
-
-  // Seeding Logic
-
-  Future<void> seedDefaultCategories(String userId) async {
-    final categoriesRef = _firestore.collection('categories');
-    final snapshot = await categoriesRef
-        .where('userId', isEqualTo: userId)
-        .limit(1)
-        .get();
-
-    // Only seed if empty for this user
-    if (snapshot.docs.isEmpty) {
-      final defaults = [
-        CategoryModel(
-          id: '',
-          userId: userId,
-          name: 'cat_food',
-          nameAr: 'طعام وشراب',
-          icon: 'food',
-          type: 'expense',
-        ),
-        CategoryModel(
-          id: '',
-          userId: userId,
-          name: 'cat_shopping',
-          nameAr: 'تسوق',
-          icon: 'shopping',
-          type: 'expense',
-        ),
-        CategoryModel(
-          id: '',
-          userId: userId,
-          name: 'cat_transportation',
-          nameAr: 'مواصلات',
-          icon: 'transportation',
-          type: 'expense',
-        ),
-        CategoryModel(
-          id: '',
-          userId: userId,
-          name: 'cat_entertainment',
-          nameAr: 'ترفيه',
-          icon: 'entertainment',
-          type: 'expense',
-        ),
-        CategoryModel(
-          id: '',
-          userId: userId,
-          name: 'cat_bills',
-          nameAr: 'فواتير',
-          icon: 'bills',
-          type: 'expense',
-        ),
-        CategoryModel(
-          id: '',
-          userId: userId,
-          name: 'cat_income',
-          nameAr: 'دخل إضافي',
-          icon: 'income',
-          type: 'income',
-        ),
-        CategoryModel(
-          id: '',
-          userId: userId,
-          name: 'cat_salary',
-          nameAr: 'راتب',
-          icon: 'salary',
-          type: 'income',
-        ),
-        CategoryModel(
-          id: '',
-          userId: userId,
-          name: 'cat_other',
-          nameAr: 'أخرى',
-          icon: 'other',
-          type: 'expense',
-        ),
-        CategoryModel(
-          id: '',
-          userId: userId,
-          name: 'cat_haircut',
-          nameAr: 'حلاقة',
-          icon: 'hair cut',
-          type: 'expense',
-        ),
-        CategoryModel(
-          id: '',
-          userId: userId,
-          name: 'cat_home',
-          nameAr: 'منزل',
-          icon: 'home',
-          type: 'expense',
-        ),
-      ];
-
-      for (var cat in defaults) {
-        await categoriesRef.add(cat.toMap());
-      }
-    }
+          return list
+              .where(
+                (t) =>
+                    (t.createdAt.isAfter(adjustedStart) ||
+                        t.createdAt.isAtSameMomentAs(adjustedStart)) &&
+                    (t.createdAt.isBefore(adjustedEnd) ||
+                        t.createdAt.isAtSameMomentAs(adjustedEnd)),
+              )
+              .toList();
+        });
   }
 }
-
-final firestoreServiceProvider = Provider<FirestoreService>(
-  (ref) => FirestoreService(),
-);
-
-final transactionsProvider =
-    StreamProvider.family<List<TransactionModel>, String>((ref, userId) {
-      return ref.watch(firestoreServiceProvider).getTransactions(userId);
-    });
-
-final categoriesProvider = StreamProvider<List<CategoryModel>>((ref) {
-  final authState = ref.watch(authStateProvider);
-  final uid = authState.value?.uid;
-  if (uid == null) return Stream.value([]);
-  return ref.watch(firestoreServiceProvider).getCategories(uid);
-});
-
-final userProfileProvider = StreamProvider<UserModel?>((ref) {
-  final authState = ref.watch(authStateProvider);
-  final uid = authState.value?.uid;
-  if (uid == null) return Stream.value(null);
-  return ref.watch(firestoreServiceProvider).getUserStream(uid);
-});

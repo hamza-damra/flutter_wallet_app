@@ -9,6 +9,8 @@ import '../../core/widgets/primary_button.dart';
 import '../../core/models/user_model.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
+import '../../core/app_state/connectivity_controller.dart';
+import '../../services/connectivity_service.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -31,6 +33,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _handleRegister() async {
     final l10n = AppLocalizations.of(context);
+
+    // Check connectivity for registration
+    final connectivity = ref.read(connectivityControllerProvider);
+    if (connectivity == ConnectivityStatus.offline) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${l10n.error}: Registration requires internet connection.',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       final credential = await ref
@@ -46,6 +64,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           uid: credential.user!.uid,
           email: credential.user!.email!,
           createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
         );
         await ref.read(firestoreServiceProvider).createUser(newUser);
         // Seed default categories for new user

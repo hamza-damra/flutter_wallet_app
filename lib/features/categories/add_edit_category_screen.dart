@@ -151,6 +151,7 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
             : null,
         icon: _selectedIcon,
         type: _selectedType,
+        updatedAt: DateTime.now(),
       );
 
       if (isEditMode) {

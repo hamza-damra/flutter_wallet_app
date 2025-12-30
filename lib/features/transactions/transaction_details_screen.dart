@@ -343,7 +343,9 @@ class _TransactionDetailsScreenState
             ),
             _buildDetailItem(
               'Transaction ID',
-              tx.id.substring(0, 8).toUpperCase(),
+              tx.id.length > 8
+                  ? tx.id.substring(0, 8).toUpperCase()
+                  : tx.id.toUpperCase(),
               Icons.tag_rounded,
             ),
           ],

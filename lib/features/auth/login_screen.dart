@@ -7,6 +7,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/custom_text_field.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../services/auth_service.dart';
+import '../../core/app_state/connectivity_controller.dart';
+import '../../services/connectivity_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -29,6 +31,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _handleLogin() async {
     final l10n = AppLocalizations.of(context);
+
+    // Check connectivity for first login
+    final connectivity = ref.read(connectivityControllerProvider);
+    if (connectivity == ConnectivityStatus.offline) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${l10n.error}: First login requires internet connection.',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       await ref

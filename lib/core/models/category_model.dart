@@ -5,6 +5,7 @@ class CategoryModel {
   final String? nameAr; // Optional Arabic name
   final String icon;
   final String type; // 'income' or 'expense'
+  final DateTime updatedAt;
 
   CategoryModel({
     required this.id,
@@ -13,6 +14,7 @@ class CategoryModel {
     this.nameAr,
     required this.icon,
     required this.type,
+    required this.updatedAt,
   });
 
   factory CategoryModel.fromMap(String id, Map<String, dynamic> data) {
@@ -23,6 +25,9 @@ class CategoryModel {
       nameAr: data['nameAr'],
       icon: data['icon'] ?? '',
       type: data['type'] ?? 'expense',
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt']).toDate()
+          : DateTime.now(),
     );
   }
 
@@ -33,6 +38,7 @@ class CategoryModel {
       'nameAr': nameAr,
       'icon': icon,
       'type': type,
+      'updatedAt': updatedAt,
     };
   }
 }
