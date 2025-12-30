@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/models/category_model.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/theme_provider.dart';
 import '../../core/localization/translation_helper.dart';
 import '../../core/widgets/custom_text_field.dart';
 import '../../core/widgets/primary_button.dart';
@@ -240,8 +241,10 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
         ? AppColors.income
         : AppColors.expense;
 
+    final themeMode = ref.watch(themeProvider);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Decorative background elements
@@ -273,7 +276,7 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
           SafeArea(
             child: Column(
               children: [
-                _buildAppBar(context, l10n, theme),
+                _buildAppBar(context, l10n, theme, themeMode),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(24),
@@ -288,8 +291,15 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
                         Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: themeMode == AppThemeMode.glassy
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : theme.cardColor,
                             borderRadius: BorderRadius.circular(24),
+                            border: themeMode == AppThemeMode.glassy
+                                ? Border.all(
+                                    color: Colors.white.withValues(alpha: 0.1),
+                                  )
+                                : null,
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withValues(alpha: 0.02),
@@ -303,29 +313,41 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
                             children: [
                               Text(
                                 l10n.enterCategoryNameEn,
-                                style: theme.textTheme.titleSmall,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  color: theme.colorScheme.onSurface,
+                                ),
                               ),
                               const SizedBox(height: 12),
                               CustomTextField(
                                 hintText: l10n.enterCategoryName,
                                 controller: _nameController,
-                                prefixIcon: const Icon(
+                                prefixIcon: Icon(
                                   Icons.label_rounded,
-                                  color: Colors.grey,
+                                  color:
+                                      theme.iconTheme.color?.withValues(
+                                        alpha: 0.5,
+                                      ) ??
+                                      Colors.grey,
                                 ),
                               ),
                               const SizedBox(height: 24),
                               Text(
                                 l10n.enterCategoryNameAr,
-                                style: theme.textTheme.titleSmall,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  color: theme.colorScheme.onSurface,
+                                ),
                               ),
                               const SizedBox(height: 12),
                               CustomTextField(
                                 hintText: l10n.enterCategoryNameAr,
                                 controller: _nameArController,
-                                prefixIcon: const Icon(
+                                prefixIcon: Icon(
                                   Icons.translate_rounded,
-                                  color: Colors.grey,
+                                  color:
+                                      theme.iconTheme.color?.withValues(
+                                        alpha: 0.5,
+                                      ) ??
+                                      Colors.grey,
                                 ),
                               ),
                             ],
@@ -338,10 +360,15 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
                           l10n.type,
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 16),
-                        _buildTypeToggle(l10n),
+                        _buildTypeToggle(
+                          l10n,
+                          themeMode: themeMode,
+                          theme: theme,
+                        ),
                         const SizedBox(height: 32),
 
                         // Icon Grid
@@ -349,10 +376,15 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
                           l10n.selectIcon,
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 16),
-                        _buildIconGrid(iconOptions),
+                        _buildIconGrid(
+                          iconOptions,
+                          themeMode: themeMode,
+                          theme: theme,
+                        ),
                         const SizedBox(height: 40),
 
                         // Save Button
@@ -378,6 +410,7 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
     BuildContext context,
     AppLocalizations l10n,
     ThemeData theme,
+    AppThemeMode themeMode,
   ) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -386,8 +419,13 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: themeMode == AppThemeMode.glassy
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : theme.cardColor,
               borderRadius: BorderRadius.circular(12),
+              border: themeMode == AppThemeMode.glassy
+                  ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+                  : null,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
@@ -398,7 +436,7 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
             ),
             child: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-              color: AppColors.textPrimary,
+              color: theme.colorScheme.onSurface,
               onPressed: () => Navigator.of(context).pop(),
             ),
           ),
@@ -406,7 +444,7 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
             isEditMode ? l10n.editCategory : l10n.addCategory,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: theme.colorScheme.onSurface,
             ),
           ),
           if (isEditMode)
@@ -435,7 +473,7 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
       width: 100,
       height: 100,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
@@ -459,11 +497,17 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
     );
   }
 
-  Widget _buildTypeToggle(AppLocalizations l10n) {
+  Widget _buildTypeToggle(
+    AppLocalizations l10n, {
+    required AppThemeMode themeMode,
+    required ThemeData theme,
+  }) {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: themeMode == AppThemeMode.glassy
+            ? Colors.black.withValues(alpha: 0.1)
+            : theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(30),
       ),
       child: Row(
@@ -476,7 +520,9 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: _selectedType == 'expense'
-                      ? Colors.white
+                      ? (themeMode == AppThemeMode.glassy
+                            ? Colors.white.withValues(alpha: 0.2)
+                            : theme.cardColor)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(25),
                   boxShadow: _selectedType == 'expense'
@@ -495,7 +541,7 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
                     style: TextStyle(
                       color: _selectedType == 'expense'
                           ? AppColors.expense
-                          : Colors.grey[500],
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -511,7 +557,9 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: _selectedType == 'income'
-                      ? Colors.white
+                      ? (themeMode == AppThemeMode.glassy
+                            ? Colors.white.withValues(alpha: 0.2)
+                            : theme.cardColor)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(25),
                   boxShadow: _selectedType == 'income'
@@ -530,7 +578,7 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
                     style: TextStyle(
                       color: _selectedType == 'income'
                           ? AppColors.income
-                          : Colors.grey[500],
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -543,7 +591,11 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
     );
   }
 
-  Widget _buildIconGrid(List<Map<String, dynamic>> options) {
+  Widget _buildIconGrid(
+    List<Map<String, dynamic>> options, {
+    required AppThemeMode themeMode,
+    required ThemeData theme,
+  }) {
     return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
@@ -570,7 +622,11 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isSelected ? color : Colors.white,
+                  color: isSelected
+                      ? color
+                      : (themeMode == AppThemeMode.glassy
+                            ? Colors.white.withValues(alpha: 0.1)
+                            : theme.cardColor),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     if (isSelected)
@@ -590,7 +646,9 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
                 child: Icon(
                   option['icon'],
                   size: 24,
-                  color: isSelected ? Colors.white : Colors.grey[600],
+                  color: isSelected
+                      ? Colors.white
+                      : theme.iconTheme.color?.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(height: 4),
@@ -598,7 +656,9 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
                 option['label'],
                 style: TextStyle(
                   fontSize: 10,
-                  color: isSelected ? color : AppColors.textSecondary,
+                  color: isSelected
+                      ? color
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
                 textAlign: TextAlign.center,

@@ -114,6 +114,7 @@
   "pleaseSelectCategory": "Please select a category",
   "transactionAdded": "Transaction added successfully",
   "transactionUpdated": "Transaction updated successfully",
+  "editTransaction": "Edit Transaction",
   "transactionDeleted": "Transaction deleted successfully",
   
   "addCategory": "Add Category",

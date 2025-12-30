@@ -111,6 +111,7 @@
   "pleaseSelectCategory": "الرجاء اختيار تصنيف",
   "transactionAdded": "تم إضافة المعاملة بنجاح",
   "transactionUpdated": "تم تحديث المعاملة بنجاح",
+  "editTransaction": "تعديل المعاملة",
   "transactionDeleted": "تم حذف المعاملة بنجاح",
   
   "addCategory": "إضافة تصنيف",

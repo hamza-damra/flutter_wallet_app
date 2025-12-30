@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -173,10 +174,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         const SizedBox(height: 32),
 
                         // Balance Card
-                        BalanceCard(
-                          totalBalance: totalBalance,
-                          income: income,
-                          expense: expense,
+                        GestureDetector(
+                          onTap: () => context.push('/reports'),
+                          child: BalanceCard(
+                            totalBalance: totalBalance,
+                            income: income,
+                            expense: expense,
+                          ),
                         ),
                         const SizedBox(height: 24),
 
@@ -700,62 +704,91 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final currentLocale = ref.read(localizationProvider);
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final themeMode = ref.read(themeProvider);
 
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.primaryColor.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.translate_rounded,
-                  color: theme.primaryColor,
-                  size: 32,
-                ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: themeMode == AppThemeMode.glassy
+                    ? const Color(0xFF0F172A).withValues(alpha: 0.6)
+                    : theme.colorScheme.surface.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(24),
+                border: themeMode == AppThemeMode.glassy
+                    ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+                    : null,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
-              const SizedBox(height: 20),
-              Text(
-                l10n.selectLanguage,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.primaryColor.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.translate_rounded,
+                      color: theme.primaryColor,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    l10n.selectLanguage,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: themeMode == AppThemeMode.glassy
+                          ? Colors.white
+                          : theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildLanguageItem(
+                    context,
+                    flag: '🇺🇸',
+                    name: l10n.english,
+                    isSelected: currentLocale.languageCode == 'en',
+                    themeMode: themeMode,
+                    onTap: () {
+                      ref
+                          .read(localizationProvider.notifier)
+                          .setLocale(const Locale('en'));
+                      Navigator.pop(context);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildLanguageItem(
+                    context,
+                    flag: '🇸🇦',
+                    name: l10n.arabic,
+                    isSelected: currentLocale.languageCode == 'ar',
+                    themeMode: themeMode,
+                    onTap: () {
+                      ref
+                          .read(localizationProvider.notifier)
+                          .setLocale(const Locale('ar'));
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
-              _buildLanguageItem(
-                context,
-                flag: '🇺🇸',
-                name: l10n.english,
-                isSelected: currentLocale.languageCode == 'en',
-                onTap: () {
-                  ref
-                      .read(localizationProvider.notifier)
-                      .setLocale(const Locale('en'));
-                  Navigator.pop(context);
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildLanguageItem(
-                context,
-                flag: '🇸🇦',
-                name: l10n.arabic,
-                isSelected: currentLocale.languageCode == 'ar',
-                onTap: () {
-                  ref
-                      .read(localizationProvider.notifier)
-                      .setLocale(const Locale('ar'));
-                  Navigator.pop(context);
-                },
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -768,18 +801,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     required String name,
     required bool isSelected,
     required VoidCallback onTap,
+    required AppThemeMode themeMode,
   }) {
     final theme = Theme.of(context);
+    final borderColor = isSelected
+        ? theme.primaryColor
+        : (themeMode == AppThemeMode.glassy
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.transparent);
+
     return Container(
       decoration: BoxDecoration(
         color: isSelected
-            ? theme.primaryColor.withValues(alpha: 0.05)
-            : theme.colorScheme.onSurface.withValues(alpha: 0.02),
+            ? theme.primaryColor.withValues(alpha: 0.1)
+            : (themeMode == AppThemeMode.glassy
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.02)),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isSelected ? theme.primaryColor : Colors.transparent,
-          width: 1.5,
-        ),
+        border: Border.all(color: borderColor, width: 1.5),
       ),
       child: ListTile(
         onTap: onTap,
@@ -791,7 +830,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             color: isSelected
                 ? theme.primaryColor
-                : theme.colorScheme.onSurface,
+                : (themeMode == AppThemeMode.glassy
+                      ? Colors.white
+                      : theme.colorScheme.onSurface),
           ),
         ),
         trailing: isSelected
@@ -804,89 +845,123 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _showAboutDialog() {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final themeMode = ref.read(themeProvider);
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.primaryColor,
-                      theme.primaryColor.withValues(alpha: 0.8),
-                    ],
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: themeMode == AppThemeMode.glassy
+                    ? const Color(0xFF0F172A).withValues(alpha: 0.6)
+                    : theme.colorScheme.surface.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(24),
+                border: themeMode == AppThemeMode.glassy
+                    ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+                    : null,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.primaryColor.withValues(alpha: 0.3),
-                      blurRadius: 15,
-                      offset: const Offset(0, 8),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.primaryColor,
+                          theme.primaryColor.withValues(alpha: 0.8),
+                        ],
+                      ),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.primaryColor.withValues(alpha: 0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.account_balance_wallet_rounded,
-                  color: Colors.white,
-                  size: 40,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                l10n.appName,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-              Text(
-                '${l10n.version} 1.0.0',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  l10n.aboutAppDescription,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface,
-                    height: 1.5,
+                    child: const Icon(
+                      Icons.account_balance_wallet_rounded,
+                      color: Colors.white,
+                      size: 40,
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.primaryColor,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
+                  const SizedBox(height: 24),
+                  Text(
+                    l10n.appName,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: themeMode == AppThemeMode.glassy
+                          ? Colors.white
+                          : theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  Text(
+                    '${l10n.version} 1.0.0',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: themeMode == AppThemeMode.glassy
+                          ? Colors.white.withValues(alpha: 0.5)
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: themeMode == AppThemeMode.glassy
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(16),
                     ),
+                    child: Text(
+                      l10n.aboutAppDescription,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: themeMode == AppThemeMode.glassy
+                            ? Colors.white.withValues(alpha: 0.8)
+                            : theme.colorScheme.onSurface,
+                        height: 1.5,
+                      ),
+                    ),
                   ),
-                  child: Text(
-                    l10n.close,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.primaryColor,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        l10n.close,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -896,92 +971,127 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _confirmLogout() {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final themeMode = ref.read(themeProvider);
 
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.logout_rounded,
-                  color: AppColors.error,
-                  size: 32,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                l10n.logout,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                l10n.logoutConfirm,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: BorderSide(color: theme.dividerColor),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: Text(
-                        l10n.cancel,
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        ref.read(authServiceProvider).signOut();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.error,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: Text(
-                        l10n.logout,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: themeMode == AppThemeMode.glassy
+                    ? const Color(0xFF0F172A).withValues(alpha: 0.6)
+                    : theme.colorScheme.surface.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(24),
+                border: themeMode == AppThemeMode.glassy
+                    ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+                    : null,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
-            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.logout_rounded,
+                      color: AppColors.error,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    l10n.logout,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: themeMode == AppThemeMode.glassy
+                          ? Colors.white
+                          : theme.colorScheme.onSurface,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    l10n.logoutConfirm,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: themeMode == AppThemeMode.glassy
+                          ? Colors.white.withValues(alpha: 0.6)
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            side: BorderSide(
+                              color: themeMode == AppThemeMode.glassy
+                                  ? Colors.white.withValues(alpha: 0.2)
+                                  : theme.dividerColor,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: Text(
+                            l10n.cancel,
+                            style: TextStyle(
+                              color: themeMode == AppThemeMode.glassy
+                                  ? Colors.white
+                                  : theme.colorScheme.onSurface,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            ref.read(authServiceProvider).signOut();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.error,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: Text(
+                            l10n.logout,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

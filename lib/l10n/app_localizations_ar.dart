@@ -312,6 +312,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transactionUpdated => 'تم تحديث المعاملة بنجاح';
 
   @override
+  String get editTransaction => 'تعديل المعاملة';
+
+  @override
   String get transactionDeleted => 'تم حذف المعاملة بنجاح';
 
   @override

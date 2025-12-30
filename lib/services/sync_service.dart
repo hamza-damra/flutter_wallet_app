@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/local/sqlite_database.dart';
 import '../data/remote/firestore_service.dart';
@@ -10,40 +10,101 @@ import 'auth_service.dart';
 import '../core/models/transaction_model.dart';
 import '../core/models/category_model.dart';
 
-class SyncService {
+class SyncService with WidgetsBindingObserver {
   final Ref _ref;
   final AppDatabase _db;
   final FirestoreService _remote;
   bool _isSyncing = false;
+  StreamSubscription? _queueSubscription;
+  Timer? _pollingTimer;
 
   SyncService(this._ref, this._db, this._remote);
 
   void init() {
+    WidgetsBinding.instance.addObserver(this);
+
     // Listen to connectivity changes
     _ref.listen(connectivityServiceProvider, (previous, next) {
       if (next == ConnectivityStatus.online &&
           previous != ConnectivityStatus.online) {
+        debugPrint(
+          'SyncService: Connectivity changed to online, triggering sync',
+        );
         sync();
       }
     });
 
-    // Initial sync check if already online
-    final status = _ref.read(connectivityServiceProvider);
-    if (status == ConnectivityStatus.online) {
+    // Listen to auth changes
+    _ref.listen(authStateProvider, (previous, next) {
+      final previousUser = previous?.value;
+      final nextUser = next.value;
+
+      if (nextUser != null && previousUser?.uid != nextUser.uid) {
+        debugPrint('SyncService: User logged in, triggering sync');
+        sync();
+      }
+    });
+
+    // Watch Sync Queue for local changes
+    _queueSubscription = _db.select(_db.syncQueue).watch().listen((items) {
+      if (items.isNotEmpty) {
+        debugPrint('SyncService: Queue has changes, triggering sync');
+        sync();
+      }
+    });
+
+    // Start periodic polling
+    _startPolling();
+
+    // Initial sync check
+    sync();
+  }
+
+  void _startPolling() {
+    _pollingTimer?.cancel();
+    _pollingTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      debugPrint('SyncService: Periodic sync trigger');
       sync();
+    });
+  }
+
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _queueSubscription?.cancel();
+    _pollingTimer?.cancel();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      debugPrint(
+        'SyncService: App resumed, triggering sync and restarting poller',
+      );
+      sync();
+      _startPolling();
+    } else if (state == AppLifecycleState.paused) {
+      _pollingTimer?.cancel();
     }
   }
 
   Future<void> sync() async {
     if (_isSyncing) return;
-    _isSyncing = true;
 
-    // Update global state to syncing
+    // Check connectivity
+    final status = _ref.read(connectivityServiceProvider);
+    if (status != ConnectivityStatus.online) {
+      return;
+    }
+
+    _isSyncing = true;
     _ref.read(syncStatusNotifierProvider.notifier).setSyncing(true);
 
     try {
       final user = _ref.read(authStateProvider).value;
-      if (user == null) return;
+      if (user == null) {
+        debugPrint('SyncService: No user logged in, skipping sync');
+        return;
+      }
 
       // 1. Process Upload (Local -> Remote)
       await _processSyncQueue();
@@ -306,5 +367,6 @@ final syncServiceProvider = Provider<SyncService>((ref) {
   final remote = ref.watch(firestoreServiceProvider);
   final service = SyncService(ref, db, remote);
   service.init();
+  ref.onDispose(() => service.dispose());
   return service;
 });

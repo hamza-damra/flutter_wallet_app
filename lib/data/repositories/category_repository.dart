@@ -16,7 +16,19 @@ class CategoryRepository {
           ..where((c) => c.userId.equals(userId) | c.userId.isNull())
           ..orderBy([(c) => OrderingTerm(expression: c.name)]))
         .watch()
-        .map((rows) => rows.map((row) => _mapRowToModel(row)).toList());
+        .map((rows) {
+          final categories = rows.map((row) => _mapRowToModel(row)).toList();
+          // Deduplicate categories by name and type combination
+          final seen = <String>{};
+          return categories.where((cat) {
+            final key = '${cat.name}_${cat.type}';
+            if (seen.contains(key)) {
+              return false;
+            }
+            seen.add(key);
+            return true;
+          }).toList();
+        });
   }
 
   Future<void> addCategory(CategoryModel category) async {
@@ -102,9 +114,40 @@ class CategoryRepository {
     );
   }
 
+  /// Cleans up duplicate categories for a user, keeping only the first occurrence
+  Future<void> cleanupDuplicateCategories(String userId) async {
+    final allCategories =
+        await (_db.select(_db.categories)
+              ..where((c) => c.userId.equals(userId) | c.userId.isNull())
+              ..orderBy([(c) => OrderingTerm(expression: c.updatedAt)]))
+            .get();
+
+    final seen = <String>{};
+    final duplicateIds = <String>[];
+
+    for (final cat in allCategories) {
+      final key = '${cat.name}_${cat.type}';
+      if (seen.contains(key)) {
+        duplicateIds.add(cat.id);
+      } else {
+        seen.add(key);
+      }
+    }
+
+    // Delete duplicate categories
+    for (final id in duplicateIds) {
+      await (_db.delete(_db.categories)..where((c) => c.id.equals(id))).go();
+    }
+  }
+
   Future<void> seedDefaultCategories(String userId) async {
-    final count = await (_db.select(_db.categories)..limit(1)).get();
-    if (count.isNotEmpty) return;
+    // Check if this specific user already has categories (not global check)
+    final userCategories =
+        await (_db.select(_db.categories)
+              ..where((c) => c.userId.equals(userId))
+              ..limit(1))
+            .get();
+    if (userCategories.isNotEmpty) return;
 
     final defaults = [
       CategoryModel(
@@ -198,6 +241,11 @@ final categoriesStreamProvider = StreamProvider<List<CategoryModel>>((ref) {
   if (uid == null) return Stream.value([]);
 
   final repo = ref.watch(categoryRepositoryProvider);
-  repo.seedDefaultCategories(uid);
+
+  // Cleanup duplicates first, then seed defaults, then watch
+  repo.cleanupDuplicateCategories(uid).then((_) {
+    repo.seedDefaultCategories(uid);
+  });
+
   return repo.watchCategories(uid);
 });

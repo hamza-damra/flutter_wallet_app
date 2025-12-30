@@ -306,7 +306,7 @@ class AppTheme {
       case AppThemeMode.glassy:
         return _ThemeColors(
           primary: AppColors.glassyPrimary,
-          background: const Color(0xFF0F172A), // Dark base for glassy to pop
+          background: const Color(0xFF020617), // Slate 950 (Deep Dark)
           surface: AppColors.glassySurface,
           textPrimary: AppColors.glassyTextPrimary,
           textSecondary: AppColors.glassyTextSecondary,

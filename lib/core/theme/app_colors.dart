@@ -28,14 +28,15 @@ class AppColors {
   static const Color oceanTextSecondary = Color(0xFF0369A1);
   static const Color oceanBorder = Color(0xFFE0F2FE);
 
-  // --- Glassy Theme (Transparent/Blur based) ---
-  static const Color glassyPrimary = Color(0xFFFF3366); // Vibrant Pink
-  static const Color glassyBackground =
-      Colors.transparent; // Will use a background image/gradient
-  static const Color glassySurface = Color(0x33FFFFFF); // Ultra-translucent
+  // --- Glassy Theme (Top Professional Dark Glass) ---
+  static const Color glassyPrimary = Color(0xFF7C3AED); // Electric Violet
+  static const Color glassyBackground = Colors.transparent;
+  static const Color glassySurface = Color(
+    0xB31E293B,
+  ); // Dark Slate 800 @ 70% Opacity
   static const Color glassyTextPrimary = Colors.white;
-  static const Color glassyTextSecondary = Color(0xB3FFFFFF);
-  static const Color glassyBorder = Color(0x4DFFFFFF);
+  static const Color glassyTextSecondary = Color(0xB3F1F5F9); // Slate 100 @ 70%
+  static const Color glassyBorder = Color(0x33FFFFFF); // White @ 20%
 
   // Status (Common across themes or slightly adjusted)
   static const Color income = Color(0xFF4CAF50);

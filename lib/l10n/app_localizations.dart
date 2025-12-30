@@ -704,6 +704,12 @@ abstract class AppLocalizations {
   /// **'Transaction updated successfully'**
   String get transactionUpdated;
 
+  /// No description provided for @editTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Transaction'**
+  String get editTransaction;
+
   /// No description provided for @transactionDeleted.
   ///
   /// In en, this message translates to:

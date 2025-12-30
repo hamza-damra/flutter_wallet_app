@@ -314,6 +314,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionUpdated => 'Transaction updated successfully';
 
   @override
+  String get editTransaction => 'Edit Transaction';
+
+  @override
   String get transactionDeleted => 'Transaction deleted successfully';
 
   @override

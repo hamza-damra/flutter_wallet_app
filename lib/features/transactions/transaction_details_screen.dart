@@ -10,6 +10,7 @@ import '../../core/utils/icon_helper.dart';
 import '../../core/localization/translation_helper.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../services/firestore_service.dart';
+import 'new_transaction_screen.dart';
 
 class TransactionDetailsScreen extends ConsumerStatefulWidget {
   final TransactionModel transaction;
@@ -242,7 +243,31 @@ class _TransactionDetailsScreenState
               color: theme.colorScheme.onSurface,
             ),
           ),
-          const SizedBox(width: 48), // Spacer for balance
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.edit_rounded, size: 20),
+              color: theme.colorScheme.onSurface,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        NewTransactionScreen(transaction: widget.transaction),
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
