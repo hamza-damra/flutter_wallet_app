@@ -6,7 +6,6 @@ import '../../l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/custom_text_field.dart';
 import '../../core/widgets/primary_button.dart';
-import '../../core/widgets/illustration_widget.dart';
 import '../../services/auth_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -56,54 +55,162 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsetsDirectional.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 40),
-              const IllustrationWidget(path: 'assets/illustrations/login.svg'),
-              const SizedBox(height: 40),
-
-              Text(l10n.loginTitle, style: theme.textTheme.headlineLarge),
-              const SizedBox(height: 40),
-
-              CustomTextField(
-                hintText: l10n.emailHint,
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
+      body: Stack(
+        children: [
+          // Decorative background elements
+          Positioned(
+            top: -100,
+            right: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.05),
               ),
-              const SizedBox(height: 16),
-
-              CustomTextField(
-                hintText: l10n.passwordHint,
-                controller: _passwordController,
-                obscureText: true,
+            ),
+          ),
+          Positioned(
+            bottom: -50,
+            left: -50,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.05),
               ),
-              const SizedBox(height: 32),
+            ),
+          ),
 
-              PrimaryButton(
-                text: l10n.loginButton,
-                onPressed: _handleLogin,
-                isLoading: _isLoading,
-              ),
-              const SizedBox(height: 24),
+          // Main Content
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header Section
+                    const SizedBox(height: 20),
+                    Icon(
+                      Icons.account_balance_wallet,
+                      size: 64,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      l10n.loginTitle,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Welcome back! Please enter your details.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 48),
 
-              GestureDetector(
-                onTap: () => context.push('/register'),
-                child: Text(
-                  l10n.noAccount,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
+                    // Form Section
+                    Text(
+                      l10n.emailHint,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    CustomTextField(
+                      hintText: 'Enter your email',
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      prefixIcon: const Icon(
+                        Icons.email_outlined,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    Text(
+                      l10n.passwordHint,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    CustomTextField(
+                      hintText: 'Enter your password',
+                      controller: _passwordController,
+                      obscureText: true,
+                      prefixIcon: const Icon(
+                        Icons.lock_outline,
+                        color: Colors.grey,
+                      ),
+                    ),
+
+                    // Forgot Password Link
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(l10n.comingSoon('Forgot Password')),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          'Forgot Password?',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Login Button
+                    PrimaryButton(
+                      text: l10n.loginButton,
+                      onPressed: _handleLogin,
+                      isLoading: _isLoading,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Register Link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Don't have an account? ",
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        GestureDetector(
+                          onTap: () => context.push('/register'),
+                          child: Text(
+                            l10n.registerButton,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

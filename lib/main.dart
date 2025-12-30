@@ -9,11 +9,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'l10n/app_localizations.dart';
 import 'core/theme/app_theme.dart';
 import 'core/localization/localization_provider.dart';
+import 'core/models/transaction_model.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/register_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/categories/categories_screen.dart';
 import 'features/transactions/new_transaction_screen.dart';
+import 'features/transactions/transaction_history_screen.dart';
+import 'features/transactions/transaction_details_screen.dart';
 import 'services/auth_service.dart';
 import 'firebase_options.dart';
 
@@ -155,6 +158,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/new-transaction',
         builder: (context, state) => const NewTransactionScreen(),
+      ),
+      GoRoute(
+        path: '/transactions-history',
+        builder: (context, state) => const TransactionHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/transaction-details',
+        builder: (context, state) {
+          final transaction = state.extra as TransactionModel;
+          return TransactionDetailsScreen(transaction: transaction);
+        },
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

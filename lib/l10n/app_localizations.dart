@@ -614,6 +614,18 @@ abstract class AppLocalizations {
   /// **'Enter title'**
   String get enterTitle;
 
+  /// No description provided for @enterTitleEn.
+  ///
+  /// In en, this message translates to:
+  /// **'Title (English)'**
+  String get enterTitleEn;
+
+  /// No description provided for @enterTitleAr.
+  ///
+  /// In en, this message translates to:
+  /// **'Title (Arabic)'**
+  String get enterTitleAr;
+
   /// No description provided for @selectCategory.
   ///
   /// In en, this message translates to:
@@ -685,6 +697,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter category name...'**
   String get enterCategoryName;
+
+  /// No description provided for @enterCategoryNameEn.
+  ///
+  /// In en, this message translates to:
+  /// **'Category Name (English)'**
+  String get enterCategoryNameEn;
+
+  /// No description provided for @enterCategoryNameAr.
+  ///
+  /// In en, this message translates to:
+  /// **'Category Name (Arabic)'**
+  String get enterCategoryNameAr;
+
+  /// No description provided for @addNewCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New Category'**
+  String get addNewCategory;
 
   /// No description provided for @selectIcon.
   ///
@@ -775,6 +805,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0{No categories} =1{1 category} other{{count} categories}}'**
   String categoryCount(int count);
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get yesterday;
 
   /// No description provided for @daysAgo.
   ///
@@ -907,6 +949,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Password reset link sent to your email'**
   String get passwordResetSent;
+
+  /// No description provided for @deleteTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Transaction'**
+  String get deleteTransaction;
+
+  /// No description provided for @transactionDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction Details'**
+  String get transactionDetails;
 }
 
 class _AppLocalizationsDelegate

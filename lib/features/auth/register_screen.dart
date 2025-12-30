@@ -6,7 +6,6 @@ import '../../l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/custom_text_field.dart';
 import '../../core/widgets/primary_button.dart';
-import '../../core/widgets/illustration_widget.dart';
 import '../../core/models/user_model.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
@@ -69,56 +68,133 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsetsDirectional.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 40),
-              const IllustrationWidget(
-                path: 'assets/illustrations/register.svg',
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: AppColors.textPrimary,
+          ),
+          onPressed: () => context.pop(),
+        ),
+      ),
+      extendBodyBehindAppBar: true,
+      body: Stack(
+        children: [
+          // Decorative background elements
+          Positioned(
+            top: -50,
+            right: -50,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.05),
               ),
-              const SizedBox(height: 40),
+            ),
+          ),
 
-              Text(l10n.registerTitle, style: theme.textTheme.headlineLarge),
-              const SizedBox(height: 40),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header
+                    Text(
+                      l10n.registerTitle,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Create an account to start tracking your finances.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 48),
 
-              CustomTextField(
-                hintText: l10n.emailHint,
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
+                    // Inputs
+                    Text(
+                      l10n.emailHint,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    CustomTextField(
+                      hintText: 'Enter your email',
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      prefixIcon: const Icon(
+                        Icons.email_outlined,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
 
-              CustomTextField(
-                hintText: l10n.passwordHint,
-                controller: _passwordController,
-                obscureText: true,
-              ),
-              const SizedBox(height: 32),
+                    Text(
+                      l10n.passwordHint,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    CustomTextField(
+                      hintText: 'Create a password',
+                      controller: _passwordController,
+                      obscureText: true,
+                      prefixIcon: const Icon(
+                        Icons.lock_outline,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 40),
 
-              PrimaryButton(
-                text: l10n.registerButton,
-                onPressed: _handleRegister,
-                isLoading: _isLoading,
-              ),
-              const SizedBox(height: 24),
+                    // Register Button
+                    PrimaryButton(
+                      text: l10n.registerButton,
+                      onPressed: _handleRegister,
+                      isLoading: _isLoading,
+                    ),
+                    const SizedBox(height: 24),
 
-              GestureDetector(
-                onTap: () => context.pop(), // Go back to login
-                child: Text(
-                  l10n.haveAccount,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
+                    // Login Link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Already have an account? ",
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        GestureDetector(
+                          onTap: () => context.pop(),
+                          child: Text(
+                            l10n.loginButton,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -267,6 +267,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get enterTitle => 'أدخل العنوان';
 
   @override
+  String get enterTitleEn => 'العنوان (إنجليزي)';
+
+  @override
+  String get enterTitleAr => 'العنوان (عربي)';
+
+  @override
   String get selectCategory => 'اختر التصنيف';
 
   @override
@@ -301,6 +307,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get enterCategoryName => 'أدخل اسم التصنيف...';
+
+  @override
+  String get enterCategoryNameEn => 'اسم التصنيف (إنجليزي)';
+
+  @override
+  String get enterCategoryNameAr => 'اسم التصنيف (عربي)';
+
+  @override
+  String get addNewCategory => 'إضافة تصنيف جديد';
 
   @override
   String get selectIcon => 'اختر أيقونة';
@@ -375,6 +390,12 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get today => 'اليوم';
+
+  @override
+  String get yesterday => 'أمس';
 
   @override
   String daysAgo(int days) {
@@ -473,4 +494,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get passwordResetSent =>
       'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني';
+
+  @override
+  String get deleteTransaction => 'حذف المعاملة';
+
+  @override
+  String get transactionDetails => 'تفاصيل المعاملة';
 }

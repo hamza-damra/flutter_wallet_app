@@ -6,10 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/models/transaction_model.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
-import '../../core/theme/app_shadows.dart';
 import '../../core/localization/localization_provider.dart';
-import '../../core/utils/direction_helper.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
 import 'widgets/balance_card.dart';
@@ -61,208 +58,260 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       key: _scaffoldKey,
       backgroundColor: AppColors.background,
       drawer: _buildDrawer(context, user),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          // Use EdgeInsetsDirectional for horizontal padding
-          padding: const EdgeInsetsDirectional.symmetric(
-            horizontal: 20,
-            vertical: 16,
+      body: Stack(
+        children: [
+          // Decorative background elements
+          Positioned(
+            top: -50,
+            right: -50,
+            child: Container(
+              width: 180,
+              height: 180,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.05),
+              ),
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              _buildHeader(context, user),
-              const SizedBox(height: 20),
+          Positioned(
+            top: 400,
+            left: -40,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.income.withValues(alpha: 0.03),
+              ),
+            ),
+          ),
 
-              // Categories Link Card
-              GestureDetector(
-                onTap: () => context.push('/categories'),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsetsDirectional.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(AppRadius.button),
-                    boxShadow: AppShadows.button,
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  _buildHeader(context, user),
+                  const SizedBox(height: 32),
+
+                  // Balance Card
+                  BalanceCard(
+                    totalBalance: totalBalance,
+                    income: income,
+                    expense: expense,
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
+                  const SizedBox(height: 24),
+
+                  // Categories Quick Access Card
+                  GestureDetector(
+                    onTap: () => context.push('/categories'),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: AlignmentDirectional.topStart,
+                          end: AlignmentDirectional.bottomEnd,
+                          colors: [
+                            AppColors.primary.withValues(alpha: 0.1),
+                            AppColors.primary.withValues(alpha: 0.05),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
                         children: [
-                          const Icon(Icons.grid_view, color: Colors.white),
-                          const SizedBox(width: 12),
-                          Text(
-                            l10n.categories,
-                            style: theme.textTheme.headlineSmall?.copyWith(
+                          // Icon Container
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.category_rounded,
                               color: Colors.white,
-                              fontSize: 18,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          // Text Content
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.categories,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  l10n.manageCategories,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Arrow Indicator
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Builder(
+                              builder: (context) {
+                                // Get the direction from parent context BEFORE wrapping
+                                final isRtl =
+                                    Directionality.of(context) ==
+                                    TextDirection.rtl;
+                                return Directionality(
+                                  // Force LTR to prevent automatic icon mirroring
+                                  textDirection: TextDirection.ltr,
+                                  child: Icon(
+                                    // Use chevron_left for RTL (Arabic) and chevron_right for LTR (English)
+                                    isRtl
+                                        ? Icons.chevron_left_rounded
+                                        : Icons.chevron_right_rounded,
+                                    color: AppColors.primary,
+                                    size: 20,
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsetsDirectional.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withAlpha(51),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Recent Transactions Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
                         child: Text(
-                          '9',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.white,
+                          l10n.recentTransactions,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => context.push('/transactions-history'),
+                        child: Text(
+                          l10n.viewAll,
+                          style: const TextStyle(color: AppColors.primary),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ),
-              const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
-              // Balance Card
-              BalanceCard(
-                totalBalance: totalBalance,
-                income: income,
-                expense: expense,
+                  // Transactions List
+                  transactionsAsync.when(
+                    data: (_) => RecentTransactions(
+                      transactions: recentTransactions,
+                      onAddPressed: () => context.push('/new-transaction'),
+                    ),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (err, stack) =>
+                        Center(child: Text('${l10n.error}: $err')),
+                  ),
+                ],
               ),
-              const SizedBox(height: 28),
-
-              // Recent Transactions Header
-              Text(
-                l10n.recentTransactions,
-                style: theme.textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 16),
-
-              // Transactions List
-              transactionsAsync.when(
-                data: (_) => RecentTransactions(
-                  transactions: recentTransactions,
-                  onAddPressed: () => context.push('/new-transaction'),
-                ),
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, stack) =>
-                    Center(child: Text('${l10n.error}: $err')),
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push('/new-transaction'),
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
   Widget _buildHeader(BuildContext context, user) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 360;
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Menu Button
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.welcome,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              user?.email?.split('@')[0] ?? 'User',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
         GestureDetector(
           onTap: () => _scaffoldKey.currentState?.openDrawer(),
           child: Container(
-            width: 44,
-            height: 44,
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withAlpha(13),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.menu,
-              color: AppColors.textPrimary,
-              size: 24,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-
-        // User Info
-        Expanded(
-          child: Row(
-            children: [
-              // Avatar
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(26),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: SvgPicture.asset(
-                    'assets/illustrations/avatar_placeholder.svg',
-                    fit: BoxFit.cover,
-                  ),
-                ),
+            child: CircleAvatar(
+              radius: 20,
+              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+              child: SvgPicture.asset(
+                'assets/illustrations/avatar_placeholder.svg',
+                width: 24,
+                height: 24,
               ),
-              const SizedBox(width: 12),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      l10n.welcome,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                        height: 1.2,
-                      ),
-                    ),
-                    Text(
-                      user?.email?.split('@')[0] ?? 'User',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontSize: isSmallScreen ? 16 : 18,
-                        height: 1.2,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Add Button
-        ElevatedButton.icon(
-          onPressed: () => context.push('/new-transaction'),
-          icon: const Icon(Icons.add, size: 18),
-          label: Text(isSmallScreen ? '' : l10n.add),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            padding: EdgeInsetsDirectional.symmetric(
-              horizontal: isSmallScreen ? 12 : 16,
-              vertical: 10,
             ),
-            minimumSize: const Size(0, 40),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            elevation: 0,
           ),
         ),
       ],
@@ -282,143 +331,154 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Drawer(
       backgroundColor: AppColors.background,
-      child: SafeArea(
-        child: Column(
-          children: [
-            // Drawer Header
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsetsDirectional.all(24),
-              decoration: const BoxDecoration(color: AppColors.primary),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 70,
-                    height: 70,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: ClipOval(
-                      child: SvgPicture.asset(
-                        'assets/illustrations/avatar_placeholder.svg',
-                        fit: BoxFit.cover,
+      child: Column(
+        children: [
+          // Drawer Header
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 24,
+              bottom: 24,
+              left: 24,
+              right: 24,
+            ),
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(30),
+                bottomRight: Radius.circular(30),
+              ),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
                       ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(4),
+                  child: ClipOval(
+                    child: SvgPicture.asset(
+                      'assets/illustrations/avatar_placeholder.svg',
+                      fit: BoxFit.cover,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    user?.email?.split('@')[0] ?? 'User',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: Colors.white,
-                      fontSize: 20,
-                    ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  user?.email?.split('@')[0] ?? 'User',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    user?.email ?? '',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white.withAlpha(204),
-                      fontSize: 14,
-                    ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  user?.email ?? '',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Menu Items
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 24),
+              child: Column(
+                children: [
+                  _buildDrawerItem(
+                    icon: Icons.person_outline,
+                    title: l10n.account,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showComingSoonSnackbar(l10n.account);
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.language,
+                    title: l10n.language,
+                    subtitle: languageName,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showLanguageDialog();
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.settings_outlined,
+                    title: l10n.appSettings,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showComingSoonSnackbar(l10n.appSettings);
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.help_outline,
+                    title: l10n.helpSupport,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showComingSoonSnackbar(l10n.helpSupport);
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.info_outline,
+                    title: l10n.about,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showAboutDialog();
+                    },
                   ),
                 ],
               ),
             ),
+          ),
 
-            // Menu Items
-            const SizedBox(height: 16),
-
-            _buildDrawerItem(
-              icon: Icons.person_outline,
-              title: l10n.account,
-              onTap: () {
-                Navigator.pop(context);
-                _showComingSoonSnackbar(l10n.account);
-              },
-            ),
-
-            _buildDrawerItem(
-              icon: Icons.language,
-              title: l10n.language,
-              subtitle: languageName,
-              onTap: () {
-                Navigator.pop(context);
-                _showLanguageDialog();
-              },
-            ),
-
-            _buildDrawerItem(
-              icon: Icons.settings_outlined,
-              title: l10n.appSettings,
-              onTap: () {
-                Navigator.pop(context);
-                _showComingSoonSnackbar(l10n.appSettings);
-              },
-            ),
-
-            _buildDrawerItem(
-              icon: Icons.help_outline,
-              title: l10n.helpSupport,
-              onTap: () {
-                Navigator.pop(context);
-                _showComingSoonSnackbar(l10n.helpSupport);
-              },
-            ),
-
-            _buildDrawerItem(
-              icon: Icons.info_outline,
-              title: l10n.about,
-              onTap: () {
-                Navigator.pop(context);
-                _showAboutDialog();
-              },
-            ),
-
-            const Spacer(),
-
-            // Logout Button
-            Padding(
-              padding: const EdgeInsetsDirectional.all(16),
-              child: SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _confirmLogout();
-                  },
-                  icon: const Icon(Icons.logout, color: AppColors.error),
-                  label: Text(
-                    l10n.logout,
-                    style: const TextStyle(color: AppColors.error),
+          // Logout Button
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _confirmLogout();
+                },
+                icon: const Icon(Icons.logout, color: Colors.white),
+                label: Text(l10n.logout),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.error,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.error),
-                    padding: const EdgeInsetsDirectional.symmetric(
-                      vertical: 14,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                  elevation: 4,
+                  shadowColor: AppColors.error.withValues(alpha: 0.4),
                 ),
               ),
             ),
+          ),
 
-            // Version
-            Padding(
-              padding: const EdgeInsetsDirectional.only(bottom: 16),
-              child: Text(
-                '${l10n.version} 1.0.0',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                ),
-              ),
+          // Version
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              '${l10n.version} 1.0.0',
+              style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -431,25 +491,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }) {
     final theme = Theme.of(context);
     return ListTile(
-      leading: Icon(icon, color: AppColors.textPrimary),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: AppColors.primary, size: 20),
+      ),
       title: Text(
         title,
         style: theme.textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
           fontSize: 16,
         ),
       ),
       subtitle: subtitle != null
           ? Text(
               subtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
+              style: theme.textTheme.bodySmall?.copyWith(
                 color: AppColors.textSecondary,
-                fontSize: 12,
               ),
             )
           : null,
-      // Use direction-aware chevron icon
-      trailing: DirectionalIcon(Icons.chevron_right, color: Colors.grey),
+      trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
       onTap: onTap,
     );
   }
@@ -472,14 +538,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.selectLanguage),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Text('🇺🇸'),
+              leading: const Text('🇺🇸', style: TextStyle(fontSize: 24)),
               title: Text(l10n.english),
               trailing: currentLocale.languageCode == 'en'
-                  ? const Icon(Icons.check, color: AppColors.primary)
+                  ? const Icon(Icons.check_circle, color: AppColors.primary)
                   : null,
               onTap: () {
                 ref
@@ -488,11 +555,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Navigator.pop(context);
               },
             ),
+            const Divider(),
             ListTile(
-              leading: const Text('🇸🇦'),
+              leading: const Text('🇸🇦', style: TextStyle(fontSize: 24)),
               title: Text(l10n.arabic),
               trailing: currentLocale.languageCode == 'ar'
-                  ? const Icon(Icons.check, color: AppColors.primary)
+                  ? const Icon(Icons.check_circle, color: AppColors.primary)
                   : null,
               onTap: () {
                 ref
@@ -513,10 +581,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            const Icon(Icons.account_balance_wallet, color: AppColors.primary),
-            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.account_balance_wallet,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(width: 12),
             Text(l10n.appName),
           ],
         ),
@@ -524,7 +603,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${l10n.version} 1.0.0', style: theme.textTheme.bodyMedium),
+            Text('${l10n.version} 1.0.0', style: theme.textTheme.titleSmall),
             const SizedBox(height: 12),
             Text(
               l10n.aboutAppDescription,
@@ -549,6 +628,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(l10n.logout),
         content: Text(l10n.logoutConfirm),
         actions: [
@@ -556,12 +636,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text(l10n.cancel),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               ref.read(authServiceProvider).signOut();
             },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              elevation: 0,
+            ),
             child: Text(l10n.logout),
           ),
         ],

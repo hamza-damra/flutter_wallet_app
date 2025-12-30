@@ -268,6 +268,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterTitle => 'Enter title';
 
   @override
+  String get enterTitleEn => 'Title (English)';
+
+  @override
+  String get enterTitleAr => 'Title (Arabic)';
+
+  @override
   String get selectCategory => 'Select Category';
 
   @override
@@ -302,6 +308,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enterCategoryName => 'Enter category name...';
+
+  @override
+  String get enterCategoryNameEn => 'Category Name (English)';
+
+  @override
+  String get enterCategoryNameAr => 'Category Name (Arabic)';
+
+  @override
+  String get addNewCategory => 'Add New Category';
 
   @override
   String get selectIcon => 'Select Icon';
@@ -370,6 +385,12 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get yesterday => 'Yesterday';
 
   @override
   String daysAgo(int days) {
@@ -465,4 +486,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordResetSent => 'Password reset link sent to your email';
+
+  @override
+  String get deleteTransaction => 'Delete Transaction';
+
+  @override
+  String get transactionDetails => 'Transaction Details';
 }

@@ -38,6 +38,7 @@ class CustomTextField extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
+      clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
         color: AppColors.inputBackground,
         borderRadius: BorderRadius.circular(AppRadius.input),
@@ -55,6 +56,7 @@ class CustomTextField extends StatelessWidget {
         onChanged: onChanged,
         validator: validator,
         decoration: InputDecoration(
+          filled: false, // Prevent double background with global theme
           hintText: hintText,
           hintStyle: theme.textTheme.bodyMedium?.copyWith(
             color: Colors.grey[400],

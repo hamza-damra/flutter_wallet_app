@@ -2,6 +2,7 @@ class TransactionModel {
   final String id;
   final String userId;
   final String title;
+  final String? titleAr;
   final double amount;
   final String type; // 'income' or 'expense'
   final String categoryId;
@@ -13,6 +14,7 @@ class TransactionModel {
     required this.id,
     required this.userId,
     required this.title,
+    this.titleAr,
     required this.amount,
     required this.type,
     required this.categoryId,
@@ -26,6 +28,7 @@ class TransactionModel {
       id: id,
       userId: data['userId'] ?? '',
       title: data['title'] ?? '',
+      titleAr: data['titleAr'],
       amount: (data['amount'] ?? 0.0).toDouble(),
       type: data['type'] ?? 'expense',
       categoryId: data['categoryId'] ?? '',
@@ -41,6 +44,7 @@ class TransactionModel {
     return {
       'userId': userId,
       'title': title,
+      'titleAr': titleAr,
       'amount': amount,
       'type': type,
       'categoryId': categoryId,

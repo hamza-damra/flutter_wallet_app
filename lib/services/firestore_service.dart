@@ -25,6 +25,10 @@ class FirestoreService {
     await _firestore.collection('transactions').add(transaction.toMap());
   }
 
+  Future<void> deleteTransaction(String transactionId) async {
+    await _firestore.collection('transactions').doc(transactionId).delete();
+  }
+
   Stream<List<TransactionModel>> getTransactions(String userId) {
     return _firestore
         .collection('transactions')

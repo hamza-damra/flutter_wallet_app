@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../core/models/transaction_model.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_radius.dart';
-import '../../../core/theme/app_shadows.dart';
-import '../../../core/widgets/illustration_widget.dart';
 import '../../../core/utils/icon_helper.dart';
+import '../../../core/localization/translation_helper.dart';
 
 /// Widget displaying a list of recent transactions or an empty state
 class RecentTransactions extends StatelessWidget {
@@ -40,30 +39,53 @@ class RecentTransactions extends StatelessWidget {
   ) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsetsDirectional.all(24),
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        boxShadow: AppShadows.card,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          const IllustrationWidget(
-            path: 'assets/illustrations/no_transactions.svg',
-            height: 120,
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.history_rounded,
+              size: 64,
+              color: Colors.grey[200],
+            ),
           ),
-          const SizedBox(height: 16),
-          Text(l10n.noTransactions, style: theme.textTheme.headlineSmall),
+          const SizedBox(height: 24),
+          Text(
+            l10n.noTransactions,
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
           Text(
             l10n.startTrackingFinances,
-            style: theme.textTheme.bodyMedium,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: onAddPressed,
-            icon: const Icon(Icons.add_circle_outline, color: Colors.white),
+            icon: const Icon(Icons.add_rounded, color: Colors.white),
             label: Text(
               l10n.addTransaction,
               style: const TextStyle(fontWeight: FontWeight.bold),
@@ -71,12 +93,10 @@ class RecentTransactions extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              padding: const EdgeInsetsDirectional.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
           ),
@@ -97,7 +117,7 @@ class RecentTransactions extends StatelessWidget {
       itemCount: transactions.length,
       itemBuilder: (context, index) {
         final tx = transactions[index];
-        return _buildTransactionItem(context, tx, theme, locale);
+        return _buildTransactionItem(context, tx, theme, locale, l10n);
       },
     );
   }
@@ -107,66 +127,129 @@ class RecentTransactions extends StatelessWidget {
     TransactionModel tx,
     ThemeData theme,
     Locale locale,
+    AppLocalizations l10n,
   ) {
     final isIncome = tx.type == 'income';
+    final color = isIncome ? AppColors.income : AppColors.expense;
     final currency = NumberFormat.simpleCurrency(
       locale: locale.toString(),
       name: 'ILS',
     );
 
+    // Format date nicely (e.g. "Today", "Yesterday", or "Dec 30")
+    String dateString;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final txDate = DateTime(
+      tx.createdAt.year,
+      tx.createdAt.month,
+      tx.createdAt.day,
+    );
+
+    if (txDate == today) {
+      dateString = l10n.today;
+    } else if (txDate == today.subtract(const Duration(days: 1))) {
+      dateString = l10n.yesterday;
+    } else {
+      dateString = DateFormat.MMMd(locale.toString()).format(tx.createdAt);
+    }
+
+    // Get display title based on locale
+    final displayTitle =
+        (locale.languageCode == 'ar' &&
+            tx.titleAr != null &&
+            tx.titleAr!.isNotEmpty)
+        ? tx.titleAr!
+        : tx.title;
+
+    // Get translated category name
+    final displayCategoryName = TranslationHelper.getCategoryName(
+      context,
+      tx.categoryName,
+    );
+
     return Container(
-      margin: const EdgeInsetsDirectional.only(bottom: 12),
-      padding: const EdgeInsetsDirectional.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.button),
-        boxShadow: AppShadows.card,
-      ),
-      child: Row(
-        children: [
-          // Icon
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Icon(
-                IconHelper.getIcon(tx.categoryIcon),
-                color: isIncome ? AppColors.income : AppColors.primary,
-              ),
-            ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          const SizedBox(width: 16),
-          // Transaction details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: () => context.push('/transaction-details', extra: tx),
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
               children: [
-                Text(
-                  tx.title,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    IconHelper.getIcon(tx.categoryIcon),
+                    color: color,
+                    size: 24,
                   ),
                 ),
-                Text(
-                  DateFormat.yMMMd(locale.toString()).format(tx.createdAt),
-                  style: theme.textTheme.bodyMedium,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayTitle,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$dateString • $displayCategoryName',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${isIncome ? '+' : ''}${currency.format(tx.amount)}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      DateFormat.jm().format(tx.createdAt),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          // Amount
-          Text(
-            '${isIncome ? '+' : ''}${currency.format(tx.amount)}',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: isIncome ? AppColors.income : AppColors.expense,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "@@last_modified": "2025-12-29",
+  "@@last_modified": "2025-12-30",
   
   "appName": "Wallet App",
   "@appName": {
@@ -99,6 +99,8 @@
   "newTransaction": "New Transaction",
   "enterAmount": "Enter amount",
   "enterTitle": "Enter title",
+  "enterTitleEn": "Title (English)",
+  "enterTitleAr": "Title (Arabic)",
   "selectCategory": "Select Category",
   "expenseType": "Expense",
   "incomeType": "Income",
@@ -112,6 +114,9 @@
   "addCategory": "Add Category",
   "editCategory": "Edit Category",
   "enterCategoryName": "Enter category name...",
+  "enterCategoryNameEn": "Category Name (English)",
+  "enterCategoryNameAr": "Category Name (Arabic)",
+  "addNewCategory": "Add New Category",
   "selectIcon": "Select Icon",
   "categoryAdded": "Category added successfully",
   "categoryUpdated": "Category updated successfully",
@@ -160,6 +165,9 @@
       }
     }
   },
+  
+  "today": "Today",
+  "yesterday": "Yesterday",
   
   "daysAgo": "{days, plural, =0{Today} =1{Yesterday} other{{days} days ago}}",
   "@daysAgo": {
@@ -224,5 +232,8 @@
   "orContinueWith": "Or continue with",
   "forgotPassword": "Forgot Password?",
   "resetPassword": "Reset Password",
-  "passwordResetSent": "Password reset link sent to your email"
+  "passwordResetSent": "Password reset link sent to your email",
+  
+  "deleteTransaction": "Delete Transaction",
+  "transactionDetails": "Transaction Details"
 }

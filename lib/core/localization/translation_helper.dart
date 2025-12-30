@@ -1,11 +1,33 @@
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
+import '../models/category_model.dart';
 
 /// Helper class for translating keys to localized strings.
 /// This is used for translating database keys (like category names) to localized UI strings.
 class TranslationHelper {
   /// Private constructor
   TranslationHelper._();
+
+  /// Get localized category name from a CategoryModel.
+  /// If the locale is Arabic and the category has an Arabic name, use that.
+  /// If the key is a known localization key (e.g., "cat_food"), returns the localized string.
+  /// Otherwise, returns the key as-is (for user-created categories).
+  static String getCategoryNameFromModel(
+    BuildContext context,
+    CategoryModel category,
+  ) {
+    final locale = Localizations.localeOf(context);
+
+    // For user-created categories with Arabic name, show Arabic when in Arabic locale
+    if (locale.languageCode == 'ar' &&
+        category.nameAr != null &&
+        category.nameAr!.isNotEmpty) {
+      return category.nameAr!;
+    }
+
+    // For system categories or English locale, use the regular translation
+    return getCategoryName(context, category.name);
+  }
 
   /// Get localized category name from a key.
   /// If the key is a known localization key (e.g., "cat_food"), returns the localized string.
