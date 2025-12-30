@@ -584,4 +584,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get profileUpdated => 'تم تحديث الملف الشخصي بنجاح';
+
+  @override
+  String get appTheme => 'سمة التطبيق';
+
+  @override
+  String get classicTheme => 'كلاسيكي فاخر';
+
+  @override
+  String get modernDarkTheme => 'داكن عصري';
+
+  @override
+  String get oceanBlueTheme => 'أزرق المحيط';
+
+  @override
+  String get glassyTheme => 'زجاجي زاهٍ';
+
+  @override
+  String get transactionId => 'رقم المعاملة';
+
+  @override
+  String get manageTransactions => 'إدارة المعاملات';
 }

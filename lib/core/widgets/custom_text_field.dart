@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_radius.dart';
 
 /// Custom text field widget with consistent styling
 class CustomTextField extends StatelessWidget {
@@ -37,42 +35,27 @@ class CustomTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      clipBehavior: Clip.hardEdge,
-      decoration: BoxDecoration(
-        color: AppColors.inputBackground,
-        borderRadius: BorderRadius.circular(AppRadius.input),
-        border: Border.all(color: AppColors.border),
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      style: theme.textTheme.bodyLarge?.copyWith(
+        color: theme.colorScheme.onSurface,
       ),
-      child: TextFormField(
-        controller: controller,
-        obscureText: obscureText,
-        keyboardType: keyboardType,
-        style: theme.textTheme.bodyLarge,
-        maxLines: maxLines,
-        enabled: enabled,
-        textInputAction: textInputAction,
-        onFieldSubmitted: onSubmitted,
-        onChanged: onChanged,
-        validator: validator,
-        decoration: InputDecoration(
-          filled: false, // Prevent double background with global theme
-          hintText: hintText,
-          hintStyle: theme.textTheme.bodyMedium?.copyWith(
-            color: Colors.grey[400],
-          ),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          errorBorder: InputBorder.none,
-          focusedErrorBorder: InputBorder.none,
-          // Use EdgeInsetsDirectional for RTL support
-          contentPadding: const EdgeInsetsDirectional.symmetric(
-            horizontal: 20,
-            vertical: 16,
-          ),
-          prefixIcon: prefixIcon,
-          suffixIcon: suffixIcon,
+      maxLines: maxLines,
+      enabled: enabled,
+      textInputAction: textInputAction,
+      onFieldSubmitted: onSubmitted,
+      onChanged: onChanged,
+      validator: validator,
+      decoration: InputDecoration(
+        hintText: hintText,
+        prefixIcon: prefixIcon,
+        suffixIcon: suffixIcon,
+        // Override content padding if needed, but usually theme handles it
+        contentPadding: const EdgeInsetsDirectional.symmetric(
+          horizontal: 20,
+          vertical: 18,
         ),
       ),
     );

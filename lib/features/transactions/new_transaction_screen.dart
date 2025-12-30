@@ -6,14 +6,16 @@ import 'package:intl/intl.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/models/transaction_model.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_radius.dart';
+
+import '../../core/utils/icon_helper.dart';
+
 import '../../core/widgets/custom_text_field.dart';
 import '../../core/widgets/primary_button.dart';
-import '../../core/localization/translation_helper.dart';
-import '../../core/utils/icon_helper.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
+import '../../core/models/category_model.dart';
 import '../categories/add_edit_category_screen.dart';
+import '../../core/theme/theme_provider.dart';
 
 class NewTransactionScreen extends ConsumerStatefulWidget {
   const NewTransactionScreen({super.key});
@@ -49,7 +51,7 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
     super.dispose();
   }
 
-  Future<void> _selectDate(BuildContext context) async {
+  Future<void> _selectDate(BuildContext context, ThemeData theme) async {
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
@@ -57,11 +59,11 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (context, child) {
         return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: AppColors.primary,
-              onPrimary: Colors.white,
-              onSurface: AppColors.textPrimary,
+          data: theme.copyWith(
+            colorScheme: theme.colorScheme.copyWith(
+              primary: theme.primaryColor,
+              onPrimary: theme.colorScheme.onPrimary,
+              onSurface: theme.colorScheme.onSurface,
             ),
           ),
           child: child!,
@@ -88,7 +90,8 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
     final l10n = AppLocalizations.of(context);
 
     // Validate fields
-    final amount = double.tryParse(_amountController.text) ?? 0.0;
+    final amountText = _amountController.text.trim();
+    final amount = double.tryParse(amountText) ?? 0.0;
     if (amount <= 0) {
       ScaffoldMessenger.of(
         context,
@@ -154,84 +157,136 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
     final categoriesAsync = ref.watch(categoriesProvider);
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final themeMode = ref.watch(themeProvider);
+    final isGlassy = themeMode == AppThemeMode.glassy;
+    final isModernDark = themeMode == AppThemeMode.modernDark;
     final isExpense = _type == 'expense';
     final activeColor = isExpense ? AppColors.expense : AppColors.income;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
-          // Decorative background elements
-          Positioned(
-            top: -50,
-            right: -50,
-            child: Container(
-              width: 180,
-              height: 180,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: activeColor.withValues(alpha: 0.05),
+          // Background for Glassy
+          if (isGlassy)
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF0F172A),
+                      Color(0xFF1E1B4B),
+                      Color(0xFF312E81),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-          Positioned(
-            bottom: 200,
-            left: -30,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary.withValues(alpha: 0.03),
+
+          // Decorative background elements for other themes
+          if (!isGlassy) ...[
+            Positioned(
+              top: -50,
+              right: -50,
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: activeColor.withValues(alpha: 0.05),
+                ),
               ),
             ),
-          ),
+            Positioned(
+              bottom: 200,
+              left: -30,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: theme.primaryColor.withValues(alpha: 0.03),
+                ),
+              ),
+            ),
+          ],
 
           SafeArea(
             child: Column(
               children: [
-                _buildAppBar(context, l10n, theme),
+                _buildAppBar(context, l10n, theme, isGlassy),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 130),
                     child: Column(
                       children: [
                         // Type Toggle
-                        _buildTypeToggle(l10n, activeColor),
+                        _buildTypeToggle(l10n, activeColor, theme, isGlassy),
                         const SizedBox(height: 32),
 
                         // Amount Input
-                        _buildAmountInput(theme, activeColor),
+                        _buildAmountInput(theme, activeColor, isGlassy),
                         const SizedBox(height: 32),
 
                         // Input Card
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: isGlassy
+                                ? Colors.white.withValues(alpha: 0.1)
+                                : theme.colorScheme.surface,
                             borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.02),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
+                            border: isGlassy
+                                ? Border.all(
+                                    color: Colors.white.withValues(alpha: 0.1),
+                                  )
+                                : (isModernDark
+                                      ? Border.all(
+                                          color: theme.dividerColor.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                        )
+                                      : null),
+                            boxShadow: isGlassy || isModernDark
+                                ? null
+                                : [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.02,
+                                      ),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 10),
+                                    ),
+                                  ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Date Selection
-                              _buildDateSelector(theme),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildDateButton(
+                                      theme,
+                                      l10n,
+                                      isGlassy,
+                                    ),
+                                  ),
+                                ],
+                              ),
                               const SizedBox(height: 20),
 
                               // Title Input (English)
                               CustomTextField(
                                 hintText: l10n.enterTitleEn,
                                 controller: _titleController,
-                                prefixIcon: const Icon(
+                                prefixIcon: Icon(
                                   Icons.edit_outlined,
-                                  color: Colors.grey,
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.4,
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -240,9 +295,11 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
                               CustomTextField(
                                 hintText: l10n.enterTitleAr,
                                 controller: _titleArController,
-                                prefixIcon: const Icon(
+                                prefixIcon: Icon(
                                   Icons.translate,
-                                  color: Colors.grey,
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.4,
+                                  ),
                                 ),
                               ),
                             ],
@@ -250,77 +307,44 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
                         ),
                         const SizedBox(height: 32),
 
-                        // Categories Section Header with Add Button
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              l10n.category,
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            TextButton.icon(
-                              onPressed: _navigateToAddCategory,
-                              icon: const Icon(
-                                Icons.add_circle_outline,
-                                size: 20,
-                                color: AppColors.primary,
-                              ),
-                              label: Text(
-                                l10n.addNewCategory,
-                                style: const TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        // Categories Section
+                        _buildCategoriesHeader(l10n, theme, isGlassy),
                         const SizedBox(height: 16),
-
-                        // Categories Grid
-                        categoriesAsync.when(
-                          data: (categories) => _buildCategoriesGrid(
-                            context,
-                            categories,
-                            l10n,
-                            activeColor,
-                          ),
-                          loading: () =>
-                              const Center(child: CircularProgressIndicator()),
-                          error: (error, stackTrace) => Text(l10n.error),
-                        ),
+                        _buildCategoryGrid(categoriesAsync, theme, isGlassy),
                       ],
                     ),
                   ),
                 ),
-
-                // Bottom Save Button
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, -5),
-                      ),
-                    ],
-                  ),
-                  child: PrimaryButton(
-                    text: l10n.save,
-                    onPressed: _handleSave,
-                    isLoading: _isLoading,
-                  ),
-                ),
               ],
+            ),
+          ),
+
+          // Bottom Save Button
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: PrimaryButton(
+                text: l10n.save,
+                onPressed: _handleSave,
+                isLoading: _isLoading,
+              ),
             ),
           ),
         ],
@@ -332,6 +356,7 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
     BuildContext context,
     AppLocalizations l10n,
     ThemeData theme,
+    bool isGlassy,
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -339,19 +364,29 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isGlassy
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              border: isGlassy
+                  ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+                  : null,
+              boxShadow: isGlassy
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
             ),
             child: IconButton(
-              icon: const Icon(Icons.close_rounded, size: 24),
-              color: AppColors.textPrimary,
+              icon: Icon(
+                Icons.close_rounded,
+                size: 24,
+                color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
+              ),
               onPressed: () => context.pop(),
             ),
           ),
@@ -364,13 +399,17 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
                   l10n.newTransaction,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: isGlassy
+                        ? Colors.white
+                        : theme.colorScheme.onSurface,
                   ),
                 ),
                 Text(
-                  'Add a record',
+                  l10n.manageTransactions,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: isGlassy
+                        ? Colors.white.withValues(alpha: 0.6)
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -381,35 +420,50 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
     );
   }
 
-  Widget _buildDateSelector(ThemeData theme) {
-    final dateFormat = DateFormat.yMMMd();
-    return GestureDetector(
-      onTap: () => _selectDate(context),
+  Widget _buildDateButton(
+    ThemeData theme,
+    AppLocalizations l10n,
+    bool isGlassy,
+  ) {
+    return InkWell(
+      onTap: () => _selectDate(context, theme),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(AppRadius.input),
-          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+          color: isGlassy
+              ? Colors.white.withValues(alpha: 0.05)
+              : theme.colorScheme.surface.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isGlassy
+                ? Colors.white.withValues(alpha: 0.1)
+                : theme.dividerColor.withValues(alpha: 0.1),
+          ),
         ),
         child: Row(
           children: [
-            const Icon(
-              Icons.calendar_today_outlined,
-              color: Colors.grey,
+            Icon(
+              Icons.calendar_today_rounded,
               size: 20,
+              color: isGlassy ? Colors.white : theme.primaryColor,
             ),
             const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                dateFormat.format(_selectedDate),
-                style: theme.textTheme.bodyLarge,
+            Text(
+              DateFormat.yMMMd(
+                Localizations.localeOf(context).toString(),
+              ).format(_selectedDate),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
               ),
             ),
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 14,
-              color: Colors.grey,
+            const Spacer(),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 20,
+              color: isGlassy
+                  ? Colors.white.withValues(alpha: 0.4)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.4),
             ),
           ],
         ),
@@ -417,55 +471,75 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
     );
   }
 
-  Widget _buildTypeToggle(AppLocalizations l10n, Color activeColor) {
+  Widget _buildTypeToggle(
+    AppLocalizations l10n,
+    Color activeColor,
+    ThemeData theme,
+    bool isGlassy,
+  ) {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(30),
+        color: isGlassy
+            ? Colors.white.withValues(alpha: 0.1)
+            : theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: isGlassy
+            ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+            : null,
       ),
       child: Row(
         children: [
-          _buildToggleItem(l10n.expenseType, 'expense', activeColor),
-          _buildToggleItem(l10n.incomeType, 'income', activeColor),
+          Expanded(
+            child: _buildTypeButton(
+              'expense',
+              l10n.expenseType,
+              activeColor,
+              _type == 'expense',
+              theme,
+              isGlassy,
+            ),
+          ),
+          Expanded(
+            child: _buildTypeButton(
+              'income',
+              l10n.income,
+              activeColor,
+              _type == 'income',
+              theme,
+              isGlassy,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildToggleItem(String label, String value, Color activeColor) {
-    final isSelected = _type == value;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _type = value;
-            _selectedCategoryId = null;
-            _selectedCategoryName = null;
-            _selectedCategoryIcon = null;
-          });
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(25),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
+  Widget _buildTypeButton(
+    String type,
+    String label,
+    Color color,
+    bool isActive,
+    ThemeData theme,
+    bool isGlassy,
+  ) {
+    return GestureDetector(
+      onTap: () => setState(() => _type = type),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isActive ? color : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
           child: Text(
             label,
-            textAlign: TextAlign.center,
             style: TextStyle(
-              color: isSelected ? activeColor : Colors.grey[500],
+              color: isActive
+                  ? Colors.white
+                  : (isGlassy
+                        ? Colors.white.withValues(alpha: 0.6)
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6)),
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -474,32 +548,28 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
     );
   }
 
-  Widget _buildAmountInput(ThemeData theme, Color activeColor) {
+  Widget _buildAmountInput(ThemeData theme, Color activeColor, bool isGlassy) {
     return Column(
       children: [
-        Text(
-          '₪',
-          style: theme.textTheme.headlineMedium?.copyWith(
-            color: Colors.grey[300],
-            fontWeight: FontWeight.bold,
-          ),
-        ),
         TextField(
           controller: _amountController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          keyboardType: TextInputType.number,
           textAlign: TextAlign.center,
           style: theme.textTheme.displayMedium?.copyWith(
             fontWeight: FontWeight.bold,
-            color: activeColor,
+            color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
           ),
           decoration: InputDecoration(
-            filled: false,
-            border: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            enabledBorder: InputBorder.none,
             hintText: '0.00',
-            hintStyle: theme.textTheme.displayMedium?.copyWith(
-              color: Colors.grey[200],
+            hintStyle: TextStyle(
+              color: isGlassy
+                  ? Colors.white.withValues(alpha: 0.2)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+            ),
+            border: InputBorder.none,
+            prefixText: '₪ ',
+            prefixStyle: theme.textTheme.headlineLarge?.copyWith(
+              color: activeColor,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -508,135 +578,150 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
     );
   }
 
-  Widget _buildCategoriesGrid(
-    BuildContext context,
-    List categories,
+  Widget _buildCategoriesHeader(
     AppLocalizations l10n,
-    Color activeColor,
+    ThemeData theme,
+    bool isGlassy,
   ) {
-    final theme = Theme.of(context);
-    final filteredCategories = categories
-        .where((c) => c.type == _type)
-        .toList();
-
-    if (filteredCategories.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.category_outlined,
-                  size: 48,
-                  color: Colors.grey[300],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.noCategoriesFound,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 24),
-              OutlinedButton.icon(
-                onPressed: _navigateToAddCategory,
-                icon: const Icon(Icons.add_rounded),
-                label: Text(l10n.addCategory),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  side: const BorderSide(color: AppColors.primary),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          l10n.category,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
           ),
         ),
-      );
-    }
-
-    return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        childAspectRatio: 0.8,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: filteredCategories.length,
-      itemBuilder: (context, index) {
-        final cat = filteredCategories[index];
-        final isSelected = _selectedCategoryId == cat.id;
-        final displayName = TranslationHelper.getCategoryNameFromModel(
-          context,
-          cat,
-        );
-
-        return GestureDetector(
-          onTap: () => setState(() {
-            _selectedCategoryId = cat.id;
-            _selectedCategoryName = cat.name;
-            _selectedCategoryIcon = cat.icon;
-          }),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isSelected ? activeColor : Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    if (isSelected)
-                      BoxShadow(
-                        color: activeColor.withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      )
-                    else
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                  ],
-                ),
-                child: Icon(
-                  IconHelper.getIcon(cat.icon),
-                  size: 24,
-                  color: isSelected ? Colors.white : AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                displayName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? activeColor : AppColors.textSecondary,
-                ),
-              ),
-            ],
+        TextButton.icon(
+          onPressed: _navigateToAddCategory,
+          icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
+          label: Text(l10n.addCategory),
+          style: TextButton.styleFrom(
+            foregroundColor: isGlassy ? Colors.white : theme.primaryColor,
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryGrid(
+    AsyncValue<List<CategoryModel>> categoriesAsync,
+    ThemeData theme,
+    bool isGlassy,
+  ) {
+    return categoriesAsync.when(
+      data: (categories) {
+        final filteredCategories = categories
+            .where((c) => c.type == _type || c.type == 'both')
+            .toList();
+
+        if (filteredCategories.isEmpty) {
+          return Center(
+            child: Text(
+              'No categories found',
+              style: TextStyle(
+                color: isGlassy
+                    ? Colors.white.withValues(alpha: 0.5)
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+          );
+        }
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
+            childAspectRatio: 0.8,
+          ),
+          itemCount: filteredCategories.length,
+          itemBuilder: (context, index) {
+            final category = filteredCategories[index];
+            final isSelected = _selectedCategoryId == category.id;
+            final locale = Localizations.localeOf(context).languageCode;
+            final displayName =
+                (locale == 'ar' && (category.nameAr?.isNotEmpty ?? false))
+                ? category.nameAr!
+                : category.name;
+
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedCategoryId = category.id;
+                  _selectedCategoryName = category.name;
+                  _selectedCategoryIcon = category.icon;
+                });
+              },
+              child: Column(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? (_type == 'expense'
+                                ? AppColors.expense
+                                : AppColors.income)
+                          : (isGlassy
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : theme.colorScheme.surface),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected
+                            ? Colors.transparent
+                            : (isGlassy
+                                  ? Colors.white.withValues(alpha: 0.1)
+                                  : theme.dividerColor.withValues(alpha: 0.1)),
+                      ),
+                      boxShadow: isSelected || isGlassy
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.02),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                    ),
+                    child: Icon(
+                      IconHelper.getIcon(category.icon),
+                      color: isSelected
+                          ? Colors.white
+                          : (isGlassy
+                                ? Colors.white
+                                : theme.colorScheme.onSurface),
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    displayName,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      color: isGlassy
+                          ? Colors.white.withValues(alpha: isSelected ? 1 : 0.7)
+                          : theme.colorScheme.onSurface.withValues(
+                              alpha: isSelected ? 1 : 0.6,
+                            ),
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, stack) => Center(child: Text('Error: $err')),
     );
   }
 }

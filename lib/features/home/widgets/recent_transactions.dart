@@ -41,11 +41,11 @@ class RecentTransactions extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -56,20 +56,20 @@ class RecentTransactions extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.grey[50],
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.history_rounded,
               size: 64,
-              color: Colors.grey[200],
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
             ),
           ),
           const SizedBox(height: 24),
           Text(
             l10n.noTransactions,
             style: theme.textTheme.titleLarge?.copyWith(
-              color: AppColors.textPrimary,
+              color: theme.colorScheme.onSurface,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -77,7 +77,7 @@ class RecentTransactions extends StatelessWidget {
           Text(
             l10n.startTrackingFinances,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               height: 1.5,
             ),
             textAlign: TextAlign.center,
@@ -85,14 +85,16 @@ class RecentTransactions extends StatelessWidget {
           const SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: onAddPressed,
-            icon: const Icon(Icons.add_rounded, color: Colors.white),
+            icon: Icon(Icons.add_rounded, color: theme.colorScheme.onPrimary),
             label: Text(
               l10n.addTransaction,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: theme.colorScheme.onPrimary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
+              backgroundColor: theme.primaryColor,
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               shape: RoundedRectangleBorder(
@@ -130,7 +132,7 @@ class RecentTransactions extends StatelessWidget {
     AppLocalizations l10n,
   ) {
     final isIncome = tx.type == 'income';
-    final color = isIncome ? AppColors.income : AppColors.expense;
+    final amountColor = isIncome ? AppColors.income : AppColors.expense;
     final currency = NumberFormat.simpleCurrency(
       locale: locale.toString(),
       name: 'ILS',
@@ -171,7 +173,7 @@ class RecentTransactions extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -195,12 +197,12 @@ class RecentTransactions extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
+                    color: amountColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     IconHelper.getIcon(tx.categoryIcon),
-                    color: color,
+                    color: amountColor,
                     size: 24,
                   ),
                 ),
@@ -213,6 +215,7 @@ class RecentTransactions extends StatelessWidget {
                         displayTitle,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -221,7 +224,9 @@ class RecentTransactions extends StatelessWidget {
                       Text(
                         '$dateString • $displayCategoryName',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
                       ),
                     ],
@@ -233,7 +238,7 @@ class RecentTransactions extends StatelessWidget {
                     Text(
                       '${isIncome ? '+' : ''}${currency.format(tx.amount)}',
                       style: theme.textTheme.titleMedium?.copyWith(
-                        color: color,
+                        color: amountColor,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -241,7 +246,9 @@ class RecentTransactions extends StatelessWidget {
                     Text(
                       DateFormat.jm().format(tx.createdAt),
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: Colors.grey[400],
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.4,
+                        ),
                       ),
                     ),
                   ],

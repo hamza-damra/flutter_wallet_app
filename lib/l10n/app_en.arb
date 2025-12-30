@@ -263,5 +263,12 @@
   "nameArHint": "Name (Arabic)",
   "nameEnHint": "Name (English)",
   "updateProfile": "Update Profile",
-  "profileUpdated": "Profile updated successfully"
+  "profileUpdated": "Profile updated successfully",
+  "appTheme": "App Theme",
+  "classicTheme": "Classic Premium",
+  "modernDarkTheme": "Modern Dark",
+  "oceanBlueTheme": "Ocean Blue",
+  "glassyTheme": "Glassy Vivid",
+  "transactionId": "Transaction ID",
+  "manageTransactions": "Manage Transactions"
 }

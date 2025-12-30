@@ -8,6 +8,7 @@ import '../../core/models/transaction_model.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/icon_helper.dart';
 import '../../core/localization/translation_helper.dart';
+import '../../core/theme/theme_provider.dart';
 import '../../services/firestore_service.dart';
 
 class TransactionDetailsScreen extends ConsumerStatefulWidget {
@@ -26,12 +27,22 @@ class _TransactionDetailsScreenState
 
   Future<void> _handleDelete() async {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(l10n.deleteTransaction),
-        content: Text(l10n.deleteTransactionConfirm),
+        backgroundColor: theme.colorScheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          l10n.deleteTransaction,
+          style: TextStyle(color: theme.colorScheme.onSurface),
+        ),
+        content: Text(
+          l10n.deleteTransactionConfirm,
+          style: TextStyle(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -80,6 +91,7 @@ class _TransactionDetailsScreenState
     final currency = NumberFormat.simpleCurrency(name: 'ILS');
     final dateFormat = DateFormat.yMMMMEEEEd().add_jm();
     final locale = Localizations.localeOf(context).languageCode;
+    final themeMode = ref.watch(themeProvider);
 
     final displayTitle =
         (locale == 'ar' && tx.titleAr != null && tx.titleAr!.isNotEmpty)
@@ -92,34 +104,54 @@ class _TransactionDetailsScreenState
     );
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
+          // Theme-based background
+          if (themeMode == AppThemeMode.glassy)
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF0F172A),
+                      Color(0xFF1E1B4B),
+                      Color(0xFF312E81),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
           // Decorative background elements
-          Positioned(
-            top: -50,
-            left: -50,
-            child: Container(
-              width: 180,
-              height: 180,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: color.withValues(alpha: 0.05),
+          if (themeMode != AppThemeMode.glassy) ...[
+            Positioned(
+              top: -50,
+              left: -50,
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color.withValues(alpha: 0.05),
+                ),
               ),
             ),
-          ),
-          Positioned(
-            top: 150,
-            right: -30,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary.withValues(alpha: 0.03),
+            Positioned(
+              top: 150,
+              right: -30,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: theme.primaryColor.withValues(alpha: 0.03),
+                ),
               ),
             ),
-          ),
+          ],
 
           SafeArea(
             child: Column(
@@ -141,6 +173,7 @@ class _TransactionDetailsScreenState
                           currency,
                           displayTitle,
                           displayCategory,
+                          themeMode,
                         ),
 
                         const SizedBox(height: 32),
@@ -153,12 +186,13 @@ class _TransactionDetailsScreenState
                           isIncome,
                           color,
                           dateFormat,
+                          themeMode,
                         ),
 
                         const SizedBox(height: 40),
 
                         // Delete Button
-                        _buildDeleteButton(l10n),
+                        _buildDeleteButton(l10n, theme),
 
                         const SizedBox(height: 24),
                       ],
@@ -185,7 +219,7 @@ class _TransactionDetailsScreenState
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -197,7 +231,7 @@ class _TransactionDetailsScreenState
             ),
             child: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-              color: AppColors.textPrimary,
+              color: theme.colorScheme.onSurface,
               onPressed: () => context.pop(),
             ),
           ),
@@ -205,7 +239,7 @@ class _TransactionDetailsScreenState
             l10n.transactionDetails,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: theme.colorScheme.onSurface,
             ),
           ),
           const SizedBox(width: 48), // Spacer for balance
@@ -222,13 +256,17 @@ class _TransactionDetailsScreenState
     NumberFormat currency,
     String title,
     String category,
+    AppThemeMode themeMode,
   ) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(30),
+        border: themeMode == AppThemeMode.glassy
+            ? Border.all(color: Colors.white.withValues(alpha: 0.2))
+            : null,
         boxShadow: [
           BoxShadow(
             color: color.withValues(alpha: 0.08),
@@ -256,7 +294,7 @@ class _TransactionDetailsScreenState
             title,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: theme.colorScheme.onSurface,
             ),
             textAlign: TextAlign.center,
           ),
@@ -264,7 +302,7 @@ class _TransactionDetailsScreenState
           Text(
             category,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 24),
@@ -294,12 +332,16 @@ class _TransactionDetailsScreenState
     bool isIncome,
     Color color,
     DateFormat dateFormat,
+    AppThemeMode themeMode,
   ) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
+        border: themeMode == AppThemeMode.glassy
+            ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+            : null,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -314,10 +356,11 @@ class _TransactionDetailsScreenState
             l10n.date,
             dateFormat.format(tx.createdAt),
             Icons.calendar_today_rounded,
+            theme,
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Divider(height: 1, color: theme.dividerColor),
           ),
           _buildDetailItem(
             l10n.type,
@@ -325,28 +368,31 @@ class _TransactionDetailsScreenState
             isIncome
                 ? Icons.arrow_downward_rounded
                 : Icons.arrow_upward_rounded,
+            theme,
             valueColor: color,
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Divider(height: 1, color: theme.dividerColor),
           ),
           _buildDetailItem(
             l10n.category,
             TranslationHelper.getCategoryName(context, tx.categoryName),
             Icons.category_rounded,
+            theme,
           ),
           if (tx.id.isNotEmpty) ...[
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Divider(height: 1, color: theme.dividerColor),
             ),
             _buildDetailItem(
-              'Transaction ID',
+              l10n.transactionId, // Using localization
               tx.id.length > 8
-                  ? tx.id.substring(0, 8).toUpperCase()
+                  ? '${tx.id.substring(0, 8).toUpperCase()}...'
                   : tx.id.toUpperCase(),
               Icons.tag_rounded,
+              theme,
             ),
           ],
         ],
@@ -357,7 +403,8 @@ class _TransactionDetailsScreenState
   Widget _buildDetailItem(
     String label,
     String value,
-    IconData icon, {
+    IconData icon,
+    ThemeData theme, {
     Color? valueColor,
   }) {
     return Row(
@@ -365,10 +412,14 @@ class _TransactionDetailsScreenState
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.grey[50],
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, size: 20, color: Colors.grey[400]),
+          child: Icon(
+            icon,
+            size: 20,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+          ),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -377,8 +428,8 @@ class _TransactionDetailsScreenState
             children: [
               Text(
                 label,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   fontSize: 12,
                 ),
               ),
@@ -386,7 +437,7 @@ class _TransactionDetailsScreenState
               Text(
                 value,
                 style: TextStyle(
-                  color: valueColor ?? AppColors.textPrimary,
+                  color: valueColor ?? theme.colorScheme.onSurface,
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
                 ),
@@ -398,7 +449,7 @@ class _TransactionDetailsScreenState
     );
   }
 
-  Widget _buildDeleteButton(AppLocalizations l10n) {
+  Widget _buildDeleteButton(AppLocalizations l10n, ThemeData theme) {
     return OutlinedButton.icon(
       onPressed: _isDeleting ? null : _handleDelete,
       icon: _isDeleting

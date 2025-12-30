@@ -195,5 +195,12 @@
   "nameArHint": "الاسم (بالعربية)",
   "nameEnHint": "الاسم (بالانجليزية)",
   "updateProfile": "تحديث الملف الشخصي",
-  "profileUpdated": "تم تحديث الملف الشخصي بنجاح"
+  "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
+  "appTheme": "سمة التطبيق",
+  "classicTheme": "كلاسيكي فاخر",
+  "modernDarkTheme": "داكن عصري",
+  "oceanBlueTheme": "أزرق المحيط",
+  "glassyTheme": "زجاجي زاهٍ",
+  "transactionId": "رقم المعاملة",
+  "manageTransactions": "إدارة المعاملات"
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
@@ -29,17 +30,19 @@ class ConnectivityService extends Notifier<ConnectivityStatus> {
       (result) => result != ConnectivityResult.none,
     );
 
-    print('ConnectivityService: results=$results, isConnected=$isConnected');
+    debugPrint(
+      'ConnectivityService: results=$results, isConnected=$isConnected',
+    );
 
     if (isConnected) {
       try {
         bool hasInternet = await _internetConnectionChecker.hasConnection;
-        print('ConnectivityService: hasInternet=$hasInternet');
+        debugPrint('ConnectivityService: hasInternet=$hasInternet');
         state = hasInternet
             ? ConnectivityStatus.online
             : ConnectivityStatus.offline;
       } catch (e) {
-        print('ConnectivityService: Error checking internet: $e');
+        debugPrint('ConnectivityService: Error checking internet: $e');
         state = ConnectivityStatus.online; // Fallback
       }
     } else {

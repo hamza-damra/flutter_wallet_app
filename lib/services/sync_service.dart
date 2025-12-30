@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/local/sqlite_database.dart';
 import '../data/remote/firestore_service.dart';
@@ -56,9 +57,9 @@ class SyncService {
             .setMessage('Some items were updated after syncing');
       }
 
-      print('Sync completed successfully');
+      debugPrint('Sync completed successfully');
     } catch (e) {
-      print('Sync error: $e');
+      debugPrint('Sync error: $e');
     } finally {
       _isSyncing = false;
       _ref.read(syncStatusNotifierProvider.notifier).setSyncing(false);
@@ -82,7 +83,7 @@ class SyncService {
           _db.syncQueue,
         )..where((t) => t.id.equals(item.id))).go();
       } catch (e) {
-        print('Error syncing item ${item.id}: $e');
+        debugPrint('Error syncing item ${item.id}: $e');
       }
     }
   }

@@ -1129,6 +1129,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile updated successfully'**
   String get profileUpdated;
+
+  /// No description provided for @appTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'App Theme'**
+  String get appTheme;
+
+  /// No description provided for @classicTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic Premium'**
+  String get classicTheme;
+
+  /// No description provided for @modernDarkTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Modern Dark'**
+  String get modernDarkTheme;
+
+  /// No description provided for @oceanBlueTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Ocean Blue'**
+  String get oceanBlueTheme;
+
+  /// No description provided for @glassyTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Glassy Vivid'**
+  String get glassyTheme;
+
+  /// No description provided for @transactionId.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction ID'**
+  String get transactionId;
+
+  /// No description provided for @manageTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Transactions'**
+  String get manageTransactions;
 }
 
 class _AppLocalizationsDelegate

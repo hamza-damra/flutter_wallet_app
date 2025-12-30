@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_shadows.dart';
 
@@ -26,6 +25,7 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final isDisabled = isLoading || !enabled;
 
     return Container(
@@ -33,15 +33,19 @@ class PrimaryButton extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppRadius.button),
-        boxShadow: isDisabled ? null : AppShadows.button,
+        boxShadow: isDisabled
+            ? null
+            : (theme.brightness == Brightness.light ? AppShadows.button : null),
       ),
       child: ElevatedButton(
         onPressed: isDisabled ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          disabledBackgroundColor: AppColors.primary.withAlpha(153),
-          foregroundColor: Colors.white,
-          disabledForegroundColor: Colors.white.withAlpha(204),
+          backgroundColor: theme.primaryColor,
+          disabledBackgroundColor: theme.primaryColor.withValues(alpha: 0.5),
+          foregroundColor: theme.colorScheme.onPrimary,
+          disabledForegroundColor: theme.colorScheme.onPrimary.withValues(
+            alpha: 0.7,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.button),
           ),
@@ -49,11 +53,11 @@ class PrimaryButton extends StatelessWidget {
           elevation: 0,
         ),
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 height: 24,
                 width: 24,
                 child: CircularProgressIndicator(
-                  color: Colors.white,
+                  color: theme.colorScheme.onPrimary,
                   strokeWidth: 2,
                 ),
               )
@@ -101,9 +105,10 @@ class SecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final isDisabled = isLoading || !enabled;
-    final effectiveBorderColor = borderColor ?? AppColors.primary;
-    final effectiveTextColor = textColor ?? AppColors.primary;
+    final effectiveBorderColor = borderColor ?? theme.primaryColor;
+    final effectiveTextColor = textColor ?? theme.primaryColor;
 
     return SizedBox(
       width: width ?? double.infinity,
@@ -114,7 +119,7 @@ class SecondaryButton extends StatelessWidget {
           foregroundColor: effectiveTextColor,
           side: BorderSide(
             color: isDisabled
-                ? effectiveBorderColor.withAlpha(128)
+                ? effectiveBorderColor.withValues(alpha: 0.5)
                 : effectiveBorderColor,
           ),
           shape: RoundedRectangleBorder(

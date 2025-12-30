@@ -577,4 +577,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileUpdated => 'Profile updated successfully';
+
+  @override
+  String get appTheme => 'App Theme';
+
+  @override
+  String get classicTheme => 'Classic Premium';
+
+  @override
+  String get modernDarkTheme => 'Modern Dark';
+
+  @override
+  String get oceanBlueTheme => 'Ocean Blue';
+
+  @override
+  String get glassyTheme => 'Glassy Vivid';
+
+  @override
+  String get transactionId => 'Transaction ID';
+
+  @override
+  String get manageTransactions => 'Manage Transactions';
 }

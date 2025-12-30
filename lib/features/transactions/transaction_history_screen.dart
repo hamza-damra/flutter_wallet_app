@@ -10,60 +10,91 @@ import '../../core/utils/icon_helper.dart';
 import '../../core/localization/translation_helper.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
+import '../../core/theme/theme_provider.dart';
 
-class TransactionHistoryScreen extends ConsumerWidget {
+class TransactionHistoryScreen extends ConsumerStatefulWidget {
   const TransactionHistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TransactionHistoryScreen> createState() =>
+      _TransactionHistoryScreenState();
+}
+
+class _TransactionHistoryScreenState
+    extends ConsumerState<TransactionHistoryScreen> {
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final themeMode = ref.watch(themeProvider);
+    final isGlassy = themeMode == AppThemeMode.glassy;
+
     final user = ref.watch(authServiceProvider).currentUser;
     final transactionsAsync = ref.watch(transactionsProvider(user?.uid ?? ''));
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
-          // Decorative background elements
-          Positioned(
-            top: -80,
-            right: -80,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary.withValues(alpha: 0.05),
+          // Background for Glassy
+          if (isGlassy)
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF0F172A),
+                      Color(0xFF1E1B4B),
+                      Color(0xFF312E81),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-          Positioned(
-            bottom: 100,
-            left: -60,
-            child: Container(
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.income.withValues(alpha: 0.05),
+
+          // Decorative elements for other themes
+          if (!isGlassy) ...[
+            Positioned(
+              top: -80,
+              right: -80,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: theme.primaryColor.withValues(alpha: 0.05),
+                ),
               ),
             ),
-          ),
+            Positioned(
+              bottom: 100,
+              left: -60,
+              child: Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.income.withValues(alpha: 0.05),
+                ),
+              ),
+            ),
+          ],
 
           // Main content
           SafeArea(
             child: Column(
               children: [
                 // Custom App Bar
-                _buildAppBar(context, l10n, theme),
+                _buildAppBar(context, l10n, theme, isGlassy),
 
                 // Content
                 Expanded(
                   child: transactionsAsync.when(
                     data: (transactions) {
                       if (transactions.isEmpty) {
-                        return _buildEmptyState(context, l10n, theme);
+                        return _buildEmptyState(context, l10n, theme, isGlassy);
                       }
 
                       // Calculate summary
@@ -107,6 +138,8 @@ class TransactionHistoryScreen extends ConsumerWidget {
                                   l10n,
                                   totalIncome,
                                   totalExpense,
+                                  theme,
+                                  isGlassy,
                                 ),
                                 const SizedBox(height: 32),
                               ],
@@ -131,7 +164,9 @@ class TransactionHistoryScreen extends ConsumerWidget {
                                       width: 4,
                                       height: 16,
                                       decoration: BoxDecoration(
-                                        color: AppColors.primary,
+                                        color: isGlassy
+                                            ? Colors.white
+                                            : theme.primaryColor,
                                         borderRadius: BorderRadius.circular(2),
                                       ),
                                     ),
@@ -140,7 +175,9 @@ class TransactionHistoryScreen extends ConsumerWidget {
                                       dateHeader,
                                       style: theme.textTheme.titleMedium
                                           ?.copyWith(
-                                            color: AppColors.textPrimary,
+                                            color: isGlassy
+                                                ? Colors.white
+                                                : theme.colorScheme.onSurface,
                                             fontWeight: FontWeight.bold,
                                           ),
                                     ),
@@ -148,8 +185,12 @@ class TransactionHistoryScreen extends ConsumerWidget {
                                 ),
                               ),
                               ...txs.map(
-                                (tx) =>
-                                    _buildTransactionItem(context, tx, theme),
+                                (tx) => _buildTransactionItem(
+                                  context,
+                                  tx,
+                                  theme,
+                                  isGlassy,
+                                ),
                               ),
                               const SizedBox(height: 16),
                             ],
@@ -175,6 +216,7 @@ class TransactionHistoryScreen extends ConsumerWidget {
     BuildContext context,
     AppLocalizations l10n,
     ThemeData theme,
+    bool isGlassy,
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -182,19 +224,26 @@ class TransactionHistoryScreen extends ConsumerWidget {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isGlassy
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              border: isGlassy
+                  ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+                  : null,
+              boxShadow: isGlassy
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
             ),
             child: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-              color: AppColors.textPrimary,
+              color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
               onPressed: () => context.pop(),
             ),
           ),
@@ -207,13 +256,17 @@ class TransactionHistoryScreen extends ConsumerWidget {
                   l10n.recentTransactions,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: isGlassy
+                        ? Colors.white
+                        : theme.colorScheme.onSurface,
                   ),
                 ),
                 Text(
                   'Transaction History',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: isGlassy
+                        ? Colors.white.withValues(alpha: 0.7)
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -229,6 +282,8 @@ class TransactionHistoryScreen extends ConsumerWidget {
     AppLocalizations l10n,
     double income,
     double expense,
+    ThemeData theme,
+    bool isGlassy,
   ) {
     final currency = NumberFormat.simpleCurrency(name: 'ILS');
     return Row(
@@ -241,6 +296,8 @@ class TransactionHistoryScreen extends ConsumerWidget {
             amount: income,
             color: AppColors.income,
             currency: currency,
+            theme: theme,
+            isGlassy: isGlassy,
           ),
         ),
         const SizedBox(width: 16),
@@ -252,6 +309,8 @@ class TransactionHistoryScreen extends ConsumerWidget {
             amount: expense,
             color: AppColors.expense,
             currency: currency,
+            theme: theme,
+            isGlassy: isGlassy,
           ),
         ),
       ],
@@ -265,19 +324,28 @@ class TransactionHistoryScreen extends ConsumerWidget {
     required double amount,
     required Color color,
     required NumberFormat currency,
+    required ThemeData theme,
+    required bool isGlassy,
   }) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isGlassy
+            ? Colors.white.withValues(alpha: 0.1)
+            : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: isGlassy
+            ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+            : null,
+        boxShadow: isGlassy
+            ? null
+            : [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -294,18 +362,20 @@ class TransactionHistoryScreen extends ConsumerWidget {
           FittedBox(
             child: Text(
               currency.format(amount),
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
               ),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: isGlassy
+                  ? Colors.white.withValues(alpha: 0.7)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
           ),
         ],
       ),
@@ -316,6 +386,7 @@ class TransactionHistoryScreen extends ConsumerWidget {
     BuildContext context,
     AppLocalizations l10n,
     ThemeData theme,
+    bool isGlassy,
   ) {
     return Center(
       child: Column(
@@ -325,20 +396,24 @@ class TransactionHistoryScreen extends ConsumerWidget {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: isGlassy
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : theme.colorScheme.surface.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.history_rounded,
               size: 64,
-              color: Colors.grey[300],
+              color: isGlassy
+                  ? Colors.white.withValues(alpha: 0.2)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.1),
             ),
           ),
           const SizedBox(height: 24),
           Text(
             l10n.noTransactions,
             style: theme.textTheme.titleLarge?.copyWith(
-              color: AppColors.textPrimary,
+              color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -347,7 +422,9 @@ class TransactionHistoryScreen extends ConsumerWidget {
             l10n.startTrackingFinances,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
+              color: isGlassy
+                  ? Colors.white.withValues(alpha: 0.6)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -359,9 +436,10 @@ class TransactionHistoryScreen extends ConsumerWidget {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
+    final checkDate = DateTime(date.year, date.month, date.day);
 
-    if (date == today) return l10n.today;
-    if (date == yesterday) return l10n.yesterday;
+    if (checkDate == today) return l10n.today;
+    if (checkDate == yesterday) return l10n.yesterday;
     return DateFormat.yMMMd().format(date);
   }
 
@@ -369,6 +447,7 @@ class TransactionHistoryScreen extends ConsumerWidget {
     BuildContext context,
     TransactionModel tx,
     ThemeData theme,
+    bool isGlassy,
   ) {
     final isIncome = tx.type == 'income';
     final color = isIncome ? AppColors.income : AppColors.expense;
@@ -388,15 +467,22 @@ class TransactionHistoryScreen extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isGlassy
+            ? Colors.white.withValues(alpha: 0.1)
+            : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: isGlassy
+            ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+            : null,
+        boxShadow: isGlassy
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -430,6 +516,9 @@ class TransactionHistoryScreen extends ConsumerWidget {
                         displayTitle,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
+                          color: isGlassy
+                              ? Colors.white
+                              : theme.colorScheme.onSurface,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -438,7 +527,11 @@ class TransactionHistoryScreen extends ConsumerWidget {
                       Text(
                         displayCategory,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: isGlassy
+                              ? Colors.white.withValues(alpha: 0.6)
+                              : theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
                         ),
                       ),
                     ],
@@ -458,7 +551,9 @@ class TransactionHistoryScreen extends ConsumerWidget {
                     Text(
                       DateFormat.jm().format(tx.createdAt),
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: Colors.grey[400],
+                        color: isGlassy
+                            ? Colors.white.withValues(alpha: 0.4)
+                            : Colors.grey[400],
                       ),
                     ),
                   ],

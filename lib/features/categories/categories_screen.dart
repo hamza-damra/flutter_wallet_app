@@ -9,6 +9,7 @@ import '../../core/theme/app_radius.dart';
 import '../../core/localization/translation_helper.dart';
 import '../../core/utils/icon_helper.dart';
 import '../../services/firestore_service.dart';
+import '../../core/theme/theme_provider.dart';
 import 'add_edit_category_screen.dart';
 
 class CategoriesScreen extends ConsumerWidget {
@@ -19,36 +20,57 @@ class CategoriesScreen extends ConsumerWidget {
     final categoriesAsync = ref.watch(categoriesProvider);
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final themeMode = ref.watch(themeProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
+          // Theme-based background
+          if (themeMode == AppThemeMode.glassy)
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF0F172A),
+                      Color(0xFF1E1B4B),
+                      Color(0xFF312E81),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
           // Decorative background elements
-          Positioned(
-            top: -80,
-            right: -80,
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary.withValues(alpha: 0.05),
+          if (themeMode != AppThemeMode.glassy) ...[
+            Positioned(
+              top: -80,
+              right: -80,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: theme.primaryColor.withValues(alpha: 0.05),
+                ),
               ),
             ),
-          ),
-          Positioned(
-            bottom: 100,
-            left: -60,
-            child: Container(
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.income.withValues(alpha: 0.05),
+            Positioned(
+              bottom: 100,
+              left: -60,
+              child: Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.income.withValues(alpha: 0.05),
+                ),
               ),
             ),
-          ),
+          ],
 
           // Main content
           SafeArea(
@@ -69,11 +91,13 @@ class CategoriesScreen extends ConsumerWidget {
                         categories,
                         l10n,
                         theme,
+                        themeMode,
                       );
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (err, stack) => _buildErrorState(context, l10n, err),
+                    error: (err, stack) =>
+                        _buildErrorState(context, l10n, err, theme),
                   ),
                 ),
               ],
@@ -81,7 +105,7 @@ class CategoriesScreen extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: _buildFAB(context, l10n),
+      floatingActionButton: _buildFAB(context, l10n, theme),
     );
   }
 
@@ -97,7 +121,7 @@ class CategoriesScreen extends ConsumerWidget {
           // Back button
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -109,7 +133,7 @@ class CategoriesScreen extends ConsumerWidget {
             ),
             child: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-              color: AppColors.textPrimary,
+              color: theme.colorScheme.onSurface,
               onPressed: () => context.pop(),
             ),
           ),
@@ -124,13 +148,13 @@ class CategoriesScreen extends ConsumerWidget {
                   l10n.categories,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
                 Text(
                   l10n.manageCategories,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -141,13 +165,17 @@ class CategoriesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildFAB(BuildContext context, AppLocalizations l10n) {
+  Widget _buildFAB(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+  ) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
+            color: theme.primaryColor.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -155,13 +183,13 @@ class CategoriesScreen extends ConsumerWidget {
       ),
       child: FloatingActionButton.extended(
         onPressed: () => _navigateToAddCategory(context),
-        backgroundColor: AppColors.primary,
+        backgroundColor: theme.primaryColor,
         elevation: 0,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        icon: Icon(Icons.add_rounded, color: theme.colorScheme.onPrimary),
         label: Text(
           l10n.addCategory,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: theme.colorScheme.onPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -189,8 +217,8 @@ class CategoriesScreen extends ConsumerWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    AppColors.primary.withValues(alpha: 0.1),
-                    AppColors.primary.withValues(alpha: 0.05),
+                    theme.primaryColor.withValues(alpha: 0.1),
+                    theme.primaryColor.withValues(alpha: 0.05),
                   ],
                 ),
                 shape: BoxShape.circle,
@@ -200,11 +228,11 @@ class CategoriesScreen extends ConsumerWidget {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: theme.colorScheme.surface,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.2),
+                        color: theme.primaryColor.withValues(alpha: 0.2),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -213,7 +241,7 @@ class CategoriesScreen extends ConsumerWidget {
                   child: Icon(
                     Icons.category_rounded,
                     size: 40,
-                    color: AppColors.primary,
+                    color: theme.primaryColor,
                   ),
                 ),
               ),
@@ -222,7 +250,7 @@ class CategoriesScreen extends ConsumerWidget {
             Text(
               l10n.noCategoriesFound,
               style: theme.textTheme.headlineSmall?.copyWith(
-                color: AppColors.textPrimary,
+                color: theme.colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
@@ -231,7 +259,7 @@ class CategoriesScreen extends ConsumerWidget {
             Text(
               l10n.tapToAddCategory,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
@@ -240,11 +268,13 @@ class CategoriesScreen extends ConsumerWidget {
             // Quick action button
             ElevatedButton.icon(
               onPressed: () => _navigateToAddCategory(context),
-              icon: const Icon(Icons.add_rounded, color: Colors.white),
-              label: Text(l10n.addCategory),
+              icon: Icon(Icons.add_rounded, color: theme.colorScheme.onPrimary),
+              label: Text(
+                l10n.addCategory,
+                style: TextStyle(color: theme.colorScheme.onPrimary),
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
+                backgroundColor: theme.primaryColor,
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
@@ -265,6 +295,7 @@ class CategoriesScreen extends ConsumerWidget {
     BuildContext context,
     AppLocalizations l10n,
     Object err,
+    ThemeData theme,
   ) {
     return Center(
       child: Padding(
@@ -272,12 +303,14 @@ class CategoriesScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
               '${l10n.error}: $err',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
             ),
           ],
         ),
@@ -290,6 +323,7 @@ class CategoriesScreen extends ConsumerWidget {
     List<CategoryModel> categories,
     AppLocalizations l10n,
     ThemeData theme,
+    AppThemeMode themeMode,
   ) {
     final expenseCategories = categories
         .where((c) => c.type == 'expense')
@@ -307,6 +341,8 @@ class CategoriesScreen extends ConsumerWidget {
           l10n,
           expenseCategories.length,
           incomeCategories.length,
+          theme,
+          themeMode,
         ),
         const SizedBox(height: 32),
 
@@ -317,11 +353,17 @@ class CategoriesScreen extends ConsumerWidget {
             l10n.expenseCategories,
             AppColors.expense,
             expenseCategories.length,
+            theme,
           ),
           const SizedBox(height: 16),
           ...expenseCategories.asMap().entries.map(
-            (entry) =>
-                _buildCategoryTile(context, entry.value, theme, entry.key),
+            (entry) => _buildCategoryTile(
+              context,
+              entry.value,
+              theme,
+              entry.key,
+              themeMode,
+            ),
           ),
         ],
 
@@ -336,11 +378,17 @@ class CategoriesScreen extends ConsumerWidget {
             l10n.incomeCategories,
             AppColors.income,
             incomeCategories.length,
+            theme,
           ),
           const SizedBox(height: 16),
           ...incomeCategories.asMap().entries.map(
-            (entry) =>
-                _buildCategoryTile(context, entry.value, theme, entry.key),
+            (entry) => _buildCategoryTile(
+              context,
+              entry.value,
+              theme,
+              entry.key,
+              themeMode,
+            ),
           ),
         ],
       ],
@@ -352,6 +400,8 @@ class CategoriesScreen extends ConsumerWidget {
     AppLocalizations l10n,
     int expenseCount,
     int incomeCount,
+    ThemeData theme,
+    AppThemeMode themeMode,
   ) {
     return Row(
       children: [
@@ -362,6 +412,8 @@ class CategoriesScreen extends ConsumerWidget {
             label: l10n.expenseCategories,
             count: expenseCount,
             color: AppColors.expense,
+            theme: theme,
+            themeMode: themeMode,
           ),
         ),
         const SizedBox(width: 16),
@@ -372,6 +424,8 @@ class CategoriesScreen extends ConsumerWidget {
             label: l10n.incomeCategories,
             count: incomeCount,
             color: AppColors.income,
+            theme: theme,
+            themeMode: themeMode,
           ),
         ),
       ],
@@ -384,12 +438,17 @@ class CategoriesScreen extends ConsumerWidget {
     required String label,
     required int count,
     required Color color,
+    required ThemeData theme,
+    required AppThemeMode themeMode,
   }) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: themeMode == AppThemeMode.glassy
+            ? Border.all(color: Colors.white.withValues(alpha: 0.2))
+            : null,
         boxShadow: [
           BoxShadow(
             color: color.withValues(alpha: 0.1),
@@ -412,17 +471,17 @@ class CategoriesScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             count.toString(),
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: theme.colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -436,6 +495,7 @@ class CategoriesScreen extends ConsumerWidget {
     String title,
     Color color,
     int count,
+    ThemeData theme,
   ) {
     return Row(
       children: [
@@ -450,8 +510,8 @@ class CategoriesScreen extends ConsumerWidget {
         const SizedBox(width: 12),
         Text(
           title,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: AppColors.textPrimary,
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -480,10 +540,10 @@ class CategoriesScreen extends ConsumerWidget {
     CategoryModel category,
     ThemeData theme,
     int index,
+    AppThemeMode themeMode,
   ) {
     final isIncome = category.type == 'income';
     final color = isIncome ? AppColors.income : AppColors.expense;
-    // Use the new method that considers Arabic names
     final localizedName = TranslationHelper.getCategoryNameFromModel(
       context,
       category,
@@ -502,8 +562,11 @@ class CategoriesScreen extends ConsumerWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(AppRadius.button),
+          border: themeMode == AppThemeMode.glassy
+              ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+              : null,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
@@ -554,6 +617,7 @@ class CategoriesScreen extends ConsumerWidget {
                           localizedName,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -572,13 +636,15 @@ class CategoriesScreen extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.grey[100],
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.05,
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.edit_outlined,
                       size: 18,
-                      color: Colors.grey,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
                   ),
                 ],

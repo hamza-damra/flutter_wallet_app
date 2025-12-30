@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/user_model.dart';
 import '../../core/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
 import 'profile_controller.dart';
 
@@ -63,8 +64,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     });
 
+    ref.listen<AsyncValue<UserModel?>>(userProfileProvider, (previous, next) {
+      if (next is AsyncData) {
+        final user = next.value;
+        if (user != null) {
+          if (_nameArController.text.isEmpty) {
+            _nameArController.text = user.displayNameAr ?? '';
+          }
+          if (_nameEnController.text.isEmpty) {
+            _nameEnController.text = user.displayNameEn ?? '';
+          }
+          if (_phoneController.text.isEmpty) {
+            _phoneController.text = user.phoneNumber ?? '';
+          }
+        }
+      }
+    });
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Background blobs for premium look
@@ -99,25 +117,45 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 _buildAppBar(context, l10n),
                 Expanded(
                   child: userAsync.when(
-                    data: (user) => user == null
-                        ? Center(child: Text(l10n.noData))
-                        : SingleChildScrollView(
-                            padding: const EdgeInsets.all(24),
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                children: [
-                                  _buildAvatarSection(user),
-                                  const SizedBox(height: 40),
-                                  _buildInfoCard(l10n, user),
-                                  const SizedBox(height: 24),
-                                  _buildEditForm(l10n),
-                                  const SizedBox(height: 40),
-                                  _buildUpdateButton(l10n, profileState),
-                                ],
-                              ),
-                            ),
+                    data: (user) {
+                      final authUser = ref
+                          .watch(authServiceProvider)
+                          .currentUser;
+
+                      // If no firestore user, create a temporary one from auth data
+                      final displayUser =
+                          user ??
+                          (authUser != null
+                              ? UserModel(
+                                  uid: authUser.uid,
+                                  email: authUser.email ?? '',
+                                  createdAt: DateTime.now(),
+                                  updatedAt: DateTime.now(),
+                                )
+                              : null);
+
+                      if (displayUser == null) {
+                        return Center(child: Text(l10n.noData));
+                      }
+
+                      return SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              _buildAvatarSection(displayUser),
+                              const SizedBox(height: 40),
+                              _buildInfoCard(l10n, displayUser),
+                              const SizedBox(height: 24),
+                              _buildEditForm(l10n),
+                              const SizedBox(height: 40),
+                              _buildUpdateButton(l10n, profileState),
+                            ],
                           ),
+                        ),
+                      );
+                    },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
                     error: (err, _) => Center(child: Text(err.toString())),
@@ -169,19 +207,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               shape: BoxShape.circle,
               gradient: LinearGradient(
                 colors: [
-                  AppColors.primary,
-                  AppColors.primary.withValues(alpha: 0.3),
+                  Theme.of(context).primaryColor,
+                  Theme.of(context).primaryColor.withValues(alpha: 0.3),
                 ],
               ),
             ),
             child: CircleAvatar(
               radius: 60,
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).colorScheme.surface,
               backgroundImage: user.photoUrl != null
                   ? NetworkImage(user.photoUrl!)
                   : null,
               child: user.photoUrl == null
-                  ? const Icon(Icons.person, size: 60, color: AppColors.primary)
+                  ? Icon(
+                      Icons.person,
+                      size: 60,
+                      color: Theme.of(context).primaryColor,
+                    )
                   : null,
             ),
           ),
@@ -190,9 +232,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             right: 0,
             child: Container(
               padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor,
                 shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
               ),
               child: const Icon(
                 Icons.camera_alt,
@@ -207,10 +250,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildInfoCard(AppLocalizations l10n, UserModel user) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -235,15 +279,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
+    final theme = Theme.of(context);
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
+            color: theme.primaryColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, color: AppColors.primary, size: 20),
+          child: Icon(icon, color: theme.primaryColor, size: 20),
         ),
         const SizedBox(width: 16),
         Column(
@@ -251,16 +296,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           children: [
             Text(
               label,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 fontSize: 12,
               ),
             ),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: theme.colorScheme.onSurface,
               ),
             ),
           ],
@@ -270,64 +315,85 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildEditForm(AppLocalizations l10n) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 8, bottom: 8),
+          padding: const EdgeInsets.only(left: 8, bottom: 12),
           child: Text(
             l10n.editProfile,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
         ),
-        TextFormField(
+        _buildTextField(
           controller: _nameArController,
+          hintText: l10n.nameArHint,
           textAlign: TextAlign.right,
-          decoration: InputDecoration(
-            hintText: l10n.nameArHint,
-            prefixIcon: const Icon(Icons.person_outline),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-          ),
+          prefixIcon: Icons.person_outline,
+          theme: theme,
         ),
         const SizedBox(height: 16),
-        TextFormField(
+        _buildTextField(
           controller: _nameEnController,
-          decoration: InputDecoration(
-            hintText: l10n.nameEnHint,
-            prefixIcon: const Icon(Icons.person_outline),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-          ),
+          hintText: l10n.nameEnHint,
+          prefixIcon: Icons.person_outline,
+          theme: theme,
         ),
         const SizedBox(height: 16),
-        TextFormField(
+        _buildTextField(
           controller: _phoneController,
+          hintText: l10n.phoneHint,
           keyboardType: TextInputType.phone,
-          decoration: InputDecoration(
-            hintText: l10n.phoneHint,
-            prefixIcon: const Icon(Icons.phone_outlined),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-          ),
+          prefixIcon: Icons.phone_outlined,
+          theme: theme,
         ),
       ],
     );
   }
 
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hintText,
+    required IconData prefixIcon,
+    required ThemeData theme,
+    TextAlign textAlign = TextAlign.start,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return TextFormField(
+      controller: controller,
+      textAlign: textAlign,
+      keyboardType: keyboardType,
+      style: TextStyle(color: theme.colorScheme.onSurface),
+      decoration: InputDecoration(
+        hintText: hintText,
+        prefixIcon: Icon(
+          prefixIcon,
+          color: theme.primaryColor.withValues(alpha: 0.7),
+        ),
+        filled: true,
+        fillColor: theme.colorScheme.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: theme.dividerColor),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: theme.dividerColor),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: theme.primaryColor, width: 1.5),
+        ),
+      ),
+    );
+  }
+
   Widget _buildUpdateButton(AppLocalizations l10n, AsyncValue profileState) {
+    final theme = Theme.of(context);
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -343,13 +409,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     );
               },
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: theme.primaryColor,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 18),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          elevation: 0,
+          elevation: 4,
+          shadowColor: theme.primaryColor.withValues(alpha: 0.3),
         ),
         child: profileState.isLoading
             ? const SizedBox(
@@ -362,7 +429,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               )
             : Text(
                 l10n.updateProfile,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
       ),
     );

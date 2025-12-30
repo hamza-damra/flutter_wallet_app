@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'l10n/app_localizations.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_provider.dart';
 import 'core/localization/localization_provider.dart';
 import 'core/models/transaction_model.dart';
 import 'features/auth/login_screen.dart';
@@ -20,6 +21,7 @@ import 'features/transactions/transaction_history_screen.dart';
 import 'features/transactions/transaction_details_screen.dart';
 import 'features/reports/reports_screen.dart';
 import 'features/profile/profile_screen.dart';
+import 'features/settings/settings_screen.dart';
 import 'features/splash/splash_screen.dart';
 import 'services/auth_service.dart';
 import 'services/sync_service.dart';
@@ -65,13 +67,14 @@ class WalletApp extends ConsumerWidget {
 
     final router = ref.watch(routerProvider);
     final locale = ref.watch(localizationProvider);
+    final themeMode = ref.watch(themeProvider);
 
     return MaterialApp.router(
       // App title generation from localization
       onGenerateTitle: (context) => AppLocalizations.of(context).appName,
 
-      // Theme configuration based on locale
-      theme: AppTheme.getTheme(locale),
+      // Theme configuration based on locale and theme mode
+      theme: AppTheme.getTheme(locale, themeMode),
 
       // Current locale
       locale: locale,
@@ -200,6 +203,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
