@@ -19,6 +19,7 @@ import 'features/transactions/transaction_history_screen.dart';
 import 'features/transactions/transaction_details_screen.dart';
 import 'features/reports/reports_screen.dart';
 import 'features/profile/profile_screen.dart';
+import 'features/splash/splash_screen.dart';
 import 'services/auth_service.dart';
 import 'firebase_options.dart';
 
@@ -125,7 +126,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
 
   return GoRouter(
-    initialLocation: '/',
+    initialLocation: '/splash',
     refreshListenable: GoRouterRefreshStream(
       ref.watch(authServiceProvider).authStateChanges,
     ),
@@ -133,6 +134,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isLoggedIn = authState.value != null;
       final isAuthRoute =
           state.uri.path == '/login' || state.uri.path == '/register';
+      final isSplashRoute = state.uri.path == '/splash';
+
+      if (isSplashRoute) {
+        return null; // Don't redirect from splash
+      }
 
       // Redirect to login if not logged in and trying to access protected routes
       if (!isLoggedIn && !isAuthRoute) {
@@ -147,6 +153,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(

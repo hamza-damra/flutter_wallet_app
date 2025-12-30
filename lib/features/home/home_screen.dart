@@ -260,10 +260,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/new-transaction'),
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: Colors.white),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () => context.push('/new-transaction'),
+          backgroundColor: AppColors.primary,
+          elevation: 0,
+          icon: const Icon(Icons.add_rounded, color: Colors.white),
+          label: Text(
+            l10n.addTransaction,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
       ),
     );
   }

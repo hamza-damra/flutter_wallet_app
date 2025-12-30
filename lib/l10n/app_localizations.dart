@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// The name of the application
   ///
   /// In en, this message translates to:
-  /// **'Wallet App'**
+  /// **'My Wallet'**
   String get appName;
 
   /// No description provided for @loginTitle.
