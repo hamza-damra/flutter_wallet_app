@@ -17,6 +17,8 @@ import 'features/categories/categories_screen.dart';
 import 'features/transactions/new_transaction_screen.dart';
 import 'features/transactions/transaction_history_screen.dart';
 import 'features/transactions/transaction_details_screen.dart';
+import 'features/reports/reports_screen.dart';
+import 'features/profile/profile_screen.dart';
 import 'services/auth_service.dart';
 import 'firebase_options.dart';
 
@@ -169,6 +171,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           final transaction = state.extra as TransactionModel;
           return TransactionDetailsScreen(transaction: transaction);
         },
+      ),
+      GoRoute(
+        path: '/reports',
+        builder: (context, state) => const ReportsScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

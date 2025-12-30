@@ -29,16 +29,26 @@ class TranslationHelper {
     return getCategoryName(context, category.name);
   }
 
-  /// Get localized category name from a key.
+  /// Get localized category name from a key or human-readable name.
   /// If the key is a known localization key (e.g., "cat_food"), returns the localized string.
+  /// If the key is a human-readable name (e.g., "Food & Drinks"), maps it to a key first.
   /// Otherwise, returns the key as-is (for user-created categories).
   static String getCategoryName(BuildContext context, String key) {
     if (key.isEmpty) return _getUnknown(context);
 
+    // If it's not a system key (starts with cat_), try to find one from the human-readable name
+    String targetKey = key;
+    if (!key.startsWith('cat_')) {
+      final mappedKey = getCategoryKey(key);
+      if (mappedKey != null) {
+        targetKey = mappedKey;
+      }
+    }
+
     final l10n = AppLocalizations.of(context);
 
     // Map of keys to their localized getters
-    switch (key) {
+    switch (targetKey) {
       case 'cat_food':
         return l10n.cat_food;
       case 'cat_shopping':

@@ -109,7 +109,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Welcome back! Please enter your details.',
+                      l10n.welcomeBack,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: AppColors.textSecondary,
@@ -127,7 +127,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     CustomTextField(
-                      hintText: 'Enter your email',
+                      hintText: l10n.enterYourEmail,
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: const Icon(
@@ -146,7 +146,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     CustomTextField(
-                      hintText: 'Enter your password',
+                      hintText: l10n.enterYourPassword,
                       controller: _passwordController,
                       obscureText: true,
                       prefixIcon: const Icon(
@@ -157,18 +157,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     // Forgot Password Link
                     Align(
-                      alignment: Alignment.centerRight,
+                      alignment: AlignmentDirectional.centerEnd,
                       child: TextButton(
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(l10n.comingSoon('Forgot Password')),
+                              content: Text(
+                                l10n.comingSoon(l10n.forgotPassword),
+                              ),
                             ),
                           );
                         },
-                        child: const Text(
-                          'Forgot Password?',
-                          style: TextStyle(
+                        child: Text(
+                          l10n.forgotPassword,
+                          style: const TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w600,
                           ),
@@ -189,10 +191,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          "Don't have an account? ",
-                          style: theme.textTheme.bodyMedium,
-                        ),
+                        Text(l10n.noAccount, style: theme.textTheme.bodyMedium),
+                        const SizedBox(width: 4),
                         GestureDetector(
                           onTap: () => context.push('/register'),
                           child: Text(

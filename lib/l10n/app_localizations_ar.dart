@@ -33,10 +33,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get confirmPasswordHint => 'تأكيد كلمة المرور';
 
   @override
-  String get noAccount => 'ليس لديك حساب؟ سجل الآن';
+  String get noAccount => 'ليس لديك حساب؟';
 
   @override
-  String get haveAccount => 'لديك حساب بالفعل؟ دخول';
+  String get haveAccount => 'لديك حساب بالفعل؟';
+
+  @override
+  String get welcomeBack => 'أهلاً بك من جديد! يرجى إدخال بياناتك.';
+
+  @override
+  String get createAccountToStart => 'أنشئ حساباً للبدء في تتبع شؤونك المالية.';
+
+  @override
+  String get enterYourEmail => 'أدخل بريدك الإلكتروني';
+
+  @override
+  String get enterYourPassword => 'أدخل كلمة المرور';
+
+  @override
+  String get createAPassword => 'أنشئ كلمة مرور';
 
   @override
   String get welcome => 'أهلاً،';
@@ -500,4 +515,73 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get transactionDetails => 'تفاصيل المعاملة';
+
+  @override
+  String get reports => 'التقارير';
+
+  @override
+  String get reportSummary => 'ملخص التقرير';
+
+  @override
+  String get startDate => 'تاريخ البدء';
+
+  @override
+  String get endDate => 'تاريخ الانتهاء';
+
+  @override
+  String get generatePdf => 'إنشاء PDF';
+
+  @override
+  String get shareAsImage => 'مشاركة كصورة';
+
+  @override
+  String get shareAsPdf => 'مشاركة كـ PDF';
+
+  @override
+  String get netBalance => 'صافي الرصيد';
+
+  @override
+  String get totalIncome => 'إجمالي الدخل';
+
+  @override
+  String get totalExpenses => 'إجمالي المصاريف';
+
+  @override
+  String get categoriesBreakdown => 'تفاصيل التصنيفات';
+
+  @override
+  String get selectDateRange => 'اختر الفترة الزمنية';
+
+  @override
+  String get shareReport => 'مشاركة التقرير';
+
+  @override
+  String get financialReport => 'تقرير مالي';
+
+  @override
+  String get preparedFor => 'تم إعداده لـ';
+
+  @override
+  String get profile => 'الملف الشخصي';
+
+  @override
+  String get editProfile => 'تعديل الملف الشخصي';
+
+  @override
+  String get phoneHint => 'رقم الهاتف';
+
+  @override
+  String get displayNameHint => 'الاسم الكامل';
+
+  @override
+  String get nameArHint => 'الاسم (بالعربية)';
+
+  @override
+  String get nameEnHint => 'الاسم (بالانجليزية)';
+
+  @override
+  String get updateProfile => 'تحديث الملف الشخصي';
+
+  @override
+  String get profileUpdated => 'تم تحديث الملف الشخصي بنجاح';
 }

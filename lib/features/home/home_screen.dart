@@ -25,7 +25,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    ref.read(firestoreServiceProvider).seedDefaultCategories();
+    // Seed check using currentUser if available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = ref.read(authServiceProvider).currentUser;
+      if (user != null) {
+        ref.read(firestoreServiceProvider).seedDefaultCategories(user.uid);
+      }
+    });
   }
 
   @override
@@ -266,27 +272,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
+    final profile = ref.watch(userProfileProvider).value;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.welcome,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.welcome,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[600],
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              user?.email?.split('@')[0] ?? 'User',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+              const SizedBox(height: 4),
+              Text(
+                profile?.getLocalizedName(
+                      Localizations.localeOf(context).languageCode,
+                    ) ??
+                    user?.email?.split('@')[0] ??
+                    'User',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         GestureDetector(
           onTap: () => _scaffoldKey.currentState?.openDrawer(),
@@ -349,47 +365,67 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 bottomRight: Radius.circular(30),
               ),
             ),
-            child: Column(
-              children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
+            child: ref
+                .watch(userProfileProvider)
+                .when(
+                  data: (profile) => Column(
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: ClipOval(
+                          child: profile?.photoUrl != null
+                              ? Image.network(
+                                  profile!.photoUrl!,
+                                  fit: BoxFit.cover,
+                                )
+                              : SvgPicture.asset(
+                                  'assets/illustrations/avatar_placeholder.svg',
+                                  fit: BoxFit.cover,
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        profile?.getLocalizedName(
+                              Localizations.localeOf(context).languageCode,
+                            ) ??
+                            user?.email?.split('@')[0] ??
+                            'User',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        user?.email ?? '',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
                       ),
                     ],
                   ),
-                  padding: const EdgeInsets.all(4),
-                  child: ClipOval(
-                    child: SvgPicture.asset(
-                      'assets/illustrations/avatar_placeholder.svg',
-                      fit: BoxFit.cover,
-                    ),
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
                   ),
+                  error: (err, _) =>
+                      const Icon(Icons.error, color: Colors.white),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  user?.email?.split('@')[0] ?? 'User',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  user?.email ?? '',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                ),
-              ],
-            ),
           ),
 
           // Menu Items
@@ -400,10 +436,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   _buildDrawerItem(
                     icon: Icons.person_outline,
-                    title: l10n.account,
+                    title: l10n.profile,
                     onTap: () {
                       Navigator.pop(context);
-                      _showComingSoonSnackbar(l10n.account);
+                      context.push('/profile');
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.analytics_outlined,
+                    title: l10n.reports,
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/reports');
                     },
                   ),
                   _buildDrawerItem(
@@ -533,44 +577,105 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _showLanguageDialog() {
     final currentLocale = ref.read(localizationProvider);
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.selectLanguage),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Text('🇺🇸', style: TextStyle(fontSize: 24)),
-              title: Text(l10n.english),
-              trailing: currentLocale.languageCode == 'en'
-                  ? const Icon(Icons.check_circle, color: AppColors.primary)
-                  : null,
-              onTap: () {
-                ref
-                    .read(localizationProvider.notifier)
-                    .setLocale(const Locale('en'));
-                Navigator.pop(context);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Text('🇸🇦', style: TextStyle(fontSize: 24)),
-              title: Text(l10n.arabic),
-              trailing: currentLocale.languageCode == 'ar'
-                  ? const Icon(Icons.check_circle, color: AppColors.primary)
-                  : null,
-              onTap: () {
-                ref
-                    .read(localizationProvider.notifier)
-                    .setLocale(const Locale('ar'));
-                Navigator.pop(context);
-              },
-            ),
-          ],
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.translate_rounded,
+                  color: AppColors.primary,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                l10n.selectLanguage,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 24),
+              _buildLanguageItem(
+                context,
+                flag: '🇺🇸',
+                name: l10n.english,
+                isSelected: currentLocale.languageCode == 'en',
+                onTap: () {
+                  ref
+                      .read(localizationProvider.notifier)
+                      .setLocale(const Locale('en'));
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildLanguageItem(
+                context,
+                flag: '🇸🇦',
+                name: l10n.arabic,
+                isSelected: currentLocale.languageCode == 'ar',
+                onTap: () {
+                  ref
+                      .read(localizationProvider.notifier)
+                      .setLocale(const Locale('ar'));
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageItem(
+    BuildContext context, {
+    required String flag,
+    required String name,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isSelected
+            ? AppColors.primary.withValues(alpha: 0.05)
+            : Colors.grey[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          width: 1.5,
+        ),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        leading: Text(flag, style: const TextStyle(fontSize: 24)),
+        title: Text(
+          name,
+          style: TextStyle(
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected ? AppColors.primary : AppColors.textPrimary,
+          ),
+        ),
+        trailing: isSelected
+            ? const Icon(Icons.check_circle, color: AppColors.primary)
+            : null,
       ),
     );
   }
@@ -580,75 +685,202 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final theme = Theme.of(context);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.account_balance_wallet,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(l10n.appName),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${l10n.version} 1.0.0', style: theme.textTheme.titleSmall),
-            const SizedBox(height: 12),
-            Text(
-              l10n.aboutAppDescription,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.close),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(30),
           ),
-        ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary,
+                      AppColors.primary.withValues(alpha: 0.8),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.account_balance_wallet_rounded,
+                  color: Colors.white,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                l10n.appName,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Text(
+                '${l10n.version} 1.0.0',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  l10n.aboutAppDescription,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Text(
+                    l10n.close,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   void _confirmLogout() {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(l10n.logout),
-        content: Text(l10n.logoutConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref.read(authServiceProvider).signOut();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
-              elevation: 0,
-            ),
-            child: Text(l10n.logout),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  color: AppColors.error,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                l10n.logout,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.logoutConfirm,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        l10n.cancel,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        ref.read(authServiceProvider).signOut();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        l10n.logout,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

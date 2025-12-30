@@ -149,14 +149,44 @@ abstract class AppLocalizations {
   /// No description provided for @noAccount.
   ///
   /// In en, this message translates to:
-  /// **'Don\'t have an account? Register'**
+  /// **'Don\'t have an account?'**
   String get noAccount;
 
   /// No description provided for @haveAccount.
   ///
   /// In en, this message translates to:
-  /// **'Already have an account? Login'**
+  /// **'Already have an account?'**
   String get haveAccount;
+
+  /// No description provided for @welcomeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back! Please enter your details.'**
+  String get welcomeBack;
+
+  /// No description provided for @createAccountToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an account to start tracking your finances.'**
+  String get createAccountToStart;
+
+  /// No description provided for @enterYourEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email'**
+  String get enterYourEmail;
+
+  /// No description provided for @enterYourPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password'**
+  String get enterYourPassword;
+
+  /// No description provided for @createAPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a password'**
+  String get createAPassword;
 
   /// No description provided for @welcome.
   ///
@@ -961,6 +991,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Transaction Details'**
   String get transactionDetails;
+
+  /// No description provided for @reports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get reports;
+
+  /// No description provided for @reportSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Report Summary'**
+  String get reportSummary;
+
+  /// No description provided for @startDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Date'**
+  String get startDate;
+
+  /// No description provided for @endDate.
+  ///
+  /// In en, this message translates to:
+  /// **'End Date'**
+  String get endDate;
+
+  /// No description provided for @generatePdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate PDF'**
+  String get generatePdf;
+
+  /// No description provided for @shareAsImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Share as Image'**
+  String get shareAsImage;
+
+  /// No description provided for @shareAsPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Share as PDF'**
+  String get shareAsPdf;
+
+  /// No description provided for @netBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Balance'**
+  String get netBalance;
+
+  /// No description provided for @totalIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Income'**
+  String get totalIncome;
+
+  /// No description provided for @totalExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Expenses'**
+  String get totalExpenses;
+
+  /// No description provided for @categoriesBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories Breakdown'**
+  String get categoriesBreakdown;
+
+  /// No description provided for @selectDateRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Date Range'**
+  String get selectDateRange;
+
+  /// No description provided for @shareReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Report'**
+  String get shareReport;
+
+  /// No description provided for @financialReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial Report'**
+  String get financialReport;
+
+  /// No description provided for @preparedFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Prepared for'**
+  String get preparedFor;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get editProfile;
+
+  /// No description provided for @phoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Number'**
+  String get phoneHint;
+
+  /// No description provided for @displayNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Name'**
+  String get displayNameHint;
+
+  /// No description provided for @nameArHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (Arabic)'**
+  String get nameArHint;
+
+  /// No description provided for @nameEnHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (English)'**
+  String get nameEnHint;
+
+  /// No description provided for @updateProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Profile'**
+  String get updateProfile;
+
+  /// No description provided for @profileUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated successfully'**
+  String get profileUpdated;
 }
 
 class _AppLocalizationsDelegate

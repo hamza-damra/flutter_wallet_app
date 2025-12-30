@@ -33,10 +33,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmPasswordHint => 'Confirm Password';
 
   @override
-  String get noAccount => 'Don\'t have an account? Register';
+  String get noAccount => 'Don\'t have an account?';
 
   @override
-  String get haveAccount => 'Already have an account? Login';
+  String get haveAccount => 'Already have an account?';
+
+  @override
+  String get welcomeBack => 'Welcome back! Please enter your details.';
+
+  @override
+  String get createAccountToStart =>
+      'Create an account to start tracking your finances.';
+
+  @override
+  String get enterYourEmail => 'Enter your email';
+
+  @override
+  String get enterYourPassword => 'Enter your password';
+
+  @override
+  String get createAPassword => 'Create a password';
 
   @override
   String get welcome => 'Welcome,';
@@ -492,4 +508,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transactionDetails => 'Transaction Details';
+
+  @override
+  String get reports => 'Reports';
+
+  @override
+  String get reportSummary => 'Report Summary';
+
+  @override
+  String get startDate => 'Start Date';
+
+  @override
+  String get endDate => 'End Date';
+
+  @override
+  String get generatePdf => 'Generate PDF';
+
+  @override
+  String get shareAsImage => 'Share as Image';
+
+  @override
+  String get shareAsPdf => 'Share as PDF';
+
+  @override
+  String get netBalance => 'Net Balance';
+
+  @override
+  String get totalIncome => 'Total Income';
+
+  @override
+  String get totalExpenses => 'Total Expenses';
+
+  @override
+  String get categoriesBreakdown => 'Categories Breakdown';
+
+  @override
+  String get selectDateRange => 'Select Date Range';
+
+  @override
+  String get shareReport => 'Share Report';
+
+  @override
+  String get financialReport => 'Financial Report';
+
+  @override
+  String get preparedFor => 'Prepared for';
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get editProfile => 'Edit Profile';
+
+  @override
+  String get phoneHint => 'Phone Number';
+
+  @override
+  String get displayNameHint => 'Full Name';
+
+  @override
+  String get nameArHint => 'Name (Arabic)';
+
+  @override
+  String get nameEnHint => 'Name (English)';
+
+  @override
+  String get updateProfile => 'Update Profile';
+
+  @override
+  String get profileUpdated => 'Profile updated successfully';
 }

@@ -48,6 +48,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           createdAt: DateTime.now(),
         );
         await ref.read(firestoreServiceProvider).createUser(newUser);
+        // Seed default categories for new user
+        await ref
+            .read(firestoreServiceProvider)
+            .seedDefaultCategories(credential.user!.uid);
       }
       // Navigation handled by router auth listener
     } catch (e) {
@@ -114,7 +118,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Create an account to start tracking your finances.',
+                      l10n.createAccountToStart,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: AppColors.textSecondary,
@@ -132,7 +136,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     const SizedBox(height: 8),
                     CustomTextField(
-                      hintText: 'Enter your email',
+                      hintText: l10n.enterYourEmail,
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: const Icon(
@@ -151,7 +155,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     const SizedBox(height: 8),
                     CustomTextField(
-                      hintText: 'Create a password',
+                      hintText: l10n.createAPassword,
                       controller: _passwordController,
                       obscureText: true,
                       prefixIcon: const Icon(
@@ -174,9 +178,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Already have an account? ",
+                          l10n.haveAccount,
                           style: theme.textTheme.bodyMedium,
                         ),
+                        const SizedBox(width: 4),
                         GestureDetector(
                           onTap: () => context.pop(),
                           child: Text(
