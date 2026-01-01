@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/user_model.dart';
@@ -51,6 +52,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final l10n = AppLocalizations.of(context);
     final userAsync = ref.watch(userProfileProvider);
     final profileState = ref.watch(profileControllerProvider);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     ref.listen(profileControllerProvider, (previous, next) {
       if (next is AsyncError) {
@@ -82,7 +85,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     });
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      extendBodyBehindAppBar: true,
+      appBar: _buildAppBar(context, l10n, theme),
       body: Stack(
         children: [
           // Background blobs for premium look
@@ -94,7 +99,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withValues(alpha: 0.05),
+                color: AppColors.primary.withValues(alpha: 0.15),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                    blurRadius: 100,
+                    spreadRadius: 20,
+                  ),
+                ],
               ),
             ),
           ),
@@ -106,7 +118,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.income.withValues(alpha: 0.05),
+                color: AppColors.income.withValues(alpha: 0.1),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.income.withValues(alpha: 0.15),
+                    blurRadius: 80,
+                    spreadRadius: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Additional decorative gradient overlay
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+              child: Container(
+                color: theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
               ),
             ),
           ),
@@ -114,7 +143,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           SafeArea(
             child: Column(
               children: [
-                _buildAppBar(context, l10n),
                 Expanded(
                   child: userAsync.when(
                     data: (user) {
@@ -139,18 +167,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       }
 
                       return SingleChildScrollView(
-                        padding: const EdgeInsets.all(24),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
                         child: Form(
                           key: _formKey,
                           child: Column(
                             children: [
-                              _buildAvatarSection(displayUser),
-                              const SizedBox(height: 40),
-                              _buildInfoCard(l10n, displayUser),
+                              _buildAvatarSection(displayUser, theme),
+                              const SizedBox(height: 32),
+                              _buildGlassyInfoCard(
+                                l10n,
+                                displayUser,
+                                theme,
+                                isDark,
+                              ),
                               const SizedBox(height: 24),
-                              _buildEditForm(l10n),
+                              _buildEditForm(l10n, theme, isDark),
                               const SizedBox(height: 40),
-                              _buildUpdateButton(l10n, profileState),
+                              _buildUpdateButton(l10n, profileState, theme),
+                              const SizedBox(height: 24),
                             ],
                           ),
                         ),
@@ -169,35 +206,45 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildAppBar(BuildContext context, AppLocalizations l10n) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.white,
-              padding: const EdgeInsets.all(12),
+  PreferredSizeWidget _buildAppBar(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+  ) {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      leading: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(
+            Icons.arrow_back_ios_new,
+            size: 20,
+            color: theme.colorScheme.onSurface,
+          ),
+          style: IconButton.styleFrom(
+            backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.5),
+            padding: const EdgeInsets.all(8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
-          Text(
-            l10n.profile,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(width: 48), // Spacer
-        ],
+        ),
+      ),
+      centerTitle: true,
+      title: Text(
+        l10n.profile,
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: theme.colorScheme.onSurface,
+        ),
       ),
     );
   }
 
-  Widget _buildAvatarSection(UserModel user) {
+  Widget _buildAvatarSection(UserModel user, ThemeData theme) {
     return Center(
       child: Stack(
         children: [
@@ -206,25 +253,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).primaryColor,
-                  Theme.of(context).primaryColor.withValues(alpha: 0.3),
-                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [theme.primaryColor, theme.colorScheme.secondary],
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.primaryColor.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
             child: CircleAvatar(
-              radius: 60,
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              backgroundImage: user.photoUrl != null
-                  ? NetworkImage(user.photoUrl!)
-                  : null,
-              child: user.photoUrl == null
-                  ? Icon(
-                      Icons.person,
-                      size: 60,
-                      color: Theme.of(context).primaryColor,
-                    )
-                  : null,
+              radius: 64,
+              backgroundColor: theme.colorScheme.surface,
+              child: CircleAvatar(
+                radius: 60,
+                backgroundColor: theme.colorScheme.surface,
+                backgroundImage: user.photoUrl != null
+                    ? NetworkImage(user.photoUrl!)
+                    : null,
+                child: user.photoUrl == null
+                    ? Icon(Icons.person, size: 60, color: theme.primaryColor)
+                    : null,
+              ),
             ),
           ),
           Positioned(
@@ -233,9 +286,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
+                color: theme.primaryColor,
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
+                border: Border.all(color: theme.colorScheme.surface, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: const Icon(
                 Icons.camera_alt,
@@ -249,78 +309,111 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildInfoCard(AppLocalizations l10n, UserModel user) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+  Widget _buildGlassyInfoCard(
+    AppLocalizations l10n,
+    UserModel user,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.2)
+                : Colors.white.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.white.withValues(alpha: 0.6),
+            ),
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _buildInfoRow(Icons.email_outlined, l10n.emailHint, user.email),
-          const Divider(height: 32),
-          _buildInfoRow(
-            Icons.calendar_today_outlined,
-            l10n.date,
-            user.createdAt.toString().split(' ')[0],
+          child: Column(
+            children: [
+              _buildInfoRow(
+                Icons.email_outlined,
+                l10n.emailHint,
+                user.email,
+                theme,
+                isDark,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Divider(
+                  color: theme.dividerColor.withValues(alpha: 0.2),
+                ),
+              ),
+              _buildInfoRow(
+                Icons.calendar_today_outlined,
+                l10n.date,
+                user.createdAt.toString().split(' ')[0],
+                theme,
+                isDark,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    final theme = Theme.of(context);
+  Widget _buildInfoRow(
+    IconData icon,
+    String label,
+    String value,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: theme.primaryColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
-          child: Icon(icon, color: theme.primaryColor, size: 20),
+          child: Icon(icon, color: theme.primaryColor, size: 24),
         ),
         const SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                fontSize: 12,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-            Text(
-              value,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface,
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                  fontSize: 15,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildEditForm(AppLocalizations l10n) {
-    final theme = Theme.of(context);
+  Widget _buildEditForm(AppLocalizations l10n, ThemeData theme, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 8, bottom: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
           child: Text(
             l10n.editProfile,
             style: theme.textTheme.titleMedium?.copyWith(
@@ -329,73 +422,116 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ),
         ),
-        _buildTextField(
+        _buildGlassyTextField(
           controller: _nameArController,
           hintText: l10n.nameArHint,
           textAlign: TextAlign.right,
           prefixIcon: Icons.person_outline,
           theme: theme,
+          isDark: isDark,
         ),
         const SizedBox(height: 16),
-        _buildTextField(
+        _buildGlassyTextField(
           controller: _nameEnController,
           hintText: l10n.nameEnHint,
           prefixIcon: Icons.person_outline,
           theme: theme,
+          isDark: isDark,
         ),
         const SizedBox(height: 16),
-        _buildTextField(
+        _buildGlassyTextField(
           controller: _phoneController,
           hintText: l10n.phoneHint,
           keyboardType: TextInputType.phone,
           prefixIcon: Icons.phone_outlined,
           theme: theme,
+          isDark: isDark,
         ),
       ],
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildGlassyTextField({
     required TextEditingController controller,
     required String hintText,
     required IconData prefixIcon,
     required ThemeData theme,
+    required bool isDark,
     TextAlign textAlign = TextAlign.start,
     TextInputType keyboardType = TextInputType.text,
   }) {
-    return TextFormField(
-      controller: controller,
-      textAlign: textAlign,
-      keyboardType: keyboardType,
-      style: TextStyle(color: theme.colorScheme.onSurface),
-      decoration: InputDecoration(
-        hintText: hintText,
-        prefixIcon: Icon(
-          prefixIcon,
-          color: theme.primaryColor.withValues(alpha: 0.7),
-        ),
-        filled: true,
-        fillColor: theme.colorScheme.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: theme.dividerColor),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: theme.dividerColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: theme.primaryColor, width: 1.5),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: TextFormField(
+          controller: controller,
+          textAlign: textAlign,
+          keyboardType: keyboardType,
+          style: TextStyle(
+            color: theme.colorScheme.onSurface,
+            fontWeight: FontWeight.w500,
+          ),
+          decoration: InputDecoration(
+            hintText: hintText,
+            prefixIcon: Icon(
+              prefixIcon,
+              color: theme.primaryColor.withValues(alpha: 0.7),
+            ),
+            hintStyle: TextStyle(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+            filled: true,
+            fillColor: isDark
+                ? Colors.black.withValues(alpha: 0.2)
+                : Colors.white.withValues(alpha: 0.3),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.white.withValues(alpha: 0.5),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.white.withValues(alpha: 0.5),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: theme.primaryColor, width: 1.5),
+            ),
+            contentPadding: const EdgeInsets.all(20),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildUpdateButton(AppLocalizations l10n, AsyncValue profileState) {
-    final theme = Theme.of(context);
-    return SizedBox(
+  Widget _buildUpdateButton(
+    AppLocalizations l10n,
+    AsyncValue profileState,
+    ThemeData theme,
+  ) {
+    return Container(
       width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [theme.primaryColor, theme.colorScheme.secondary],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.primaryColor.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
       child: ElevatedButton(
         onPressed: profileState.isLoading
             ? null
@@ -409,14 +545,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     );
               },
         style: ElevatedButton.styleFrom(
-          backgroundColor: theme.primaryColor,
+          backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
+          shadowColor: Colors.transparent,
           padding: const EdgeInsets.symmetric(vertical: 18),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          elevation: 4,
-          shadowColor: theme.primaryColor.withValues(alpha: 0.3),
         ),
         child: profileState.isLoading
             ? const SizedBox(
