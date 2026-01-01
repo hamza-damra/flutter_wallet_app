@@ -5,11 +5,18 @@ import '../../core/theme/theme_provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/update_service.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  bool _isCheckingUpdate = false;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final themeMode = ref.watch(themeProvider);
@@ -448,6 +455,8 @@ class SettingsScreen extends ConsumerWidget {
     ThemeData theme,
     bool isGlassy,
   ) {
+    final updateService = ref.watch(updateServiceProvider);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -490,7 +499,7 @@ class SettingsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Version 1.0.0',
+                      'Version ${updateService.getInstalledVersionName()}',
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: isGlassy
@@ -518,38 +527,74 @@ class SettingsScreen extends ConsumerWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: () async {
-                final updateService = ref.read(updateServiceProvider);
-                // Reset session flag to allow showing dialog
-                updateService.resetSessionFlag();
-                // Trigger update check
-                if (context.mounted) {
-                  final shown = await updateService.checkAndPromptIfNeeded(
-                    context,
-                  );
-                  if (!shown && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Row(
-                          children: [
-                            const Icon(Icons.check_circle, color: Colors.white),
-                            const SizedBox(width: 12),
-                            const Text('Your app is up to date!'),
-                          ],
-                        ),
-                        backgroundColor: Colors.green.shade600,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        margin: const EdgeInsets.all(16),
+              onPressed: _isCheckingUpdate
+                  ? null
+                  : () async {
+                      setState(() {
+                        _isCheckingUpdate = true;
+                      });
+
+                      try {
+                        final updateService = ref.read(updateServiceProvider);
+                        // Reset session flag to allow showing dialog
+                        updateService.resetSessionFlag();
+                        // Trigger update check
+                        if (context.mounted) {
+                          final shown = await updateService
+                              .checkAndPromptIfNeeded(context);
+                          if (!shown && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.check_circle,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text('Your app is up to date!'),
+                                  ],
+                                ),
+                                backgroundColor: Colors.green.shade600,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                margin: const EdgeInsets.all(16),
+                              ),
+                            );
+                          }
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error checking updates: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() {
+                            _isCheckingUpdate = false;
+                          });
+                        }
+                      }
+                    },
+              icon: _isCheckingUpdate
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
                       ),
-                    );
-                  }
-                }
-              },
-              icon: const Icon(Icons.refresh_rounded, size: 20),
-              label: const Text('Check for Updates'),
+                    )
+                  : const Icon(Icons.refresh_rounded, size: 20),
+              label: Text(
+                _isCheckingUpdate ? 'Checking...' : 'Check for Updates',
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: isGlassy
                     ? Colors.white.withValues(alpha: 0.15)
