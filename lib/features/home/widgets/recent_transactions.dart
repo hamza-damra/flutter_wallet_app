@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:ui';
 import 'package:intl/intl.dart';
 
 import '../../../l10n/app_localizations.dart';
@@ -7,9 +9,10 @@ import '../../../core/models/transaction_model.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/icon_helper.dart';
 import '../../../core/localization/translation_helper.dart';
+import '../../../core/theme/theme_provider.dart';
 
 /// Widget displaying a list of recent transactions or an empty state
-class RecentTransactions extends StatelessWidget {
+class RecentTransactions extends ConsumerWidget {
   final List<TransactionModel> transactions;
   final VoidCallback onAddPressed;
 
@@ -20,56 +23,76 @@ class RecentTransactions extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context);
 
+    final themeMode = ref.watch(themeProvider);
+
     if (transactions.isEmpty) {
-      return _buildEmptyState(context, l10n, theme);
+      return _buildEmptyState(context, l10n, theme, themeMode);
     }
 
-    return _buildTransactionsList(context, l10n, theme, locale);
+    return _buildTransactionsList(context, l10n, theme, locale, themeMode);
   }
 
   Widget _buildEmptyState(
     BuildContext context,
     AppLocalizations l10n,
     ThemeData theme,
+    AppThemeMode themeMode,
   ) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+    final isGlassy = themeMode == AppThemeMode.glassy;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: isGlassy ? 10 : 0,
+          sigmaY: isGlassy ? 10 : 0,
+        ),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+          decoration: BoxDecoration(
+            color: isGlassy
+                ? Colors.white.withValues(alpha: 0.05)
+                : theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: isGlassy
+                ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+                : null,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isGlassy ? 0.1 : 0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
+          child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+              color: isGlassy
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.history_rounded,
               size: 64,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+              color: isGlassy
+                  ? Colors.white.withValues(alpha: 0.2)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.1),
             ),
           ),
           const SizedBox(height: 24),
           Text(
             l10n.noTransactions,
             style: theme.textTheme.titleLarge?.copyWith(
-              color: theme.colorScheme.onSurface,
+              color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -77,7 +100,9 @@ class RecentTransactions extends StatelessWidget {
           Text(
             l10n.startTrackingFinances,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              color: isGlassy
+                  ? Colors.white.withValues(alpha: 0.6)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.6),
               height: 1.5,
             ),
             textAlign: TextAlign.center,
@@ -102,7 +127,8 @@ class RecentTransactions extends StatelessWidget {
               ),
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -112,6 +138,7 @@ class RecentTransactions extends StatelessWidget {
     AppLocalizations l10n,
     ThemeData theme,
     Locale locale,
+    AppThemeMode themeMode,
   ) {
     return ListView.builder(
       physics: const NeverScrollableScrollPhysics(),
@@ -119,7 +146,14 @@ class RecentTransactions extends StatelessWidget {
       itemCount: transactions.length,
       itemBuilder: (context, index) {
         final tx = transactions[index];
-        return _buildTransactionItem(context, tx, theme, locale, l10n);
+        return _buildTransactionItem(
+          context,
+          tx,
+          theme,
+          locale,
+          l10n,
+          themeMode,
+        );
       },
     );
   }
@@ -130,7 +164,9 @@ class RecentTransactions extends StatelessWidget {
     ThemeData theme,
     Locale locale,
     AppLocalizations l10n,
+    AppThemeMode themeMode,
   ) {
+    final isGlassy = themeMode == AppThemeMode.glassy;
     final isIncome = tx.type == 'income';
     final amountColor = isIncome ? AppColors.income : AppColors.expense;
     final currency = NumberFormat.simpleCurrency(
@@ -170,90 +206,108 @@ class RecentTransactions extends StatelessWidget {
       tx.categoryName,
     );
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: isGlassy ? 5 : 0,
+          sigmaY: isGlassy ? 5 : 0,
+        ),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: isGlassy
+                ? Colors.white.withValues(alpha: 0.05)
+                : theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: isGlassy
+                ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+                : null,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          onTap: () => context.push('/transaction-details', extra: tx),
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: amountColor.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    IconHelper.getIcon(tx.categoryIcon),
-                    color: amountColor,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        displayTitle,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '$dateString • $displayCategoryName',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.6,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            child: InkWell(
+              onTap: () => context.push('/transaction-details', extra: tx),
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
                   children: [
-                    Text(
-                      '${isIncome ? '+' : ''}${currency.format(tx.amount)}',
-                      style: theme.textTheme.titleMedium?.copyWith(
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: amountColor.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        IconHelper.getIcon(tx.categoryIcon),
                         color: amountColor,
-                        fontWeight: FontWeight.bold,
+                        size: 24,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      DateFormat.jm().format(tx.createdAt),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.4,
-                        ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            displayTitle,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: isGlassy
+                                  ? Colors.white
+                                  : theme.colorScheme.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '$dateString • $displayCategoryName',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: (isGlassy
+                                      ? Colors.white
+                                      : theme.colorScheme.onSurface)
+                                  .withValues(alpha: 0.6),
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${isIncome ? '+' : ''}${currency.format(tx.amount)}',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: amountColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          DateFormat.jm().format(tx.createdAt),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: (isGlassy
+                                    ? Colors.white
+                                    : theme.colorScheme.onSurface)
+                                .withValues(alpha: 0.4),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
