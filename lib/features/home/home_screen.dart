@@ -12,6 +12,7 @@ import '../../core/localization/localization_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
 import '../../services/sync_service.dart';
+import '../../services/update_service.dart';
 import 'widgets/balance_card.dart';
 import 'widgets/recent_transactions.dart';
 import '../../core/widgets/connectivity_indicator.dart';
@@ -956,6 +957,64 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Text(
                         l10n.close,
                         style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        // Reset session flag to allow manual check
+                        ref.read(updateServiceProvider).resetSessionFlag();
+                        // Check for updates
+                        ref
+                            .read(updateServiceProvider)
+                            .checkAndPromptIfNeeded(context)
+                            .then((shown) {
+                              if (!shown && context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      Localizations.localeOf(
+                                                context,
+                                              ).languageCode ==
+                                              'ar'
+                                          ? 'التطبيق محدث لأحدث إصدار'
+                                          : 'App is up to date',
+                                    ),
+                                  ),
+                                );
+                              }
+                            });
+                      },
+                      icon: Icon(
+                        Icons.system_update,
+                        color: themeMode == AppThemeMode.glassy
+                            ? Colors.white
+                            : theme.primaryColor,
+                      ),
+                      label: Text(
+                        Localizations.localeOf(context).languageCode == 'ar'
+                            ? 'تحقق من التحديثات'
+                            : 'Check for Updates',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: themeMode == AppThemeMode.glassy
+                              ? Colors.white
+                              : theme.primaryColor,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: BorderSide(
+                          color: themeMode == AppThemeMode.glassy
+                              ? Colors.white.withValues(alpha: 0.2)
+                              : theme.primaryColor,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                     ),
                   ),
