@@ -271,5 +271,20 @@
   "oceanBlueTheme": "Ocean Blue",
   "glassyTheme": "Glassy Vivid",
   "transactionId": "Transaction ID",
-  "manageTransactions": "Manage Transactions"
+  "manageTransactions": "Manage Transactions",
+  "thisMonth": "This Month",
+  "lastMonth": "Last Month",
+  "last30Days": "Last 30 Days",
+  "thisYear": "This Year",
+  "applyFilter": "Apply Filter",
+  
+  "updateAvailable": "Update Available",
+  "updateNow": "Update Now",
+  "later": "Later",
+  "currentVersion": "Current Version",
+  "newVersion": "New Version",
+  "updateRequired": "This update is required to continue using the app.",
+  "dontRemindVersion": "Don't remind me for this version",
+  "updateMessage": "A new version is available with bug fixes and improvements.",
+  "downloadFailed": "Failed to open download link"
 }

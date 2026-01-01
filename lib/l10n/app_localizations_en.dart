@@ -601,4 +601,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get manageTransactions => 'Manage Transactions';
+
+  @override
+  String get thisMonth => 'This Month';
+
+  @override
+  String get lastMonth => 'Last Month';
+
+  @override
+  String get last30Days => 'Last 30 Days';
+
+  @override
+  String get thisYear => 'This Year';
+
+  @override
+  String get applyFilter => 'Apply Filter';
+
+  @override
+  String get updateAvailable => 'Update Available';
+
+  @override
+  String get updateNow => 'Update Now';
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get currentVersion => 'Current Version';
+
+  @override
+  String get newVersion => 'New Version';
+
+  @override
+  String get updateRequired =>
+      'This update is required to continue using the app.';
+
+  @override
+  String get dontRemindVersion => 'Don\'t remind me for this version';
+
+  @override
+  String get updateMessage =>
+      'A new version is available with bug fixes and improvements.';
+
+  @override
+  String get downloadFailed => 'Failed to open download link';
 }

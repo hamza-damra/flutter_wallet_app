@@ -203,5 +203,20 @@
   "oceanBlueTheme": "أزرق المحيط",
   "glassyTheme": "زجاجي زاهٍ",
   "transactionId": "رقم المعاملة",
-  "manageTransactions": "إدارة المعاملات"
+  "manageTransactions": "إدارة المعاملات",
+  "thisMonth": "هذا الشهر",
+  "lastMonth": "الشهر الماضي",
+  "last30Days": "آخر 30 يوم",
+  "thisYear": "هذه السنة",
+  "applyFilter": "تطبيق الفلتر",
+  
+  "updateAvailable": "تحديث متوفر",
+  "updateNow": "تحديث الآن",
+  "later": "لاحقاً",
+  "currentVersion": "الإصدار الحالي",
+  "newVersion": "الإصدار الجديد",
+  "updateRequired": "هذا التحديث مطلوب للاستمرار في استخدام التطبيق.",
+  "dontRemindVersion": "لا تذكرني بهذا الإصدار",
+  "updateMessage": "إصدار جديد متاح مع إصلاحات وتحسينات.",
+  "downloadFailed": "فشل في فتح رابط التنزيل"
 }

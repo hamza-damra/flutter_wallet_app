@@ -608,4 +608,47 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get manageTransactions => 'إدارة المعاملات';
+
+  @override
+  String get thisMonth => 'هذا الشهر';
+
+  @override
+  String get lastMonth => 'الشهر الماضي';
+
+  @override
+  String get last30Days => 'آخر 30 يوم';
+
+  @override
+  String get thisYear => 'هذه السنة';
+
+  @override
+  String get applyFilter => 'تطبيق الفلتر';
+
+  @override
+  String get updateAvailable => 'تحديث متوفر';
+
+  @override
+  String get updateNow => 'تحديث الآن';
+
+  @override
+  String get later => 'لاحقاً';
+
+  @override
+  String get currentVersion => 'الإصدار الحالي';
+
+  @override
+  String get newVersion => 'الإصدار الجديد';
+
+  @override
+  String get updateRequired =>
+      'هذا التحديث مطلوب للاستمرار في استخدام التطبيق.';
+
+  @override
+  String get dontRemindVersion => 'لا تذكرني بهذا الإصدار';
+
+  @override
+  String get updateMessage => 'إصدار جديد متاح مع إصلاحات وتحسينات.';
+
+  @override
+  String get downloadFailed => 'فشل في فتح رابط التنزيل';
 }

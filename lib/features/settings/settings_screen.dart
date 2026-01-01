@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/update_service.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -12,13 +13,14 @@ class SettingsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final themeMode = ref.watch(themeProvider);
+    final isGlassy = themeMode == AppThemeMode.glassy;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Background blobs for visual depth
-          if (themeMode == AppThemeMode.glassy) ...[
+          if (isGlassy) ...[
             Positioned(
               top: -100,
               right: -50,
@@ -27,7 +29,12 @@ class SettingsScreen extends ConsumerWidget {
                 height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.pink.withValues(alpha: 0.1),
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.purple.withValues(alpha: 0.15),
+                      Colors.purple.withValues(alpha: 0.0),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -39,7 +46,12 @@ class SettingsScreen extends ConsumerWidget {
                 height: 400,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.blue.withValues(alpha: 0.1),
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.blue.withValues(alpha: 0.12),
+                      Colors.blue.withValues(alpha: 0.0),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -61,30 +73,54 @@ class SettingsScreen extends ConsumerWidget {
           SafeArea(
             child: Column(
               children: [
-                _buildAppBar(
-                  context,
-                  l10n,
-                  theme,
-                  themeMode == AppThemeMode.glassy,
-                ),
+                _buildAppBar(context, l10n, theme, isGlassy),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
+                      horizontal: 20,
                       vertical: 8,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Theme Section
                         _buildSectionHeader(
                           theme,
                           l10n.appTheme,
-                          themeMode == AppThemeMode.glassy,
+                          Icons.palette_outlined,
+                          isGlassy,
                         ),
-                        const SizedBox(height: 20),
-                        _buildThemeCard(context, ref, l10n, theme, themeMode),
+                        const SizedBox(height: 16),
+                        _buildEnhancedThemeCard(
+                          context,
+                          ref,
+                          l10n,
+                          theme,
+                          themeMode,
+                        ),
+                        const SizedBox(height: 28),
+
+                        // App Updates Section
+                        _buildSectionHeader(
+                          theme,
+                          'App Updates',
+                          Icons.system_update_outlined,
+                          isGlassy,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildUpdateSection(context, ref, theme, isGlassy),
+                        const SizedBox(height: 28),
+
+                        // About Section
+                        _buildSectionHeader(
+                          theme,
+                          l10n.about,
+                          Icons.info_outline,
+                          isGlassy,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildAboutCard(context, l10n, theme, isGlassy),
                         const SizedBox(height: 32),
-                        // Add more settings sections here as needed
                       ],
                     ),
                   ),
@@ -107,65 +143,150 @@ class SettingsScreen extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: Icon(
-              Icons.arrow_back_ios_new,
-              size: 20,
-              color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
-            ),
-            style: IconButton.styleFrom(
-              backgroundColor: isGlassy
+          Container(
+            decoration: BoxDecoration(
+              color: isGlassy
                   ? Colors.white.withValues(alpha: 0.1)
                   : theme.colorScheme.surface,
-              padding: const EdgeInsets.all(12),
-              elevation: isGlassy ? 0 : 2,
-              shadowColor: Colors.black.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(14),
+              border: isGlassy
+                  ? Border.all(color: Colors.white.withValues(alpha: 0.15))
+                  : null,
+              boxShadow: isGlassy
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+            ),
+            child: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: Icon(
+                Icons.arrow_back_ios_new,
+                size: 20,
+                color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
+              ),
             ),
           ),
-          const SizedBox(width: 20),
-          Text(
-            l10n.appSettings,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
-            ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.appSettings,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
+                ),
+              ),
+              Text(
+                'Customize your experience',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: isGlassy
+                      ? Colors.white.withValues(alpha: 0.7)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(ThemeData theme, String title, bool isGlassy) {
-    return Text(
-      title,
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.bold,
-        color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
-      ),
+  Widget _buildSectionHeader(
+    ThemeData theme,
+    String title,
+    IconData icon,
+    bool isGlassy,
+  ) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isGlassy
+                ? Colors.white.withValues(alpha: 0.1)
+                : theme.colorScheme.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            icon,
+            size: 18,
+            color: isGlassy ? Colors.white : theme.colorScheme.primary,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildThemeCard(
+  Widget _buildEnhancedThemeCard(
     BuildContext context,
     WidgetRef ref,
     AppLocalizations l10n,
     ThemeData theme,
-    AppThemeMode themeMode,
+    AppThemeMode currentThemeMode,
   ) {
+    final isGlassy = currentThemeMode == AppThemeMode.glassy;
+
+    final themes = [
+      _ThemeOption(
+        mode: AppThemeMode.classic,
+        name: l10n.classicTheme,
+        primaryColor: AppColors.primary,
+        secondaryColor: AppColors.primaryLight,
+        icon: Icons.wb_sunny_outlined,
+        description: 'Warm & elegant',
+      ),
+      _ThemeOption(
+        mode: AppThemeMode.modernDark,
+        name: l10n.modernDarkTheme,
+        primaryColor: AppColors.darkPrimary,
+        secondaryColor: AppColors.darkSurface,
+        icon: Icons.dark_mode_outlined,
+        description: 'Sleek & modern',
+      ),
+      _ThemeOption(
+        mode: AppThemeMode.oceanBlue,
+        name: l10n.oceanBlueTheme,
+        primaryColor: AppColors.oceanPrimary,
+        secondaryColor: AppColors.oceanSecondary,
+        icon: Icons.water_outlined,
+        description: 'Fresh & calm',
+      ),
+      _ThemeOption(
+        mode: AppThemeMode.glassy,
+        name: l10n.glassyTheme,
+        primaryColor: AppColors.glassyPrimary,
+        secondaryColor: Colors.pink,
+        icon: Icons.blur_on,
+        description: 'Premium glass',
+      ),
+    ];
+
     return Container(
-      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withValues(
-          alpha: themeMode == AppThemeMode.glassy ? 0.4 : 1.0,
+          alpha: isGlassy ? 0.35 : 1.0,
         ),
         borderRadius: BorderRadius.circular(24),
-        border: themeMode == AppThemeMode.glassy
-            ? Border.all(color: Colors.white.withValues(alpha: 0.2))
+        border: isGlassy
+            ? Border.all(color: Colors.white.withValues(alpha: 0.15))
             : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: isGlassy ? 0.2 : 0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -173,117 +294,405 @@ class SettingsScreen extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                child: _buildThemeOption(
+          // Grid of theme options
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 1.15,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount: themes.length,
+              itemBuilder: (context, index) {
+                final themeOption = themes[index];
+                final isSelected = currentThemeMode == themeOption.mode;
+                return _buildEnhancedThemeOption(
                   context,
                   ref,
-                  l10n.classicTheme,
-                  AppThemeMode.classic,
-                  AppColors.primary,
-                  themeMode == AppThemeMode.classic,
-                  themeMode == AppThemeMode.glassy,
-                ),
-              ),
-              Expanded(
-                child: _buildThemeOption(
-                  context,
-                  ref,
-                  l10n.modernDarkTheme,
-                  AppThemeMode.modernDark,
-                  AppColors.darkPrimary,
-                  themeMode == AppThemeMode.modernDark,
-                  themeMode == AppThemeMode.glassy,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                child: _buildThemeOption(
-                  context,
-                  ref,
-                  l10n.oceanBlueTheme,
-                  AppThemeMode.oceanBlue,
-                  AppColors.oceanPrimary,
-                  themeMode == AppThemeMode.oceanBlue,
-                  themeMode == AppThemeMode.glassy,
-                ),
-              ),
-              Expanded(
-                child: _buildThemeOption(
-                  context,
-                  ref,
-                  l10n.glassyTheme,
-                  AppThemeMode.glassy,
-                  AppColors.glassyPrimary,
-                  themeMode == AppThemeMode.glassy,
-                  themeMode == AppThemeMode.glassy,
-                ),
-              ),
-            ],
+                  themeOption,
+                  isSelected,
+                  isGlassy,
+                  theme,
+                );
+              },
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildThemeOption(
+  Widget _buildEnhancedThemeOption(
     BuildContext context,
     WidgetRef ref,
-    String label,
-    AppThemeMode mode,
-    Color color,
+    _ThemeOption themeOption,
     bool isSelected,
     bool isGlassy,
+    ThemeData theme,
   ) {
-    final theme = Theme.of(context);
     return GestureDetector(
-      onTap: () => ref.read(themeProvider.notifier).setTheme(mode),
+      onTap: () => ref.read(themeProvider.notifier).setTheme(themeOption.mode),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [
+                    themeOption.primaryColor.withValues(alpha: 0.2),
+                    themeOption.secondaryColor.withValues(alpha: 0.1),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: isSelected
+              ? null
+              : (isGlassy
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : theme.colorScheme.surface),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isSelected
+                ? themeOption.primaryColor
+                : (isGlassy
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : theme.colorScheme.outline.withValues(alpha: 0.15)),
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: themeOption.primaryColor.withValues(alpha: 0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Color preview with gradient
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    themeOption.primaryColor,
+                    themeOption.secondaryColor,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: themeOption.primaryColor.withValues(alpha: 0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Icon(
+                isSelected ? Icons.check_rounded : themeOption.icon,
+                color: Colors.white,
+                size: isSelected ? 24 : 20,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              themeOption.name,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isGlassy
+                    ? Colors.white.withValues(alpha: isSelected ? 1 : 0.8)
+                    : (isSelected
+                          ? themeOption.primaryColor
+                          : theme.colorScheme.onSurface),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              themeOption.description,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontSize: 10,
+                color: isGlassy
+                    ? Colors.white.withValues(alpha: 0.5)
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUpdateSection(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    bool isGlassy,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withValues(
+          alpha: isGlassy ? 0.35 : 1.0,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: isGlassy
+            ? Border.all(color: Colors.white.withValues(alpha: 0.15))
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isGlassy ? 0.2 : 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
       child: Column(
         children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isSelected ? Colors.white : Colors.transparent,
-                width: 3,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade400, Colors.teal.shade400],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-              ],
-            ),
-            child: isSelected
-                ? const Icon(Icons.check, color: Colors.white, size: 28)
-                : null,
+                child: const Icon(
+                  Icons.verified_outlined,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Version 1.0.0',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isGlassy
+                            ? Colors.white
+                            : theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Your app is up to date',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isGlassy
+                            ? Colors.white.withValues(alpha: 0.7)
+                            : theme.colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isGlassy
-                  ? Colors.white.withValues(alpha: isSelected ? 1 : 0.7)
-                  : (isSelected
-                        ? theme.primaryColor
-                        : theme.colorScheme.onSurface),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                final updateService = ref.read(updateServiceProvider);
+                // Reset session flag to allow showing dialog
+                updateService.resetSessionFlag();
+                // Trigger update check
+                if (context.mounted) {
+                  final shown = await updateService.checkAndPromptIfNeeded(
+                    context,
+                  );
+                  if (!shown && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            const Icon(Icons.check_circle, color: Colors.white),
+                            const SizedBox(width: 12),
+                            const Text('Your app is up to date!'),
+                          ],
+                        ),
+                        backgroundColor: Colors.green.shade600,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        margin: const EdgeInsets.all(16),
+                      ),
+                    );
+                  }
+                }
+              },
+              icon: const Icon(Icons.refresh_rounded, size: 20),
+              label: const Text('Check for Updates'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isGlassy
+                    ? Colors.white.withValues(alpha: 0.15)
+                    : theme.colorScheme.primary.withValues(alpha: 0.1),
+                foregroundColor: isGlassy
+                    ? Colors.white
+                    : theme.colorScheme.primary,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(
+                    color: isGlassy
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : theme.colorScheme.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildAboutCard(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+    bool isGlassy,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withValues(
+          alpha: isGlassy ? 0.35 : 1.0,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: isGlassy
+            ? Border.all(color: Colors.white.withValues(alpha: 0.15))
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isGlassy ? 0.2 : 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildAboutItem(
+            theme,
+            Icons.info_outline,
+            l10n.about,
+            l10n.aboutAppDescription,
+            isGlassy,
+          ),
+          Divider(
+            color: isGlassy
+                ? Colors.white.withValues(alpha: 0.1)
+                : theme.colorScheme.outline.withValues(alpha: 0.1),
+            height: 24,
+          ),
+          _buildAboutItem(
+            theme,
+            Icons.code_rounded,
+            l10n.version,
+            '1.0.0 (Build 1)',
+            isGlassy,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAboutItem(
+    ThemeData theme,
+    IconData icon,
+    String title,
+    String subtitle,
+    bool isGlassy,
+  ) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isGlassy
+                ? Colors.white.withValues(alpha: 0.1)
+                : theme.colorScheme.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            size: 20,
+            color: isGlassy ? Colors.white : theme.colorScheme.primary,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: isGlassy
+                      ? Colors.white.withValues(alpha: 0.7)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Helper class for theme options
+class _ThemeOption {
+  final AppThemeMode mode;
+  final String name;
+  final Color primaryColor;
+  final Color secondaryColor;
+  final IconData icon;
+  final String description;
+
+  const _ThemeOption({
+    required this.mode,
+    required this.name,
+    required this.primaryColor,
+    required this.secondaryColor,
+    required this.icon,
+    required this.description,
+  });
 }

@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/app_state/connectivity_controller.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/update_service.dart';
+import '../../services/push_notification_service.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -18,6 +20,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  bool _servicesInitialized = false;
 
   @override
   void initState() {
@@ -43,13 +46,68 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _controller.forward();
 
-    _navigateToNext();
+    _initializeServicesAndNavigate();
   }
 
-  Future<void> _navigateToNext() async {
+  Future<void> _initializeServicesAndNavigate() async {
+    try {
+      // Initialize update service
+      final updateService = ref.read(updateServiceProvider);
+      await updateService.initialize();
+
+      // Initialize push notification service
+      final pushService = ref.read(pushNotificationServiceProvider);
+      await pushService.initialize();
+
+      _servicesInitialized = true;
+    } catch (e) {
+      // Log error but don't block app startup
+      debugPrint('Error initializing services: $e');
+    }
+
+    // Wait for splash animation
     await Future.delayed(const Duration(seconds: 3));
+
     if (mounted) {
       context.go('/');
+
+      // Check for updates after navigation (with a slight delay for route transition)
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted && _servicesInitialized) {
+          _checkForUpdates();
+        }
+      });
+    }
+  }
+
+  Future<void> _checkForUpdates() async {
+    try {
+      final pushService = ref.read(pushNotificationServiceProvider);
+
+      // Check if there's a pending update check from a notification
+      final hasPending = await pushService.hasPendingUpdateCheck();
+
+      // Set up update notification callback
+      pushService.setOnUpdateNotificationReceived(() {
+        if (mounted) {
+          _triggerUpdateCheck();
+        }
+      });
+
+      // Check for updates (will also handle pending check from notification)
+      if (mounted && (hasPending || true)) {
+        // Always check on startup
+        await pushService.checkForUpdates(context);
+      }
+    } catch (e) {
+      debugPrint('Error checking for updates: $e');
+    }
+  }
+
+  void _triggerUpdateCheck() async {
+    if (mounted) {
+      final pushService = ref.read(pushNotificationServiceProvider);
+      await pushService.checkForUpdates(context);
     }
   }
 
