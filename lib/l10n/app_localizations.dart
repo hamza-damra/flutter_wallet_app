@@ -1261,6 +1261,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to open download link'**
   String get downloadFailed;
+
+  /// No description provided for @debtsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Debts'**
+  String get debtsTitle;
+
+  /// No description provided for @addFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Friend'**
+  String get addFriend;
+
+  /// No description provided for @owedByMe.
+  ///
+  /// In en, this message translates to:
+  /// **'I Owe'**
+  String get owedByMe;
+
+  /// No description provided for @owedToMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Owes Me'**
+  String get owedToMe;
+
+  /// No description provided for @lent.
+  ///
+  /// In en, this message translates to:
+  /// **'Lent'**
+  String get lent;
+
+  /// No description provided for @borrowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Borrowed'**
+  String get borrowed;
+
+  /// No description provided for @debtHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get debtHistory;
+
+  /// No description provided for @newDebtTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Debt Transaction'**
+  String get newDebtTransaction;
+
+  /// No description provided for @friendName.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend Name'**
+  String get friendName;
+
+  /// No description provided for @phoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Number'**
+  String get phoneNumber;
+
+  /// No description provided for @totalLent.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Lent'**
+  String get totalLent;
+
+  /// No description provided for @totalBorrowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Borrowed'**
+  String get totalBorrowed;
+
+  /// No description provided for @settled.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled'**
+  String get settled;
+
+  /// No description provided for @deleteFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Friend'**
+  String get deleteFriend;
+
+  /// No description provided for @deleteFriendConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this friend?'**
+  String get deleteFriendConfirm;
+
+  /// No description provided for @debtTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt Transactions'**
+  String get debtTransactions;
 }
 
 class _AppLocalizationsDelegate

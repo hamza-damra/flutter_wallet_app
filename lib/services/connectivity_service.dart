@@ -12,7 +12,7 @@ class ConnectivityService extends Notifier<ConnectivityStatus> {
   @override
   ConnectivityStatus build() {
     _connectivity = Connectivity();
-    _internetConnectionChecker = InternetConnectionChecker.instance;
+    _internetConnectionChecker = InternetConnectionChecker();
     _init();
     return ConnectivityStatus.offline;
   }

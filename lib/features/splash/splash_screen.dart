@@ -20,8 +20,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
-  bool _servicesInitialized = false;
-
   @override
   void initState() {
     super.initState();
@@ -45,7 +43,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
 
     _controller.forward();
-
     _initializeServicesAndNavigate();
   }
 
@@ -58,8 +55,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       // Initialize push notification service
       final pushService = ref.read(pushNotificationServiceProvider);
       await pushService.initialize();
-
-      _servicesInitialized = true;
     } catch (e) {
       // Log error but don't block app startup
       debugPrint('Error initializing services: $e');
@@ -70,44 +65,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     if (mounted) {
       context.go('/');
-
-      // Check for updates after navigation (with a slight delay for route transition)
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted && _servicesInitialized) {
-          _checkForUpdates();
-        }
-      });
-    }
-  }
-
-  Future<void> _checkForUpdates() async {
-    try {
-      final pushService = ref.read(pushNotificationServiceProvider);
-
-      // Check if there's a pending update check from a notification
-      final hasPending = await pushService.hasPendingUpdateCheck();
-
-      // Set up update notification callback
-      pushService.setOnUpdateNotificationReceived(() {
-        if (mounted) {
-          _triggerUpdateCheck();
-        }
-      });
-
-      // Check for updates (will also handle pending check from notification)
-      if (mounted && (hasPending || true)) {
-        // Always check on startup
-        await pushService.checkForUpdates(context);
-      }
-    } catch (e) {
-      debugPrint('Error checking for updates: $e');
-    }
-  }
-
-  void _triggerUpdateCheck() async {
-    if (mounted) {
-      final pushService = ref.read(pushNotificationServiceProvider);
-      await pushService.checkForUpdates(context);
     }
   }
 

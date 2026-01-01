@@ -645,4 +645,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get downloadFailed => 'Failed to open download link';
+
+  @override
+  String get debtsTitle => 'Debts';
+
+  @override
+  String get addFriend => 'Add Friend';
+
+  @override
+  String get owedByMe => 'I Owe';
+
+  @override
+  String get owedToMe => 'Owes Me';
+
+  @override
+  String get lent => 'Lent';
+
+  @override
+  String get borrowed => 'Borrowed';
+
+  @override
+  String get debtHistory => 'History';
+
+  @override
+  String get newDebtTransaction => 'Add Debt Transaction';
+
+  @override
+  String get friendName => 'Friend Name';
+
+  @override
+  String get phoneNumber => 'Phone Number';
+
+  @override
+  String get totalLent => 'Total Lent';
+
+  @override
+  String get totalBorrowed => 'Total Borrowed';
+
+  @override
+  String get settled => 'Settled';
+
+  @override
+  String get deleteFriend => 'Delete Friend';
+
+  @override
+  String get deleteFriendConfirm =>
+      'Are you sure you want to delete this friend?';
+
+  @override
+  String get debtTransactions => 'Debt Transactions';
 }

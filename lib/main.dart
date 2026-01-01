@@ -25,6 +25,10 @@ import 'features/settings/settings_screen.dart';
 import 'features/splash/splash_screen.dart';
 import 'services/auth_service.dart';
 import 'services/sync_service.dart';
+import 'features/debts/screens/debts_screen.dart';
+import 'features/debts/screens/friend_details_screen.dart';
+import 'features/debts/screens/add_debt_transaction_screen.dart';
+import 'features/debts/models/friend_model.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -207,6 +211,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(path: '/debts', builder: (context, state) => const DebtsScreen()),
+      GoRoute(
+        path: '/debt-details',
+        builder: (context, state) {
+          final friend = state.extra as FriendModel;
+          return FriendDetailsScreen(friend: friend);
+        },
+      ),
+      GoRoute(
+        path: '/add-debt-transaction',
+        builder: (context, state) {
+          final friend = state.extra as FriendModel;
+          return AddDebtTransactionScreen(friend: friend);
+        },
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

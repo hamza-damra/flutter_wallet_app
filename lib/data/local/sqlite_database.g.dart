@@ -1724,12 +1724,1291 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
   }
 }
 
+class $FriendsTable extends Friends with TableInfo<$FriendsTable, Friend> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FriendsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _localIdMeta = const VerificationMeta(
+    'localId',
+  );
+  @override
+  late final GeneratedColumn<int> localId = GeneratedColumn<int>(
+    'local_id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+    'remote_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _phoneNumberMeta = const VerificationMeta(
+    'phoneNumber',
+  );
+  @override
+  late final GeneratedColumn<String> phoneNumber = GeneratedColumn<String>(
+    'phone_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtLocalMeta = const VerificationMeta(
+    'createdAtLocal',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAtLocal =
+      GeneratedColumn<DateTime>(
+        'created_at_local',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _updatedAtLocalMeta = const VerificationMeta(
+    'updatedAtLocal',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAtLocal =
+      GeneratedColumn<DateTime>(
+        'updated_at_local',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    localId,
+    remoteId,
+    userId,
+    name,
+    phoneNumber,
+    createdAtLocal,
+    updatedAtLocal,
+    deleted,
+    syncStatus,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'friends';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Friend> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('local_id')) {
+      context.handle(
+        _localIdMeta,
+        localId.isAcceptableOrUnknown(data['local_id']!, _localIdMeta),
+      );
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('phone_number')) {
+      context.handle(
+        _phoneNumberMeta,
+        phoneNumber.isAcceptableOrUnknown(
+          data['phone_number']!,
+          _phoneNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at_local')) {
+      context.handle(
+        _createdAtLocalMeta,
+        createdAtLocal.isAcceptableOrUnknown(
+          data['created_at_local']!,
+          _createdAtLocalMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtLocalMeta);
+    }
+    if (data.containsKey('updated_at_local')) {
+      context.handle(
+        _updatedAtLocalMeta,
+        updatedAtLocal.isAcceptableOrUnknown(
+          data['updated_at_local']!,
+          _updatedAtLocalMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtLocalMeta);
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {localId};
+  @override
+  Friend map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Friend(
+      localId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}local_id'],
+      )!,
+      remoteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_id'],
+      ),
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      phoneNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}phone_number'],
+      ),
+      createdAtLocal: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at_local'],
+      )!,
+      updatedAtLocal: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at_local'],
+      )!,
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+    );
+  }
+
+  @override
+  $FriendsTable createAlias(String alias) {
+    return $FriendsTable(attachedDatabase, alias);
+  }
+}
+
+class Friend extends DataClass implements Insertable<Friend> {
+  final int localId;
+  final String? remoteId;
+  final String userId;
+  final String name;
+  final String? phoneNumber;
+  final DateTime createdAtLocal;
+  final DateTime updatedAtLocal;
+  final bool deleted;
+  final String syncStatus;
+  const Friend({
+    required this.localId,
+    this.remoteId,
+    required this.userId,
+    required this.name,
+    this.phoneNumber,
+    required this.createdAtLocal,
+    required this.updatedAtLocal,
+    required this.deleted,
+    required this.syncStatus,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['local_id'] = Variable<int>(localId);
+    if (!nullToAbsent || remoteId != null) {
+      map['remote_id'] = Variable<String>(remoteId);
+    }
+    map['user_id'] = Variable<String>(userId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || phoneNumber != null) {
+      map['phone_number'] = Variable<String>(phoneNumber);
+    }
+    map['created_at_local'] = Variable<DateTime>(createdAtLocal);
+    map['updated_at_local'] = Variable<DateTime>(updatedAtLocal);
+    map['deleted'] = Variable<bool>(deleted);
+    map['sync_status'] = Variable<String>(syncStatus);
+    return map;
+  }
+
+  FriendsCompanion toCompanion(bool nullToAbsent) {
+    return FriendsCompanion(
+      localId: Value(localId),
+      remoteId: remoteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remoteId),
+      userId: Value(userId),
+      name: Value(name),
+      phoneNumber: phoneNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(phoneNumber),
+      createdAtLocal: Value(createdAtLocal),
+      updatedAtLocal: Value(updatedAtLocal),
+      deleted: Value(deleted),
+      syncStatus: Value(syncStatus),
+    );
+  }
+
+  factory Friend.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Friend(
+      localId: serializer.fromJson<int>(json['localId']),
+      remoteId: serializer.fromJson<String?>(json['remoteId']),
+      userId: serializer.fromJson<String>(json['userId']),
+      name: serializer.fromJson<String>(json['name']),
+      phoneNumber: serializer.fromJson<String?>(json['phoneNumber']),
+      createdAtLocal: serializer.fromJson<DateTime>(json['createdAtLocal']),
+      updatedAtLocal: serializer.fromJson<DateTime>(json['updatedAtLocal']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'localId': serializer.toJson<int>(localId),
+      'remoteId': serializer.toJson<String?>(remoteId),
+      'userId': serializer.toJson<String>(userId),
+      'name': serializer.toJson<String>(name),
+      'phoneNumber': serializer.toJson<String?>(phoneNumber),
+      'createdAtLocal': serializer.toJson<DateTime>(createdAtLocal),
+      'updatedAtLocal': serializer.toJson<DateTime>(updatedAtLocal),
+      'deleted': serializer.toJson<bool>(deleted),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+    };
+  }
+
+  Friend copyWith({
+    int? localId,
+    Value<String?> remoteId = const Value.absent(),
+    String? userId,
+    String? name,
+    Value<String?> phoneNumber = const Value.absent(),
+    DateTime? createdAtLocal,
+    DateTime? updatedAtLocal,
+    bool? deleted,
+    String? syncStatus,
+  }) => Friend(
+    localId: localId ?? this.localId,
+    remoteId: remoteId.present ? remoteId.value : this.remoteId,
+    userId: userId ?? this.userId,
+    name: name ?? this.name,
+    phoneNumber: phoneNumber.present ? phoneNumber.value : this.phoneNumber,
+    createdAtLocal: createdAtLocal ?? this.createdAtLocal,
+    updatedAtLocal: updatedAtLocal ?? this.updatedAtLocal,
+    deleted: deleted ?? this.deleted,
+    syncStatus: syncStatus ?? this.syncStatus,
+  );
+  Friend copyWithCompanion(FriendsCompanion data) {
+    return Friend(
+      localId: data.localId.present ? data.localId.value : this.localId,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      name: data.name.present ? data.name.value : this.name,
+      phoneNumber: data.phoneNumber.present
+          ? data.phoneNumber.value
+          : this.phoneNumber,
+      createdAtLocal: data.createdAtLocal.present
+          ? data.createdAtLocal.value
+          : this.createdAtLocal,
+      updatedAtLocal: data.updatedAtLocal.present
+          ? data.updatedAtLocal.value
+          : this.updatedAtLocal,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Friend(')
+          ..write('localId: $localId, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('userId: $userId, ')
+          ..write('name: $name, ')
+          ..write('phoneNumber: $phoneNumber, ')
+          ..write('createdAtLocal: $createdAtLocal, ')
+          ..write('updatedAtLocal: $updatedAtLocal, ')
+          ..write('deleted: $deleted, ')
+          ..write('syncStatus: $syncStatus')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    localId,
+    remoteId,
+    userId,
+    name,
+    phoneNumber,
+    createdAtLocal,
+    updatedAtLocal,
+    deleted,
+    syncStatus,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Friend &&
+          other.localId == this.localId &&
+          other.remoteId == this.remoteId &&
+          other.userId == this.userId &&
+          other.name == this.name &&
+          other.phoneNumber == this.phoneNumber &&
+          other.createdAtLocal == this.createdAtLocal &&
+          other.updatedAtLocal == this.updatedAtLocal &&
+          other.deleted == this.deleted &&
+          other.syncStatus == this.syncStatus);
+}
+
+class FriendsCompanion extends UpdateCompanion<Friend> {
+  final Value<int> localId;
+  final Value<String?> remoteId;
+  final Value<String> userId;
+  final Value<String> name;
+  final Value<String?> phoneNumber;
+  final Value<DateTime> createdAtLocal;
+  final Value<DateTime> updatedAtLocal;
+  final Value<bool> deleted;
+  final Value<String> syncStatus;
+  const FriendsCompanion({
+    this.localId = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.phoneNumber = const Value.absent(),
+    this.createdAtLocal = const Value.absent(),
+    this.updatedAtLocal = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+  });
+  FriendsCompanion.insert({
+    this.localId = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    required String userId,
+    required String name,
+    this.phoneNumber = const Value.absent(),
+    required DateTime createdAtLocal,
+    required DateTime updatedAtLocal,
+    this.deleted = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+  }) : userId = Value(userId),
+       name = Value(name),
+       createdAtLocal = Value(createdAtLocal),
+       updatedAtLocal = Value(updatedAtLocal);
+  static Insertable<Friend> custom({
+    Expression<int>? localId,
+    Expression<String>? remoteId,
+    Expression<String>? userId,
+    Expression<String>? name,
+    Expression<String>? phoneNumber,
+    Expression<DateTime>? createdAtLocal,
+    Expression<DateTime>? updatedAtLocal,
+    Expression<bool>? deleted,
+    Expression<String>? syncStatus,
+  }) {
+    return RawValuesInsertable({
+      if (localId != null) 'local_id': localId,
+      if (remoteId != null) 'remote_id': remoteId,
+      if (userId != null) 'user_id': userId,
+      if (name != null) 'name': name,
+      if (phoneNumber != null) 'phone_number': phoneNumber,
+      if (createdAtLocal != null) 'created_at_local': createdAtLocal,
+      if (updatedAtLocal != null) 'updated_at_local': updatedAtLocal,
+      if (deleted != null) 'deleted': deleted,
+      if (syncStatus != null) 'sync_status': syncStatus,
+    });
+  }
+
+  FriendsCompanion copyWith({
+    Value<int>? localId,
+    Value<String?>? remoteId,
+    Value<String>? userId,
+    Value<String>? name,
+    Value<String?>? phoneNumber,
+    Value<DateTime>? createdAtLocal,
+    Value<DateTime>? updatedAtLocal,
+    Value<bool>? deleted,
+    Value<String>? syncStatus,
+  }) {
+    return FriendsCompanion(
+      localId: localId ?? this.localId,
+      remoteId: remoteId ?? this.remoteId,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      createdAtLocal: createdAtLocal ?? this.createdAtLocal,
+      updatedAtLocal: updatedAtLocal ?? this.updatedAtLocal,
+      deleted: deleted ?? this.deleted,
+      syncStatus: syncStatus ?? this.syncStatus,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (localId.present) {
+      map['local_id'] = Variable<int>(localId.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (phoneNumber.present) {
+      map['phone_number'] = Variable<String>(phoneNumber.value);
+    }
+    if (createdAtLocal.present) {
+      map['created_at_local'] = Variable<DateTime>(createdAtLocal.value);
+    }
+    if (updatedAtLocal.present) {
+      map['updated_at_local'] = Variable<DateTime>(updatedAtLocal.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FriendsCompanion(')
+          ..write('localId: $localId, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('userId: $userId, ')
+          ..write('name: $name, ')
+          ..write('phoneNumber: $phoneNumber, ')
+          ..write('createdAtLocal: $createdAtLocal, ')
+          ..write('updatedAtLocal: $updatedAtLocal, ')
+          ..write('deleted: $deleted, ')
+          ..write('syncStatus: $syncStatus')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DebtTransactionsTable extends DebtTransactions
+    with TableInfo<$DebtTransactionsTable, DebtTransaction> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DebtTransactionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _localIdMeta = const VerificationMeta(
+    'localId',
+  );
+  @override
+  late final GeneratedColumn<int> localId = GeneratedColumn<int>(
+    'local_id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+    'remote_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _friendIdMeta = const VerificationMeta(
+    'friendId',
+  );
+  @override
+  late final GeneratedColumn<int> friendId = GeneratedColumn<int>(
+    'friend_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES friends (local_id)',
+    ),
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtLocalMeta = const VerificationMeta(
+    'createdAtLocal',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAtLocal =
+      GeneratedColumn<DateTime>(
+        'created_at_local',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _updatedAtLocalMeta = const VerificationMeta(
+    'updatedAtLocal',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAtLocal =
+      GeneratedColumn<DateTime>(
+        'updated_at_local',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    localId,
+    remoteId,
+    userId,
+    friendId,
+    amount,
+    type,
+    date,
+    note,
+    createdAtLocal,
+    updatedAtLocal,
+    deleted,
+    syncStatus,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'debt_transactions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DebtTransaction> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('local_id')) {
+      context.handle(
+        _localIdMeta,
+        localId.isAcceptableOrUnknown(data['local_id']!, _localIdMeta),
+      );
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('friend_id')) {
+      context.handle(
+        _friendIdMeta,
+        friendId.isAcceptableOrUnknown(data['friend_id']!, _friendIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_friendIdMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('created_at_local')) {
+      context.handle(
+        _createdAtLocalMeta,
+        createdAtLocal.isAcceptableOrUnknown(
+          data['created_at_local']!,
+          _createdAtLocalMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtLocalMeta);
+    }
+    if (data.containsKey('updated_at_local')) {
+      context.handle(
+        _updatedAtLocalMeta,
+        updatedAtLocal.isAcceptableOrUnknown(
+          data['updated_at_local']!,
+          _updatedAtLocalMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtLocalMeta);
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {localId};
+  @override
+  DebtTransaction map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DebtTransaction(
+      localId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}local_id'],
+      )!,
+      remoteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_id'],
+      ),
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      friendId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}friend_id'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}amount'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}date'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      createdAtLocal: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at_local'],
+      )!,
+      updatedAtLocal: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at_local'],
+      )!,
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+    );
+  }
+
+  @override
+  $DebtTransactionsTable createAlias(String alias) {
+    return $DebtTransactionsTable(attachedDatabase, alias);
+  }
+}
+
+class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
+  final int localId;
+  final String? remoteId;
+  final String userId;
+  final int friendId;
+  final double amount;
+  final String type;
+  final DateTime date;
+  final String? note;
+  final DateTime createdAtLocal;
+  final DateTime updatedAtLocal;
+  final bool deleted;
+  final String syncStatus;
+  const DebtTransaction({
+    required this.localId,
+    this.remoteId,
+    required this.userId,
+    required this.friendId,
+    required this.amount,
+    required this.type,
+    required this.date,
+    this.note,
+    required this.createdAtLocal,
+    required this.updatedAtLocal,
+    required this.deleted,
+    required this.syncStatus,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['local_id'] = Variable<int>(localId);
+    if (!nullToAbsent || remoteId != null) {
+      map['remote_id'] = Variable<String>(remoteId);
+    }
+    map['user_id'] = Variable<String>(userId);
+    map['friend_id'] = Variable<int>(friendId);
+    map['amount'] = Variable<double>(amount);
+    map['type'] = Variable<String>(type);
+    map['date'] = Variable<DateTime>(date);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['created_at_local'] = Variable<DateTime>(createdAtLocal);
+    map['updated_at_local'] = Variable<DateTime>(updatedAtLocal);
+    map['deleted'] = Variable<bool>(deleted);
+    map['sync_status'] = Variable<String>(syncStatus);
+    return map;
+  }
+
+  DebtTransactionsCompanion toCompanion(bool nullToAbsent) {
+    return DebtTransactionsCompanion(
+      localId: Value(localId),
+      remoteId: remoteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remoteId),
+      userId: Value(userId),
+      friendId: Value(friendId),
+      amount: Value(amount),
+      type: Value(type),
+      date: Value(date),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      createdAtLocal: Value(createdAtLocal),
+      updatedAtLocal: Value(updatedAtLocal),
+      deleted: Value(deleted),
+      syncStatus: Value(syncStatus),
+    );
+  }
+
+  factory DebtTransaction.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DebtTransaction(
+      localId: serializer.fromJson<int>(json['localId']),
+      remoteId: serializer.fromJson<String?>(json['remoteId']),
+      userId: serializer.fromJson<String>(json['userId']),
+      friendId: serializer.fromJson<int>(json['friendId']),
+      amount: serializer.fromJson<double>(json['amount']),
+      type: serializer.fromJson<String>(json['type']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      note: serializer.fromJson<String?>(json['note']),
+      createdAtLocal: serializer.fromJson<DateTime>(json['createdAtLocal']),
+      updatedAtLocal: serializer.fromJson<DateTime>(json['updatedAtLocal']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'localId': serializer.toJson<int>(localId),
+      'remoteId': serializer.toJson<String?>(remoteId),
+      'userId': serializer.toJson<String>(userId),
+      'friendId': serializer.toJson<int>(friendId),
+      'amount': serializer.toJson<double>(amount),
+      'type': serializer.toJson<String>(type),
+      'date': serializer.toJson<DateTime>(date),
+      'note': serializer.toJson<String?>(note),
+      'createdAtLocal': serializer.toJson<DateTime>(createdAtLocal),
+      'updatedAtLocal': serializer.toJson<DateTime>(updatedAtLocal),
+      'deleted': serializer.toJson<bool>(deleted),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+    };
+  }
+
+  DebtTransaction copyWith({
+    int? localId,
+    Value<String?> remoteId = const Value.absent(),
+    String? userId,
+    int? friendId,
+    double? amount,
+    String? type,
+    DateTime? date,
+    Value<String?> note = const Value.absent(),
+    DateTime? createdAtLocal,
+    DateTime? updatedAtLocal,
+    bool? deleted,
+    String? syncStatus,
+  }) => DebtTransaction(
+    localId: localId ?? this.localId,
+    remoteId: remoteId.present ? remoteId.value : this.remoteId,
+    userId: userId ?? this.userId,
+    friendId: friendId ?? this.friendId,
+    amount: amount ?? this.amount,
+    type: type ?? this.type,
+    date: date ?? this.date,
+    note: note.present ? note.value : this.note,
+    createdAtLocal: createdAtLocal ?? this.createdAtLocal,
+    updatedAtLocal: updatedAtLocal ?? this.updatedAtLocal,
+    deleted: deleted ?? this.deleted,
+    syncStatus: syncStatus ?? this.syncStatus,
+  );
+  DebtTransaction copyWithCompanion(DebtTransactionsCompanion data) {
+    return DebtTransaction(
+      localId: data.localId.present ? data.localId.value : this.localId,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      friendId: data.friendId.present ? data.friendId.value : this.friendId,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      type: data.type.present ? data.type.value : this.type,
+      date: data.date.present ? data.date.value : this.date,
+      note: data.note.present ? data.note.value : this.note,
+      createdAtLocal: data.createdAtLocal.present
+          ? data.createdAtLocal.value
+          : this.createdAtLocal,
+      updatedAtLocal: data.updatedAtLocal.present
+          ? data.updatedAtLocal.value
+          : this.updatedAtLocal,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DebtTransaction(')
+          ..write('localId: $localId, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('userId: $userId, ')
+          ..write('friendId: $friendId, ')
+          ..write('amount: $amount, ')
+          ..write('type: $type, ')
+          ..write('date: $date, ')
+          ..write('note: $note, ')
+          ..write('createdAtLocal: $createdAtLocal, ')
+          ..write('updatedAtLocal: $updatedAtLocal, ')
+          ..write('deleted: $deleted, ')
+          ..write('syncStatus: $syncStatus')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    localId,
+    remoteId,
+    userId,
+    friendId,
+    amount,
+    type,
+    date,
+    note,
+    createdAtLocal,
+    updatedAtLocal,
+    deleted,
+    syncStatus,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DebtTransaction &&
+          other.localId == this.localId &&
+          other.remoteId == this.remoteId &&
+          other.userId == this.userId &&
+          other.friendId == this.friendId &&
+          other.amount == this.amount &&
+          other.type == this.type &&
+          other.date == this.date &&
+          other.note == this.note &&
+          other.createdAtLocal == this.createdAtLocal &&
+          other.updatedAtLocal == this.updatedAtLocal &&
+          other.deleted == this.deleted &&
+          other.syncStatus == this.syncStatus);
+}
+
+class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
+  final Value<int> localId;
+  final Value<String?> remoteId;
+  final Value<String> userId;
+  final Value<int> friendId;
+  final Value<double> amount;
+  final Value<String> type;
+  final Value<DateTime> date;
+  final Value<String?> note;
+  final Value<DateTime> createdAtLocal;
+  final Value<DateTime> updatedAtLocal;
+  final Value<bool> deleted;
+  final Value<String> syncStatus;
+  const DebtTransactionsCompanion({
+    this.localId = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.friendId = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.type = const Value.absent(),
+    this.date = const Value.absent(),
+    this.note = const Value.absent(),
+    this.createdAtLocal = const Value.absent(),
+    this.updatedAtLocal = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+  });
+  DebtTransactionsCompanion.insert({
+    this.localId = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    required String userId,
+    required int friendId,
+    required double amount,
+    required String type,
+    required DateTime date,
+    this.note = const Value.absent(),
+    required DateTime createdAtLocal,
+    required DateTime updatedAtLocal,
+    this.deleted = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+  }) : userId = Value(userId),
+       friendId = Value(friendId),
+       amount = Value(amount),
+       type = Value(type),
+       date = Value(date),
+       createdAtLocal = Value(createdAtLocal),
+       updatedAtLocal = Value(updatedAtLocal);
+  static Insertable<DebtTransaction> custom({
+    Expression<int>? localId,
+    Expression<String>? remoteId,
+    Expression<String>? userId,
+    Expression<int>? friendId,
+    Expression<double>? amount,
+    Expression<String>? type,
+    Expression<DateTime>? date,
+    Expression<String>? note,
+    Expression<DateTime>? createdAtLocal,
+    Expression<DateTime>? updatedAtLocal,
+    Expression<bool>? deleted,
+    Expression<String>? syncStatus,
+  }) {
+    return RawValuesInsertable({
+      if (localId != null) 'local_id': localId,
+      if (remoteId != null) 'remote_id': remoteId,
+      if (userId != null) 'user_id': userId,
+      if (friendId != null) 'friend_id': friendId,
+      if (amount != null) 'amount': amount,
+      if (type != null) 'type': type,
+      if (date != null) 'date': date,
+      if (note != null) 'note': note,
+      if (createdAtLocal != null) 'created_at_local': createdAtLocal,
+      if (updatedAtLocal != null) 'updated_at_local': updatedAtLocal,
+      if (deleted != null) 'deleted': deleted,
+      if (syncStatus != null) 'sync_status': syncStatus,
+    });
+  }
+
+  DebtTransactionsCompanion copyWith({
+    Value<int>? localId,
+    Value<String?>? remoteId,
+    Value<String>? userId,
+    Value<int>? friendId,
+    Value<double>? amount,
+    Value<String>? type,
+    Value<DateTime>? date,
+    Value<String?>? note,
+    Value<DateTime>? createdAtLocal,
+    Value<DateTime>? updatedAtLocal,
+    Value<bool>? deleted,
+    Value<String>? syncStatus,
+  }) {
+    return DebtTransactionsCompanion(
+      localId: localId ?? this.localId,
+      remoteId: remoteId ?? this.remoteId,
+      userId: userId ?? this.userId,
+      friendId: friendId ?? this.friendId,
+      amount: amount ?? this.amount,
+      type: type ?? this.type,
+      date: date ?? this.date,
+      note: note ?? this.note,
+      createdAtLocal: createdAtLocal ?? this.createdAtLocal,
+      updatedAtLocal: updatedAtLocal ?? this.updatedAtLocal,
+      deleted: deleted ?? this.deleted,
+      syncStatus: syncStatus ?? this.syncStatus,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (localId.present) {
+      map['local_id'] = Variable<int>(localId.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (friendId.present) {
+      map['friend_id'] = Variable<int>(friendId.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (createdAtLocal.present) {
+      map['created_at_local'] = Variable<DateTime>(createdAtLocal.value);
+    }
+    if (updatedAtLocal.present) {
+      map['updated_at_local'] = Variable<DateTime>(updatedAtLocal.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DebtTransactionsCompanion(')
+          ..write('localId: $localId, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('userId: $userId, ')
+          ..write('friendId: $friendId, ')
+          ..write('amount: $amount, ')
+          ..write('type: $type, ')
+          ..write('date: $date, ')
+          ..write('note: $note, ')
+          ..write('createdAtLocal: $createdAtLocal, ')
+          ..write('updatedAtLocal: $updatedAtLocal, ')
+          ..write('deleted: $deleted, ')
+          ..write('syncStatus: $syncStatus')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $TransactionsTable transactions = $TransactionsTable(this);
   late final $CategoriesTable categories = $CategoriesTable(this);
   late final $SyncQueueTable syncQueue = $SyncQueueTable(this);
+  late final $FriendsTable friends = $FriendsTable(this);
+  late final $DebtTransactionsTable debtTransactions = $DebtTransactionsTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1738,6 +3017,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     transactions,
     categories,
     syncQueue,
+    friends,
+    debtTransactions,
   ];
 }
 
@@ -2588,6 +3869,854 @@ typedef $$SyncQueueTableProcessedTableManager =
       SyncQueueData,
       PrefetchHooks Function()
     >;
+typedef $$FriendsTableCreateCompanionBuilder =
+    FriendsCompanion Function({
+      Value<int> localId,
+      Value<String?> remoteId,
+      required String userId,
+      required String name,
+      Value<String?> phoneNumber,
+      required DateTime createdAtLocal,
+      required DateTime updatedAtLocal,
+      Value<bool> deleted,
+      Value<String> syncStatus,
+    });
+typedef $$FriendsTableUpdateCompanionBuilder =
+    FriendsCompanion Function({
+      Value<int> localId,
+      Value<String?> remoteId,
+      Value<String> userId,
+      Value<String> name,
+      Value<String?> phoneNumber,
+      Value<DateTime> createdAtLocal,
+      Value<DateTime> updatedAtLocal,
+      Value<bool> deleted,
+      Value<String> syncStatus,
+    });
+
+final class $$FriendsTableReferences
+    extends BaseReferences<_$AppDatabase, $FriendsTable, Friend> {
+  $$FriendsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$DebtTransactionsTable, List<DebtTransaction>>
+  _debtTransactionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.debtTransactions,
+    aliasName: $_aliasNameGenerator(
+      db.friends.localId,
+      db.debtTransactions.friendId,
+    ),
+  );
+
+  $$DebtTransactionsTableProcessedTableManager get debtTransactionsRefs {
+    final manager =
+        $$DebtTransactionsTableTableManager($_db, $_db.debtTransactions).filter(
+          (f) => f.friendId.localId.sqlEquals($_itemColumn<int>('local_id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _debtTransactionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$FriendsTableFilterComposer
+    extends Composer<_$AppDatabase, $FriendsTable> {
+  $$FriendsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get localId => $composableBuilder(
+    column: $table.localId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get phoneNumber => $composableBuilder(
+    column: $table.phoneNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAtLocal => $composableBuilder(
+    column: $table.createdAtLocal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAtLocal => $composableBuilder(
+    column: $table.updatedAtLocal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> debtTransactionsRefs(
+    Expression<bool> Function($$DebtTransactionsTableFilterComposer f) f,
+  ) {
+    final $$DebtTransactionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.localId,
+      referencedTable: $db.debtTransactions,
+      getReferencedColumn: (t) => t.friendId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DebtTransactionsTableFilterComposer(
+            $db: $db,
+            $table: $db.debtTransactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$FriendsTableOrderingComposer
+    extends Composer<_$AppDatabase, $FriendsTable> {
+  $$FriendsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get localId => $composableBuilder(
+    column: $table.localId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get phoneNumber => $composableBuilder(
+    column: $table.phoneNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAtLocal => $composableBuilder(
+    column: $table.createdAtLocal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAtLocal => $composableBuilder(
+    column: $table.updatedAtLocal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FriendsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FriendsTable> {
+  $$FriendsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get localId =>
+      $composableBuilder(column: $table.localId, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get phoneNumber => $composableBuilder(
+    column: $table.phoneNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAtLocal => $composableBuilder(
+    column: $table.createdAtLocal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAtLocal => $composableBuilder(
+    column: $table.updatedAtLocal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  Expression<T> debtTransactionsRefs<T extends Object>(
+    Expression<T> Function($$DebtTransactionsTableAnnotationComposer a) f,
+  ) {
+    final $$DebtTransactionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.localId,
+      referencedTable: $db.debtTransactions,
+      getReferencedColumn: (t) => t.friendId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DebtTransactionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.debtTransactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$FriendsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FriendsTable,
+          Friend,
+          $$FriendsTableFilterComposer,
+          $$FriendsTableOrderingComposer,
+          $$FriendsTableAnnotationComposer,
+          $$FriendsTableCreateCompanionBuilder,
+          $$FriendsTableUpdateCompanionBuilder,
+          (Friend, $$FriendsTableReferences),
+          Friend,
+          PrefetchHooks Function({bool debtTransactionsRefs})
+        > {
+  $$FriendsTableTableManager(_$AppDatabase db, $FriendsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FriendsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FriendsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FriendsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> localId = const Value.absent(),
+                Value<String?> remoteId = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> phoneNumber = const Value.absent(),
+                Value<DateTime> createdAtLocal = const Value.absent(),
+                Value<DateTime> updatedAtLocal = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+              }) => FriendsCompanion(
+                localId: localId,
+                remoteId: remoteId,
+                userId: userId,
+                name: name,
+                phoneNumber: phoneNumber,
+                createdAtLocal: createdAtLocal,
+                updatedAtLocal: updatedAtLocal,
+                deleted: deleted,
+                syncStatus: syncStatus,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> localId = const Value.absent(),
+                Value<String?> remoteId = const Value.absent(),
+                required String userId,
+                required String name,
+                Value<String?> phoneNumber = const Value.absent(),
+                required DateTime createdAtLocal,
+                required DateTime updatedAtLocal,
+                Value<bool> deleted = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+              }) => FriendsCompanion.insert(
+                localId: localId,
+                remoteId: remoteId,
+                userId: userId,
+                name: name,
+                phoneNumber: phoneNumber,
+                createdAtLocal: createdAtLocal,
+                updatedAtLocal: updatedAtLocal,
+                deleted: deleted,
+                syncStatus: syncStatus,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$FriendsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({debtTransactionsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (debtTransactionsRefs) db.debtTransactions,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (debtTransactionsRefs)
+                    await $_getPrefetchedData<
+                      Friend,
+                      $FriendsTable,
+                      DebtTransaction
+                    >(
+                      currentTable: table,
+                      referencedTable: $$FriendsTableReferences
+                          ._debtTransactionsRefsTable(db),
+                      managerFromTypedResult: (p0) => $$FriendsTableReferences(
+                        db,
+                        table,
+                        p0,
+                      ).debtTransactionsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where(
+                            (e) => e.friendId == item.localId,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$FriendsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FriendsTable,
+      Friend,
+      $$FriendsTableFilterComposer,
+      $$FriendsTableOrderingComposer,
+      $$FriendsTableAnnotationComposer,
+      $$FriendsTableCreateCompanionBuilder,
+      $$FriendsTableUpdateCompanionBuilder,
+      (Friend, $$FriendsTableReferences),
+      Friend,
+      PrefetchHooks Function({bool debtTransactionsRefs})
+    >;
+typedef $$DebtTransactionsTableCreateCompanionBuilder =
+    DebtTransactionsCompanion Function({
+      Value<int> localId,
+      Value<String?> remoteId,
+      required String userId,
+      required int friendId,
+      required double amount,
+      required String type,
+      required DateTime date,
+      Value<String?> note,
+      required DateTime createdAtLocal,
+      required DateTime updatedAtLocal,
+      Value<bool> deleted,
+      Value<String> syncStatus,
+    });
+typedef $$DebtTransactionsTableUpdateCompanionBuilder =
+    DebtTransactionsCompanion Function({
+      Value<int> localId,
+      Value<String?> remoteId,
+      Value<String> userId,
+      Value<int> friendId,
+      Value<double> amount,
+      Value<String> type,
+      Value<DateTime> date,
+      Value<String?> note,
+      Value<DateTime> createdAtLocal,
+      Value<DateTime> updatedAtLocal,
+      Value<bool> deleted,
+      Value<String> syncStatus,
+    });
+
+final class $$DebtTransactionsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $DebtTransactionsTable, DebtTransaction> {
+  $$DebtTransactionsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $FriendsTable _friendIdTable(_$AppDatabase db) =>
+      db.friends.createAlias(
+        $_aliasNameGenerator(db.debtTransactions.friendId, db.friends.localId),
+      );
+
+  $$FriendsTableProcessedTableManager get friendId {
+    final $_column = $_itemColumn<int>('friend_id')!;
+
+    final manager = $$FriendsTableTableManager(
+      $_db,
+      $_db.friends,
+    ).filter((f) => f.localId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_friendIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$DebtTransactionsTableFilterComposer
+    extends Composer<_$AppDatabase, $DebtTransactionsTable> {
+  $$DebtTransactionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get localId => $composableBuilder(
+    column: $table.localId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAtLocal => $composableBuilder(
+    column: $table.createdAtLocal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAtLocal => $composableBuilder(
+    column: $table.updatedAtLocal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$FriendsTableFilterComposer get friendId {
+    final $$FriendsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.friendId,
+      referencedTable: $db.friends,
+      getReferencedColumn: (t) => t.localId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FriendsTableFilterComposer(
+            $db: $db,
+            $table: $db.friends,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DebtTransactionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DebtTransactionsTable> {
+  $$DebtTransactionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get localId => $composableBuilder(
+    column: $table.localId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAtLocal => $composableBuilder(
+    column: $table.createdAtLocal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAtLocal => $composableBuilder(
+    column: $table.updatedAtLocal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$FriendsTableOrderingComposer get friendId {
+    final $$FriendsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.friendId,
+      referencedTable: $db.friends,
+      getReferencedColumn: (t) => t.localId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FriendsTableOrderingComposer(
+            $db: $db,
+            $table: $db.friends,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DebtTransactionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DebtTransactionsTable> {
+  $$DebtTransactionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get localId =>
+      $composableBuilder(column: $table.localId, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAtLocal => $composableBuilder(
+    column: $table.createdAtLocal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAtLocal => $composableBuilder(
+    column: $table.updatedAtLocal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  $$FriendsTableAnnotationComposer get friendId {
+    final $$FriendsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.friendId,
+      referencedTable: $db.friends,
+      getReferencedColumn: (t) => t.localId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FriendsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.friends,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DebtTransactionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DebtTransactionsTable,
+          DebtTransaction,
+          $$DebtTransactionsTableFilterComposer,
+          $$DebtTransactionsTableOrderingComposer,
+          $$DebtTransactionsTableAnnotationComposer,
+          $$DebtTransactionsTableCreateCompanionBuilder,
+          $$DebtTransactionsTableUpdateCompanionBuilder,
+          (DebtTransaction, $$DebtTransactionsTableReferences),
+          DebtTransaction,
+          PrefetchHooks Function({bool friendId})
+        > {
+  $$DebtTransactionsTableTableManager(
+    _$AppDatabase db,
+    $DebtTransactionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DebtTransactionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DebtTransactionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DebtTransactionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> localId = const Value.absent(),
+                Value<String?> remoteId = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<int> friendId = const Value.absent(),
+                Value<double> amount = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<DateTime> date = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<DateTime> createdAtLocal = const Value.absent(),
+                Value<DateTime> updatedAtLocal = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+              }) => DebtTransactionsCompanion(
+                localId: localId,
+                remoteId: remoteId,
+                userId: userId,
+                friendId: friendId,
+                amount: amount,
+                type: type,
+                date: date,
+                note: note,
+                createdAtLocal: createdAtLocal,
+                updatedAtLocal: updatedAtLocal,
+                deleted: deleted,
+                syncStatus: syncStatus,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> localId = const Value.absent(),
+                Value<String?> remoteId = const Value.absent(),
+                required String userId,
+                required int friendId,
+                required double amount,
+                required String type,
+                required DateTime date,
+                Value<String?> note = const Value.absent(),
+                required DateTime createdAtLocal,
+                required DateTime updatedAtLocal,
+                Value<bool> deleted = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+              }) => DebtTransactionsCompanion.insert(
+                localId: localId,
+                remoteId: remoteId,
+                userId: userId,
+                friendId: friendId,
+                amount: amount,
+                type: type,
+                date: date,
+                note: note,
+                createdAtLocal: createdAtLocal,
+                updatedAtLocal: updatedAtLocal,
+                deleted: deleted,
+                syncStatus: syncStatus,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$DebtTransactionsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({friendId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (friendId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.friendId,
+                                referencedTable:
+                                    $$DebtTransactionsTableReferences
+                                        ._friendIdTable(db),
+                                referencedColumn:
+                                    $$DebtTransactionsTableReferences
+                                        ._friendIdTable(db)
+                                        .localId,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$DebtTransactionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DebtTransactionsTable,
+      DebtTransaction,
+      $$DebtTransactionsTableFilterComposer,
+      $$DebtTransactionsTableOrderingComposer,
+      $$DebtTransactionsTableAnnotationComposer,
+      $$DebtTransactionsTableCreateCompanionBuilder,
+      $$DebtTransactionsTableUpdateCompanionBuilder,
+      (DebtTransaction, $$DebtTransactionsTableReferences),
+      DebtTransaction,
+      PrefetchHooks Function({bool friendId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2598,4 +4727,8 @@ class $AppDatabaseManager {
       $$CategoriesTableTableManager(_db, _db.categories);
   $$SyncQueueTableTableManager get syncQueue =>
       $$SyncQueueTableTableManager(_db, _db.syncQueue);
+  $$FriendsTableTableManager get friends =>
+      $$FriendsTableTableManager(_db, _db.friends);
+  $$DebtTransactionsTableTableManager get debtTransactions =>
+      $$DebtTransactionsTableTableManager(_db, _db.debtTransactions);
 }

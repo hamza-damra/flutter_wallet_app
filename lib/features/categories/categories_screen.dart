@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:ui';
 
 import '../../l10n/app_localizations.dart';
 import '../../core/models/category_model.dart';
@@ -35,9 +36,9 @@ class CategoriesScreen extends ConsumerWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Color(0xFF0F172A),
-                      Color(0xFF1E1B4B),
-                      Color(0xFF312E81),
+                      Color(0xFF2A2D3E),
+                      Color(0xFF26293A),
+                      Color(0xFF2B2E40),
                     ],
                   ),
                 ),
@@ -77,14 +78,19 @@ class CategoriesScreen extends ConsumerWidget {
             child: Column(
               children: [
                 // Custom App Bar
-                _buildAppBar(context, l10n, theme),
+                _buildAppBar(context, l10n, theme, themeMode),
 
                 // Content
                 Expanded(
                   child: categoriesAsync.when(
                     data: (categories) {
                       if (categories.isEmpty) {
-                        return _buildEmptyState(context, l10n, theme);
+                        return _buildEmptyState(
+                          context,
+                          l10n,
+                          theme,
+                          themeMode,
+                        );
                       }
                       return _buildCategoriesList(
                         context,
@@ -97,7 +103,7 @@ class CategoriesScreen extends ConsumerWidget {
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
                     error: (err, stack) =>
-                        _buildErrorState(context, l10n, err, theme),
+                        _buildErrorState(context, l10n, err, theme, themeMode),
                   ),
                 ),
               ],
@@ -113,28 +119,44 @@ class CategoriesScreen extends ConsumerWidget {
     BuildContext context,
     AppLocalizations l10n,
     ThemeData theme,
+    AppThemeMode themeMode,
   ) {
+    final isGlassy = themeMode == AppThemeMode.glassy;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
           // Back button
-          Container(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: BackdropFilter(
+              filter: isGlassy
+                  ? ImageFilter.blur(sigmaX: 5, sigmaY: 5)
+                  : ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isGlassy
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: isGlassy
+                      ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+                      : null,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-              color: theme.colorScheme.onSurface,
-              onPressed: () => context.pop(),
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                  color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
+                  onPressed: () => context.pop(),
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -148,13 +170,17 @@ class CategoriesScreen extends ConsumerWidget {
                   l10n.categories,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
+                    color: isGlassy
+                        ? Colors.white
+                        : theme.colorScheme.onSurface,
                   ),
                 ),
                 Text(
                   l10n.manageCategories,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    color:
+                        (isGlassy ? Colors.white : theme.colorScheme.onSurface)
+                            .withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -201,7 +227,9 @@ class CategoriesScreen extends ConsumerWidget {
     BuildContext context,
     AppLocalizations l10n,
     ThemeData theme,
+    AppThemeMode themeMode,
   ) {
+    final isGlassy = themeMode == AppThemeMode.glassy;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -228,7 +256,9 @@ class CategoriesScreen extends ConsumerWidget {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
+                    color: isGlassy
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : theme.colorScheme.surface,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
@@ -250,7 +280,7 @@ class CategoriesScreen extends ConsumerWidget {
             Text(
               l10n.noCategoriesFound,
               style: theme.textTheme.headlineSmall?.copyWith(
-                color: theme.colorScheme.onSurface,
+                color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
@@ -259,7 +289,8 @@ class CategoriesScreen extends ConsumerWidget {
             Text(
               l10n.tapToAddCategory,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                color: (isGlassy ? Colors.white : theme.colorScheme.onSurface)
+                    .withValues(alpha: 0.6),
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
@@ -296,7 +327,9 @@ class CategoriesScreen extends ConsumerWidget {
     AppLocalizations l10n,
     Object err,
     ThemeData theme,
+    AppThemeMode themeMode,
   ) {
+    final isGlassy = themeMode == AppThemeMode.glassy;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -309,7 +342,8 @@ class CategoriesScreen extends ConsumerWidget {
               '${l10n.error}: $err',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                color: (isGlassy ? Colors.white : theme.colorScheme.onSurface)
+                    .withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -354,6 +388,7 @@ class CategoriesScreen extends ConsumerWidget {
             AppColors.expense,
             expenseCategories.length,
             theme,
+            themeMode,
           ),
           const SizedBox(height: 16),
           ...expenseCategories.asMap().entries.map(
@@ -379,6 +414,7 @@ class CategoriesScreen extends ConsumerWidget {
             AppColors.income,
             incomeCategories.length,
             theme,
+            themeMode,
           ),
           const SizedBox(height: 16),
           ...incomeCategories.asMap().entries.map(
@@ -441,51 +477,64 @@ class CategoriesScreen extends ConsumerWidget {
     required ThemeData theme,
     required AppThemeMode themeMode,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: themeMode == AppThemeMode.glassy
-            ? Border.all(color: Colors.white.withValues(alpha: 0.2))
-            : null,
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+    final isGlassy = themeMode == AppThemeMode.glassy;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: isGlassy
+            ? ImageFilter.blur(sigmaX: 10, sigmaY: 10)
+            : ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isGlassy
+                ? Colors.white.withValues(alpha: 0.05)
+                : theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: themeMode == AppThemeMode.glassy
+                ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+                : null,
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                count.toString(),
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: (isGlassy ? Colors.white : theme.colorScheme.onSurface)
+                      .withValues(alpha: 0.6),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            count.toString(),
-            style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -496,7 +545,9 @@ class CategoriesScreen extends ConsumerWidget {
     Color color,
     int count,
     ThemeData theme,
+    AppThemeMode themeMode,
   ) {
+    final isGlassy = themeMode == AppThemeMode.glassy;
     return Row(
       children: [
         Container(
@@ -511,7 +562,7 @@ class CategoriesScreen extends ConsumerWidget {
         Text(
           title,
           style: theme.textTheme.titleLarge?.copyWith(
-            color: theme.colorScheme.onSurface,
+            color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -549,6 +600,8 @@ class CategoriesScreen extends ConsumerWidget {
       category,
     );
 
+    final isGlassy = themeMode == AppThemeMode.glassy;
+
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: Duration(milliseconds: 200 + (index * 50)),
@@ -559,95 +612,111 @@ class CategoriesScreen extends ConsumerWidget {
           child: Opacity(opacity: value, child: child),
         );
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.button),
-          border: themeMode == AppThemeMode.glassy
-              ? Border.all(color: Colors.white.withValues(alpha: 0.1))
-              : null,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.button),
+        child: BackdropFilter(
+          filter: isGlassy
+              ? ImageFilter.blur(sigmaX: 5, sigmaY: 5)
+              : ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: isGlassy
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(AppRadius.button),
+              border: themeMode == AppThemeMode.glassy
+                  ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+                  : null,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadius.button),
-          child: InkWell(
-            onTap: () => _navigateToEditCategory(context, category),
-            borderRadius: BorderRadius.circular(AppRadius.button),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  // Icon container with gradient
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          color.withValues(alpha: 0.15),
-                          color.withValues(alpha: 0.05),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(
-                      IconHelper.getIcon(category.icon),
-                      color: color,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-
-                  // Category name
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          localizedName,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.onSurface,
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(AppRadius.button),
+              child: InkWell(
+                onTap: () => _navigateToEditCategory(context, category),
+                borderRadius: BorderRadius.circular(AppRadius.button),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      // Icon container with gradient
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              color.withValues(alpha: 0.15),
+                              color.withValues(alpha: 0.05),
+                            ],
                           ),
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          isIncome ? 'Income' : 'Expense',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: color,
-                            fontWeight: FontWeight.w500,
-                          ),
+                        child: Icon(
+                          IconHelper.getIcon(category.icon),
+                          color: color,
+                          size: 24,
                         ),
-                      ],
-                    ),
-                  ),
-
-                  // Edit button
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.onSurface.withValues(
-                        alpha: 0.05,
                       ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.edit_outlined,
-                      size: 18,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                    ),
+                      const SizedBox(width: 16),
+
+                      // Category name
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              localizedName,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: isGlassy
+                                    ? Colors.white
+                                    : theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              isIncome ? 'Income' : 'Expense',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: color,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Edit button
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.05,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.edit_outlined,
+                          size: 18,
+                          color:
+                              (isGlassy
+                                      ? Colors.white
+                                      : theme.colorScheme.onSurface)
+                                  .withValues(alpha: 0.4),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),

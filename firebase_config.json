@@ -1,0 +1,39 @@
+{
+  "parameters": {
+    "latest_version_code": {
+      "defaultValue": {
+        "value": "4"
+      },
+      "description": "The logic version code of the latest release (must prompt update if app version < this)",
+      "valueType": "NUMBER"
+    },
+    "latest_version_name": {
+      "defaultValue": {
+        "value": "1.0.4"
+      },
+      "description": "Display name of the latest version",
+      "valueType": "STRING"
+    },
+    "apk_url": {
+      "defaultValue": {
+        "value": "https://github.com/hamza-damra/flutter_wallet_app/releases/download/v1.0.4/app-release.apk"
+      },
+      "description": "Direct download URL for the APK",
+      "valueType": "STRING"
+    },
+    "update_message": {
+      "defaultValue": {
+        "value": "A new version with a beautiful Glassy theme is available!"
+      },
+      "description": "Message shown to users in the update dialog",
+      "valueType": "STRING"
+    },
+    "force_update": {
+      "defaultValue": {
+        "value": "false"
+      },
+      "description": "Whether to force users to update",
+      "valueType": "BOOLEAN"
+    }
+  }
+}

@@ -77,9 +77,7 @@ class ReportsService {
     final file = File('${directory.path}/$fileName');
     await file.writeAsBytes(pdfBytes);
 
-    await SharePlus.instance.share(
-      ShareParams(files: [XFile(file.path)], text: 'Financial Report'),
-    );
+    await Share.shareXFiles([XFile(file.path)], text: 'Financial Report');
   }
 
   Future<void> shareAsImage(Uint8List imageBytes) async {
@@ -88,8 +86,8 @@ class ReportsService {
     final file = File('${directory.path}/$fileName');
     await file.writeAsBytes(imageBytes);
 
-    await SharePlus.instance.share(
-      ShareParams(files: [XFile(file.path)], text: 'Financial Report Summary'),
-    );
+    await Share.shareXFiles([
+      XFile(file.path),
+    ], text: 'Financial Report Summary');
   }
 }

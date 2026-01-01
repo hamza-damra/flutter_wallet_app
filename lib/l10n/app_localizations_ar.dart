@@ -651,4 +651,52 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get downloadFailed => 'فشل في فتح رابط التنزيل';
+
+  @override
+  String get debtsTitle => 'الديون';
+
+  @override
+  String get addFriend => 'إضافة صديق';
+
+  @override
+  String get owedByMe => 'أنا مدين';
+
+  @override
+  String get owedToMe => 'مدين لي';
+
+  @override
+  String get lent => 'أقرضت';
+
+  @override
+  String get borrowed => 'اقترضت';
+
+  @override
+  String get debtHistory => 'السجل';
+
+  @override
+  String get newDebtTransaction => 'معاملة دين جديدة';
+
+  @override
+  String get friendName => 'اسم الصديق';
+
+  @override
+  String get phoneNumber => 'رقم الهاتف';
+
+  @override
+  String get totalLent => 'إجمالي ما أقرضته';
+
+  @override
+  String get totalBorrowed => 'إجمالي ما اقترضه';
+
+  @override
+  String get settled => 'تمت التسوية';
+
+  @override
+  String get deleteFriend => 'حذف صديق';
+
+  @override
+  String get deleteFriendConfirm => 'هل أنت متأكد من حذف هذا الصديق؟';
+
+  @override
+  String get debtTransactions => 'معاملات الديون';
 }

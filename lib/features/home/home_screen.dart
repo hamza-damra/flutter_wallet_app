@@ -36,6 +36,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (user != null) {
         ref.read(firestoreServiceProvider).seedDefaultCategories(user.uid);
       }
+
+      // Check for updates on app launch
+      ref.read(updateServiceProvider).checkAndPromptIfNeeded(context);
     });
   }
 
@@ -575,6 +578,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     onTap: () {
                       Navigator.pop(context);
                       context.push('/reports');
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.handshake_outlined,
+                    title: l10n.debtsTitle,
+                    onTap: () {
+                      Navigator.pop(context);
+                      context.push('/debts');
                     },
                   ),
                   _buildDrawerItem(

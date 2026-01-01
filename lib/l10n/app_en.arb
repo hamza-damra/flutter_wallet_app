@@ -286,5 +286,23 @@
   "updateRequired": "This update is required to continue using the app.",
   "dontRemindVersion": "Don't remind me for this version",
   "updateMessage": "A new version is available with bug fixes and improvements.",
-  "downloadFailed": "Failed to open download link"
+  "downloadFailed": "Failed to open download link",
+  "debtsTitle": "Debts",
+  "addFriend": "Add Friend",
+  "owedByMe": "I Owe",
+  "owedToMe": "Owes Me",
+  "lent": "Lent",
+  "borrowed": "Borrowed",
+  "debtHistory": "History",
+  "newDebtTransaction": "Add Debt Transaction",
+  "friendName": "Friend Name",
+  "phoneNumber": "Phone Number",
+  "totalLent": "Total Lent",
+  "totalBorrowed": "Total Borrowed",
+  "settled": "Settled",
+  "deleteFriend": "Delete Friend",
+  "deleteFriendConfirm": "Are you sure you want to delete this friend?",
+  "debtTransactions": "Debt Transactions"
 }
+
+

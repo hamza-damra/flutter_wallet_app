@@ -538,10 +538,61 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         final updateService = ref.read(updateServiceProvider);
                         // Reset session flag to allow showing dialog
                         updateService.resetSessionFlag();
+
+                        // DEBUG: Print detailed update check info
+                        debugPrint('========================================');
+                        debugPrint('DEBUG: Check for Updates pressed');
+                        debugPrint(
+                          'DEBUG: Installed Version Code: ${updateService.getInstalledVersionCode()}',
+                        );
+                        debugPrint(
+                          'DEBUG: Installed Version Name: ${updateService.getInstalledVersionName()}',
+                        );
+
+                        // Fetch remote config and show debug info
+                        final updateInfo = await updateService
+                            .fetchRemoteUpdateInfo();
+                        if (updateInfo != null) {
+                          debugPrint(
+                            'DEBUG: Remote Latest Version Code: ${updateInfo.latestVersionCode}',
+                          );
+                          debugPrint(
+                            'DEBUG: Remote Latest Version Name: ${updateInfo.latestVersionName}',
+                          );
+                          debugPrint(
+                            'DEBUG: Remote APK URL: ${updateInfo.apkUrl}',
+                          );
+                          debugPrint(
+                            'DEBUG: Force Update: ${updateInfo.forceUpdate}',
+                          );
+                          debugPrint(
+                            'DEBUG: Min Supported Version: ${updateInfo.minSupportedVersionCode}',
+                          );
+                          debugPrint(
+                            'DEBUG: Update Message: ${updateInfo.updateMessage}',
+                          );
+                          debugPrint(
+                            'DEBUG: Has Valid APK URL: ${updateInfo.hasValidApkUrl}',
+                          );
+
+                          final requirement = updateService
+                              .getUpdateRequirement(updateInfo);
+                          debugPrint('DEBUG: Update Requirement: $requirement');
+                        } else {
+                          debugPrint(
+                            'DEBUG: Failed to fetch remote update info (returned null)',
+                          );
+                        }
+                        debugPrint('========================================');
+
                         // Trigger update check
                         if (context.mounted) {
                           final shown = await updateService
-                              .checkAndPromptIfNeeded(context);
+                              .checkAndPromptIfNeeded(
+                                context,
+                                bypassCooldown: true,
+                              );
+                          debugPrint('DEBUG: Update dialog shown: $shown');
                           if (!shown && context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -565,7 +616,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             );
                           }
                         }
-                      } catch (e) {
+                      } catch (e, stackTrace) {
+                        debugPrint('DEBUG: Error checking updates: $e');
+                        debugPrint('DEBUG: Stack trace: $stackTrace');
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(

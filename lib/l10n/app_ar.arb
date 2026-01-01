@@ -218,5 +218,22 @@
   "updateRequired": "هذا التحديث مطلوب للاستمرار في استخدام التطبيق.",
   "dontRemindVersion": "لا تذكرني بهذا الإصدار",
   "updateMessage": "إصدار جديد متاح مع إصلاحات وتحسينات.",
-  "downloadFailed": "فشل في فتح رابط التنزيل"
+  "downloadFailed": "فشل في فتح رابط التنزيل",
+  "debtsTitle": "الديون",
+  "addFriend": "إضافة صديق",
+  "owedByMe": "أنا مدين",
+  "owedToMe": "مدين لي",
+  "lent": "أقرضت",
+  "borrowed": "اقترضت",
+  "debtHistory": "السجل",
+  "newDebtTransaction": "معاملة دين جديدة",
+  "friendName": "اسم الصديق",
+  "phoneNumber": "رقم الهاتف",
+  "totalLent": "إجمالي ما أقرضته",
+  "totalBorrowed": "إجمالي ما اقترضه",
+  "settled": "تمت التسوية",
+  "deleteFriend": "حذف صديق",
+  "deleteFriendConfirm": "هل أنت متأكد من حذف هذا الصديق؟",
+  "debtTransactions": "معاملات الديون"
 }
+

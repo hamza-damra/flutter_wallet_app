@@ -1,9 +1,15 @@
 import 'dart:developer';
+import 'dart:ui';
 
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -102,7 +108,8 @@ class UpdateService {
       await _remoteConfig!.setConfigSettings(
         RemoteConfigSettings(
           fetchTimeout: const Duration(seconds: 15),
-          minimumFetchInterval: const Duration(hours: 1),
+          // DEBUG: Set to zero for testing immediate updates
+          minimumFetchInterval: Duration.zero,
         ),
       );
 
@@ -175,6 +182,33 @@ class UpdateService {
   UpdateRequirement getUpdateRequirement(UpdateInfo updateInfo) {
     final installedVersionCode = getInstalledVersionCode();
 
+    // DEBUG LOGS
+    log(
+      '------------------------------------------------',
+      name: 'UpdateService',
+    );
+    log('DEBUG: Checking for updates...', name: 'UpdateService');
+    log(
+      'DEBUG: Installed Version Code: $installedVersionCode',
+      name: 'UpdateService',
+    );
+    log(
+      'DEBUG: Remote Latest Version Code: ${updateInfo.latestVersionCode}',
+      name: 'UpdateService',
+    );
+    log(
+      'DEBUG: Remote Min Supported Code: ${updateInfo.minSupportedVersionCode}',
+      name: 'UpdateService',
+    );
+    log(
+      'DEBUG: Force Update Flag: ${updateInfo.forceUpdate}',
+      name: 'UpdateService',
+    );
+    log(
+      '------------------------------------------------',
+      name: 'UpdateService',
+    );
+
     // Check if installed version is below minimum supported - force update
     if (installedVersionCode < updateInfo.minSupportedVersionCode) {
       log(
@@ -202,7 +236,10 @@ class UpdateService {
       return UpdateRequirement.optional;
     }
 
-    log('UpdateService: App is up to date', name: 'UpdateService');
+    log(
+      'UpdateService: App is up to date (installed: $installedVersionCode >= latest: ${updateInfo.latestVersionCode})',
+      name: 'UpdateService',
+    );
     return UpdateRequirement.none;
   }
 
@@ -285,7 +322,11 @@ class UpdateService {
 
   /// Main method to check for updates and prompt the user if needed
   /// Returns true if an update dialog was shown
-  Future<bool> checkAndPromptIfNeeded(BuildContext context) async {
+  /// Set [bypassCooldown] to true for manual "Check for Updates" button clicks
+  Future<bool> checkAndPromptIfNeeded(
+    BuildContext context, {
+    bool bypassCooldown = false,
+  }) async {
     // Prevent showing multiple dialogs in a single session
     if (_hasShownDialogThisSession) {
       log(
@@ -314,9 +355,13 @@ class UpdateService {
         return false;
       }
 
-      // For optional updates, check if we should prompt
-      if (requirement == UpdateRequirement.optional) {
+      // For optional updates, check if we should prompt (unless bypassing cooldown)
+      if (requirement == UpdateRequirement.optional && !bypassCooldown) {
         if (!shouldPromptOptionalUpdate(updateInfo)) {
+          log(
+            'UpdateService: Skipping optional update due to cooldown/skip',
+            name: 'UpdateService',
+          );
           return false;
         }
       }
@@ -363,18 +408,12 @@ class UpdateService {
         installedVersion: getInstalledVersionName(),
         isForced: isForced,
         onUpdate: () async {
-          final success = await openApkDownloadUrl(updateInfo.apkUrl);
+          // Close the initial dialog before starting download
           if (context.mounted) {
             Navigator.of(context).pop(UpdatePromptResult.update);
-            if (!success) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Failed to open download link'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
           }
+          // Start the download and install process
+          await _downloadAndInstallUpdate(context, updateInfo);
         },
         onLater: () {
           Navigator.of(context).pop(UpdatePromptResult.later);
@@ -402,11 +441,72 @@ class UpdateService {
       case UpdatePromptResult.update:
         return true;
       case UpdatePromptResult.skipVersion:
-        await skipVersion(updateInfo.latestVersionCode);
+        // Already handled in the dialog callback
         return true;
       case UpdatePromptResult.later:
       case UpdatePromptResult.skip:
         return true;
+    }
+  }
+
+  Future<void> _downloadAndInstallUpdate(
+    BuildContext context,
+    UpdateInfo updateInfo,
+  ) async {
+    final dio = Dio();
+    String? savePath;
+
+    // Show progress dialog
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return _DownloadProgressDialog(
+          dio: dio,
+          url: updateInfo.apkUrl,
+          onDownloadComplete: (path) {
+            savePath = path;
+            Navigator.of(context).pop(); // Close progress dialog
+          },
+          onError: (e) {
+            Navigator.of(context).pop(); // Close progress dialog
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Download failed: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+        );
+      },
+    ).then((_) async {
+      // After dialog closes, if we have a path, try to install
+      if (savePath != null) {
+        log(
+          'UpdateService: Install requested for: $savePath',
+          name: 'UpdateService',
+        );
+        await _installApk(savePath!);
+      }
+    });
+  }
+
+  Future<void> _installApk(String path) async {
+    try {
+      final result = await OpenFilex.open(path);
+      log(
+        'UpdateService: OpenFilex result: ${result.type} - ${result.message}',
+        name: 'UpdateService',
+      );
+      if (result.type != ResultType.done) {
+        // Handle error if needed
+      }
+    } catch (e) {
+      log('UpdateService: Error installing APK: $e', name: 'UpdateService');
     }
   }
 
@@ -438,244 +538,746 @@ class _UpdateDialogContent extends StatefulWidget {
   State<_UpdateDialogContent> createState() => _UpdateDialogContentState();
 }
 
-class _UpdateDialogContentState extends State<_UpdateDialogContent> {
+class _UpdateDialogContentState extends State<_UpdateDialogContent>
+    with SingleTickerProviderStateMixin {
   bool _skipVersionChecked = false;
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _scaleAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutBack,
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final isDark = theme.brightness == Brightness.dark;
 
     return PopScope(
       canPop: !widget.isForced,
-      child: AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.system_update,
-                color: colorScheme.primary,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                isArabic ? 'تحديث متوفر' : 'Update Available',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Version info
-              Container(
-                padding: const EdgeInsets.all(16),
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
                 decoration: BoxDecoration(
-                  color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: colorScheme.outline.withValues(alpha: 0.3),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isDark
+                        ? [
+                            const Color(0xFF1E1B4B).withValues(alpha: 0.95),
+                            const Color(0xFF312E81).withValues(alpha: 0.9),
+                          ]
+                        : [
+                            Colors.white.withValues(alpha: 0.95),
+                            Colors.grey.shade50.withValues(alpha: 0.95),
+                          ],
                   ),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.15)
+                        : Colors.grey.withValues(alpha: 0.2),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 30,
+                      offset: const Offset(0, 15),
+                    ),
+                  ],
                 ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildVersionRow(
-                      isArabic ? 'الإصدار الحالي' : 'Current Version',
-                      widget.installedVersion,
-                      theme,
+                    // Header with gradient
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            theme.primaryColor,
+                            theme.primaryColor.withValues(alpha: 0.8),
+                          ],
+                        ),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(28),
+                          topRight: Radius.circular(28),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          // Animated icon
+                          Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                width: 2,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.system_update_alt_rounded,
+                              color: Colors.white,
+                              size: 36,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            isArabic
+                                ? 'تحديث جديد متوفر!'
+                                : 'Update Available!',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            isArabic
+                                ? 'نسخة أحدث جاهزة للتحميل'
+                                : 'A newer version is ready to download',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.8),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    Divider(color: colorScheme.outline.withValues(alpha: 0.2)),
-                    const SizedBox(height: 8),
-                    _buildVersionRow(
-                      isArabic ? 'الإصدار الجديد' : 'New Version',
-                      widget.updateInfo.latestVersionName,
-                      theme,
-                      isHighlighted: true,
+
+                    // Content
+                    Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          // Version comparison card
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.05)
+                                  : Colors.grey.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isDark
+                                    ? Colors.white.withValues(alpha: 0.1)
+                                    : Colors.grey.withValues(alpha: 0.2),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                // Current version
+                                Expanded(
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        isArabic ? 'الحالي' : 'Current',
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: isDark
+                                                  ? Colors.white.withValues(
+                                                      alpha: 0.6,
+                                                    )
+                                                  : Colors.grey.shade600,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isDark
+                                              ? Colors.white.withValues(
+                                                  alpha: 0.1,
+                                                )
+                                              : Colors.grey.shade200,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'v${widget.installedVersion}',
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: isDark
+                                                    ? Colors.white.withValues(
+                                                        alpha: 0.7,
+                                                      )
+                                                    : Colors.grey.shade700,
+                                              ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Arrow
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: Icon(
+                                    Icons.arrow_forward_rounded,
+                                    color: theme.primaryColor,
+                                    size: 28,
+                                  ),
+                                ),
+                                // New version
+                                Expanded(
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        isArabic ? 'الجديد' : 'New',
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: theme.primaryColor,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              theme.primaryColor.withValues(
+                                                alpha: 0.2,
+                                              ),
+                                              theme.primaryColor.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          border: Border.all(
+                                            color: theme.primaryColor
+                                                .withValues(alpha: 0.3),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'v${widget.updateInfo.latestVersionName}',
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: theme.primaryColor,
+                                              ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Update message
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: theme.primaryColor.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.auto_awesome,
+                                  color: theme.primaryColor,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    widget.updateInfo.updateMessage.isNotEmpty
+                                        ? widget.updateInfo.updateMessage
+                                        : (isArabic
+                                              ? 'إصدار جديد مع تحسينات وإصلاحات.'
+                                              : 'New version with improvements and fixes.'),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black87,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Force update warning
+                          if (widget.isForced) ...[
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.orange.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.warning_amber_rounded,
+                                      color: Colors.orange,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      isArabic
+                                          ? 'هذا التحديث مطلوب للاستمرار.'
+                                          : 'This update is required to continue.',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: Colors.orange.shade800,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+
+                          // Skip version checkbox (optional updates only)
+                          if (!widget.isForced) ...[
+                            const SizedBox(height: 16),
+                            InkWell(
+                              onTap: () => setState(
+                                () =>
+                                    _skipVersionChecked = !_skipVersionChecked,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: _skipVersionChecked
+                                      ? theme.primaryColor.withValues(
+                                          alpha: 0.1,
+                                        )
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: _skipVersionChecked
+                                        ? theme.primaryColor.withValues(
+                                            alpha: 0.3,
+                                          )
+                                        : (isDark
+                                              ? Colors.white.withValues(
+                                                  alpha: 0.1,
+                                                )
+                                              : Colors.grey.withValues(
+                                                  alpha: 0.3,
+                                                )),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 22,
+                                      height: 22,
+                                      decoration: BoxDecoration(
+                                        color: _skipVersionChecked
+                                            ? theme.primaryColor
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: _skipVersionChecked
+                                              ? theme.primaryColor
+                                              : (isDark
+                                                    ? Colors.white38
+                                                    : Colors.grey),
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: _skipVersionChecked
+                                          ? const Icon(
+                                              Icons.check,
+                                              size: 16,
+                                              color: Colors.white,
+                                            )
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        isArabic
+                                            ? 'لا تذكرني بهذا الإصدار'
+                                            : "Don't remind me for this version",
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: isDark
+                                                  ? Colors.white70
+                                                  : Colors.grey.shade700,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 24),
+
+                          // Buttons
+                          // Buttons
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Update button (Primary Action)
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      theme.primaryColor,
+                                      theme.primaryColor.withValues(alpha: 0.8),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(14),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: theme.primaryColor.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
+                                ),
+                                child: ElevatedButton.icon(
+                                  onPressed: widget.onUpdate,
+                                  icon: const Icon(
+                                    Icons.download_rounded,
+                                    size: 24,
+                                  ),
+                                  label: Text(
+                                    isArabic ? 'تحديث الآن' : 'Update Now',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    foregroundColor: Colors.white,
+                                    shadowColor: Colors.transparent,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              // Later button (Secondary Action - Optional only)
+                              if (!widget.isForced) ...[
+                                const SizedBox(height: 12),
+                                OutlinedButton(
+                                  onPressed: () {
+                                    if (_skipVersionChecked) {
+                                      widget.onSkipVersion();
+                                    } else {
+                                      widget.onLater();
+                                    }
+                                  },
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    side: BorderSide(
+                                      color: isDark
+                                          ? Colors.white.withValues(alpha: 0.2)
+                                          : Colors.grey.shade400,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    isArabic ? 'لاحقاً' : 'Later',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.grey.shade700,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-
-              const SizedBox(height: 16),
-
-              // Update message
-              Text(
-                widget.updateInfo.updateMessage.isNotEmpty
-                    ? widget.updateInfo.updateMessage
-                    : (isArabic
-                          ? 'إصدار جديد متاح مع إصلاحات وتحسينات.'
-                          : 'A new version is available with bug fixes and improvements.'),
-                style: theme.textTheme.bodyMedium,
-              ),
-
-              // Force update warning
-              if (widget.isForced) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.orange.shade200),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.warning_amber_rounded,
-                        color: Colors.orange.shade700,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          isArabic
-                              ? 'هذا التحديث مطلوب للاستمرار في استخدام التطبيق.'
-                              : 'This update is required to continue using the app.',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.orange.shade800,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-
-              // "Don't remind for this version" checkbox (optional updates only)
-              if (!widget.isForced) ...[
-                const SizedBox(height: 16),
-                InkWell(
-                  onTap: () {
-                    setState(() {
-                      _skipVersionChecked = !_skipVersionChecked;
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: Checkbox(
-                            value: _skipVersionChecked,
-                            onChanged: (value) {
-                              setState(() {
-                                _skipVersionChecked = value ?? false;
-                              });
-                            },
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            isArabic
-                                ? 'لا تذكرني بهذا الإصدار'
-                                : 'Don\'t remind me for this version',
-                            style: theme.textTheme.bodySmall,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ],
+            ),
           ),
         ),
-        actions: [
-          // "Later" button (optional updates only)
-          if (!widget.isForced)
-            TextButton(
-              onPressed: () {
-                if (_skipVersionChecked) {
-                  widget.onSkipVersion();
-                } else {
-                  widget.onLater();
-                }
-              },
-              child: Text(
-                isArabic ? 'لاحقاً' : 'Later',
-                style: TextStyle(color: colorScheme.outline),
-              ),
-            ),
-          // "Update" button
-          ElevatedButton.icon(
-            onPressed: widget.onUpdate,
-            icon: const Icon(Icons.download_rounded, size: 20),
-            label: Text(isArabic ? 'تحديث' : 'Update'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-          ),
-        ],
-        actionsAlignment: MainAxisAlignment.end,
-        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       ),
     );
   }
+}
 
-  Widget _buildVersionRow(
-    String label,
-    String version,
-    ThemeData theme, {
-    bool isHighlighted = false,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.outline,
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: isHighlighted
-                ? theme.colorScheme.primary.withValues(alpha: 0.1)
-                : theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(8),
-            border: isHighlighted
-                ? Border.all(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                  )
-                : null,
-          ),
-          child: Text(
-            'v$version',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: isHighlighted ? theme.colorScheme.primary : null,
+class _DownloadProgressDialog extends StatefulWidget {
+  final Dio dio;
+  final String url;
+  final Function(String path) onDownloadComplete;
+  final Function(dynamic error) onError;
+
+  const _DownloadProgressDialog({
+    required this.dio,
+    required this.url,
+    required this.onDownloadComplete,
+    required this.onError,
+  });
+
+  @override
+  State<_DownloadProgressDialog> createState() =>
+      _DownloadProgressDialogState();
+}
+
+class _DownloadProgressDialogState extends State<_DownloadProgressDialog> {
+  double _progress = 0.0;
+  String _statusMessage = 'Initializing...';
+  CancelToken? _cancelToken;
+
+  @override
+  void initState() {
+    super.initState();
+    _startDownload();
+  }
+
+  @override
+  void dispose() {
+    _cancelToken?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _startDownload() async {
+    _cancelToken = CancelToken();
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final savePath = '${dir.path}/update.apk';
+
+      // Clean up existing file if any
+      final file = File(savePath);
+      if (await file.exists()) {
+        await file.delete();
+      }
+
+      if (mounted) {
+        setState(() {
+          _statusMessage = 'Downloading update...';
+        });
+      }
+
+      await widget.dio.download(
+        widget.url,
+        savePath,
+        cancelToken: _cancelToken,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            if (mounted) {
+              setState(() {
+                _progress = received / total;
+                final percent = (_progress * 100).toStringAsFixed(0);
+                _statusMessage = 'Downloading... $percent%';
+              });
+            }
+          }
+        },
+      );
+
+      if (mounted) {
+        widget.onDownloadComplete(savePath);
+      }
+    } catch (e) {
+      if (e is DioException && CancelToken.isCancel(e)) {
+        log('Download cancelled');
+      } else {
+        log('Download error: $e');
+        if (mounted) {
+          widget.onError(e);
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return PopScope(
+      canPop: false, // Prevent dismissing while downloading
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isDark
+                      ? [
+                          const Color(0xFF1E1B4B).withValues(alpha: 0.9),
+                          const Color(0xFF312E81).withValues(alpha: 0.8),
+                        ]
+                      : [
+                          Colors.white.withValues(alpha: 0.95),
+                          Colors.grey.shade100.withValues(alpha: 0.9),
+                        ],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.grey.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Icon with pulse effect (simulated statically)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.primaryColor.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.cloud_download_rounded,
+                      color: theme.primaryColor,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  Text(
+                    'Downloading Update',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Text(
+                    _statusMessage,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Progress Bar
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: _progress,
+                      minHeight: 8,
+                      backgroundColor: isDark
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.grey.withValues(alpha: 0.2),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        theme.primaryColor,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Cancel Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        _cancelToken?.cancel();
+                        Navigator.of(context).pop();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: BorderSide(
+                          color: isDark ? Colors.white30 : Colors.grey.shade300,
+                        ),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }

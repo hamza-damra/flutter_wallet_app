@@ -71,63 +71,70 @@ class RecentTransactions extends ConsumerWidget {
             ],
           ),
           child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: isGlassy
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.05),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.history_rounded,
-              size: 64,
-              color: isGlassy
-                  ? Colors.white.withValues(alpha: 0.2)
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.1),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            l10n.noTransactions,
-            style: theme.textTheme.titleLarge?.copyWith(
-              color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.startTrackingFinances,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: isGlassy
-                  ? Colors.white.withValues(alpha: 0.6)
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: onAddPressed,
-            icon: Icon(Icons.add_rounded, color: theme.colorScheme.onPrimary),
-            label: Text(
-              l10n.addTransaction,
-              style: TextStyle(
-                color: theme.colorScheme.onPrimary,
-                fontWeight: FontWeight.bold,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: isGlassy
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.history_rounded,
+                  size: 64,
+                  color: isGlassy
+                      ? Colors.white.withValues(alpha: 0.2)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                ),
               ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primaryColor,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+              const SizedBox(height: 24),
+              Text(
+                l10n.noTransactions,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.startTrackingFinances,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: isGlassy
+                      ? Colors.white.withValues(alpha: 0.6)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: onAddPressed,
+                icon: Icon(
+                  Icons.add_rounded,
+                  color: theme.colorScheme.onPrimary,
+                ),
+                label: Text(
+                  l10n.addTransaction,
+                  style: TextStyle(
+                    color: theme.colorScheme.onPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.primaryColor,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ],
           ),
-          ],
         ),
       ),
     );
@@ -274,10 +281,11 @@ class RecentTransactions extends ConsumerWidget {
                           Text(
                             '$dateString • $displayCategoryName',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: (isGlassy
-                                      ? Colors.white
-                                      : theme.colorScheme.onSurface)
-                                  .withValues(alpha: 0.6),
+                              color:
+                                  (isGlassy
+                                          ? Colors.white
+                                          : theme.colorScheme.onSurface)
+                                      .withValues(alpha: 0.6),
                             ),
                           ),
                         ],
@@ -297,10 +305,11 @@ class RecentTransactions extends ConsumerWidget {
                         Text(
                           DateFormat.jm().format(tx.createdAt),
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: (isGlassy
-                                    ? Colors.white
-                                    : theme.colorScheme.onSurface)
-                                .withValues(alpha: 0.4),
+                            color:
+                                (isGlassy
+                                        ? Colors.white
+                                        : theme.colorScheme.onSurface)
+                                    .withValues(alpha: 0.4),
                           ),
                         ),
                       ],

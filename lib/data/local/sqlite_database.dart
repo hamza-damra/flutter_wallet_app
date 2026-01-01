@@ -48,12 +48,54 @@ class SyncQueue extends Table {
   DateTimeColumn get createdAt => dateTime()();
 }
 
-@DriftDatabase(tables: [Transactions, Categories, SyncQueue])
+class Friends extends Table {
+  IntColumn get localId => integer().autoIncrement()();
+  TextColumn get remoteId => text().nullable()();
+  TextColumn get userId => text()();
+  TextColumn get name => text()();
+  TextColumn get phoneNumber => text().nullable()();
+  DateTimeColumn get createdAtLocal => dateTime()();
+  DateTimeColumn get updatedAtLocal => dateTime()();
+  BoolColumn get deleted => boolean().withDefault(const Constant(false))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+}
+
+class DebtTransactions extends Table {
+  IntColumn get localId => integer().autoIncrement()();
+  TextColumn get remoteId => text().nullable()();
+  TextColumn get userId => text()();
+  IntColumn get friendId => integer().references(Friends, #localId)();
+  RealColumn get amount => real()();
+  TextColumn get type => text()(); // 'lent' or 'borrowed'
+  DateTimeColumn get date => dateTime()();
+  TextColumn get note => text().nullable()();
+  DateTimeColumn get createdAtLocal => dateTime()();
+  DateTimeColumn get updatedAtLocal => dateTime()();
+  BoolColumn get deleted => boolean().withDefault(const Constant(false))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+}
+
+@DriftDatabase(
+  tables: [Transactions, Categories, SyncQueue, Friends, DebtTransactions],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (Migrator m) async {
+      await m.createAll();
+    },
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 2) {
+        await m.createTable(friends);
+        await m.createTable(debtTransactions);
+      }
+    },
+  );
 }
 
 LazyDatabase _openConnection() {
