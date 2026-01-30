@@ -310,6 +310,18 @@ class FriendDetailsScreen extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton.icon(
+                onPressed: () => _showSettleDebtDialog(context, ref, tx),
+                icon: Icon(Icons.check_circle_outline, size: 18, color: Colors.green),
+                label: Text(
+                  l10n.settled,
+                  style: const TextStyle(color: Colors.green),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                ),
+              ),
+              const SizedBox(width: 4),
+              TextButton.icon(
                 onPressed: () => context.push(
                   '/edit-debt-transaction',
                   extra: {'friend': friend, 'transaction': tx},
@@ -323,7 +335,7 @@ class FriendDetailsScreen extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 4),
               TextButton.icon(
                 onPressed: () => _confirmDeleteTransaction(context, ref, tx.id),
                 icon: const Icon(Icons.delete, size: 18, color: Colors.red),
@@ -397,5 +409,150 @@ class FriendDetailsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  void _showSettleDebtDialog(
+    BuildContext context,
+    WidgetRef ref,
+    DebtTransactionModel tx,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isArabic = l10n.localeName == 'ar';
+    final currencyFormatter = NumberFormat.currency(
+      symbol: '₪',
+      decimalDigits: 2,
+    );
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check_circle, color: Colors.green, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                isArabic ? 'تأكيد السداد' : 'Confirm Settlement',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isArabic
+                  ? 'هل تريد تسجيل سداد هذا الدين؟'
+                  : 'Do you want to mark this debt as paid?',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    isArabic ? 'المبلغ:' : 'Amount:',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  Text(
+                    currencyFormatter.format(tx.amount),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: tx.type == 'lent' ? Colors.green : Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isArabic
+                  ? 'سيتم إنشاء معاملة معاكسة لتسوية هذا الدين.'
+                  : 'An opposite transaction will be created to settle this debt.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: Colors.grey[600],
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton.icon(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await _settleDebt(ref, tx);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      isArabic ? 'تم تسوية الدين بنجاح' : 'Debt settled successfully',
+                    ),
+                    backgroundColor: Colors.green,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.check, size: 18),
+            label: Text(l10n.confirm),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _settleDebt(WidgetRef ref, DebtTransactionModel tx) async {
+    // Create an opposite transaction to settle the debt
+    // If original was 'lent', create 'borrowed' and vice versa
+    final oppositeType = tx.type == 'lent' ? 'borrowed' : 'lent';
+    
+    final settlementTransaction = DebtTransactionModel(
+      id: '0', // Will be assigned by DB
+      userId: tx.userId,
+      friendId: tx.friendId,
+      amount: tx.amount,
+      type: oppositeType,
+      date: DateTime.now(),
+      note: 'Settlement for ${tx.type == 'lent' ? 'lent' : 'borrowed'} amount',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    await ref.read(debtsRepositoryProvider).addDebtTransaction(settlementTransaction);
   }
 }

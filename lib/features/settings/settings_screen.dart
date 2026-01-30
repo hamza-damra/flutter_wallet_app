@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/theme_provider.dart';
+import '../../core/providers/currency_provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/update_service.dart';
 
@@ -105,6 +106,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           theme,
                           themeMode,
                         ),
+                        const SizedBox(height: 28),
+
+                        // Currency Section
+                        _buildSectionHeader(
+                          theme,
+                          l10n.localeName == 'ar' ? 'العملة' : 'Currency',
+                          Icons.attach_money_outlined,
+                          isGlassy,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildCurrencyCard(context, ref, theme, isGlassy),
                         const SizedBox(height: 28),
 
                         // App Updates Section
@@ -772,6 +784,230 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildCurrencyCard(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    bool isGlassy,
+  ) {
+    final currentCurrency = ref.watch(currencyProvider);
+    final l10n = AppLocalizations.of(context);
+    final isArabic = l10n.localeName == 'ar';
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withValues(
+          alpha: isGlassy ? 0.35 : 1.0,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: isGlassy
+            ? Border.all(color: Colors.white.withValues(alpha: 0.15))
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isGlassy ? 0.2 : 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade400, Colors.teal.shade400],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  currentCurrency.symbol,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isArabic ? currentCurrency.nameAr : currentCurrency.name,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isGlassy
+                            ? Colors.white
+                            : theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      currentCurrency.code,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isGlassy
+                            ? Colors.white.withValues(alpha: 0.7)
+                            : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _showCurrencyPicker(context, ref, theme, isGlassy),
+              icon: const Icon(Icons.swap_horiz_rounded, size: 20),
+              label: Text(isArabic ? 'تغيير العملة' : 'Change Currency'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isGlassy
+                    ? Colors.white.withValues(alpha: 0.15)
+                    : theme.colorScheme.primary.withValues(alpha: 0.1),
+                foregroundColor: isGlassy
+                    ? Colors.white
+                    : theme.colorScheme.primary,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(
+                    color: isGlassy
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : theme.colorScheme.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCurrencyPicker(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    bool isGlassy,
+  ) {
+    final currentCurrency = ref.read(currencyProvider);
+    final l10n = AppLocalizations.of(context);
+    final isArabic = l10n.localeName == 'ar';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.6,
+        ),
+        decoration: BoxDecoration(
+          color: isGlassy
+              ? const Color(0xFF1E1B4B).withValues(alpha: 0.95)
+              : theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              isArabic ? 'اختر العملة' : 'Select Currency',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: supportedCurrencies.length,
+                itemBuilder: (context, index) {
+                  final currency = supportedCurrencies[index];
+                  final isSelected = currency.code == currentCurrency.code;
+                  return ListTile(
+                    onTap: () {
+                      ref.read(currencyProvider.notifier).setCurrency(currency);
+                      Navigator.pop(context);
+                    },
+                    leading: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? theme.primaryColor.withValues(alpha: 0.2)
+                            : (isGlassy
+                                ? Colors.white.withValues(alpha: 0.1)
+                                : theme.colorScheme.surfaceContainerHighest),
+                        borderRadius: BorderRadius.circular(12),
+                        border: isSelected
+                            ? Border.all(color: theme.primaryColor, width: 2)
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          currency.symbol,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isSelected
+                                ? theme.primaryColor
+                                : (isGlassy
+                                    ? Colors.white
+                                    : theme.colorScheme.onSurface),
+                          ),
+                        ),
+                      ),
+                    ),
+                    title: Text(
+                      isArabic ? currency.nameAr : currency.name,
+                      style: TextStyle(
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    subtitle: Text(
+                      currency.code,
+                      style: TextStyle(
+                        color: isGlassy
+                            ? Colors.white.withValues(alpha: 0.6)
+                            : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    trailing: isSelected
+                        ? Icon(Icons.check_circle, color: theme.primaryColor)
+                        : null,
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
     );
   }
 }

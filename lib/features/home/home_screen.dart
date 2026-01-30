@@ -409,75 +409,152 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final themeMode = ref.watch(themeProvider);
+    final isGlassy = themeMode == AppThemeMode.glassy;
 
     final profile = ref.watch(userProfileProvider).value;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
+        // Menu button - professional design
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _scaffoldKey.currentState?.openDrawer(),
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isGlassy
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isGlassy
+                      ? Colors.white.withValues(alpha: 0.15)
+                      : theme.colorScheme.outline.withValues(alpha: 0.1),
+                ),
+                boxShadow: isGlassy
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+              ),
+              child: Icon(
+                Icons.menu_rounded,
+                size: 22,
+                color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        // User info section
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 l10n.welcome,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: isGlassy
+                      ? Colors.white.withValues(alpha: 0.7)
+                      : Colors.grey[600],
+                  letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
                 profile?.getLocalizedName(
                       Localizations.localeOf(context).languageCode,
                     ) ??
                     user?.email?.split('@')[0] ??
                     'User',
-                style: theme.textTheme.headlineSmall?.copyWith(
+                style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
+                  color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               const ConnectivityIndicator(),
             ],
           ),
         ),
-        GestureDetector(
-          onTap: () => _scaffoldKey.currentState?.openDrawer(),
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: themeMode == AppThemeMode.glassy
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : theme.colorScheme.surface,
-              shape: BoxShape.circle,
-              border: themeMode == AppThemeMode.glassy
-                  ? Border.all(color: Colors.white.withValues(alpha: 0.1))
-                  : null,
-              boxShadow: themeMode == AppThemeMode.glassy
-                  ? null
-                  : [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-            ),
-            child: CircleAvatar(
-              radius: 20,
-              backgroundColor: themeMode == AppThemeMode.glassy
-                  ? Colors.white.withValues(alpha: 0.05)
-                  : theme.primaryColor.withValues(alpha: 0.1),
-              child: SvgPicture.asset(
-                'assets/illustrations/avatar_placeholder.svg',
-                width: 24,
-                height: 24,
+        // Notification & Profile actions
+        Row(
+          children: [
+            // Notification bell (placeholder for future)
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  // Future: notifications
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isGlassy
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.notifications_outlined,
+                    size: 20,
+                    color: isGlassy
+                        ? Colors.white.withValues(alpha: 0.8)
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
               ),
             ),
-          ),
+            const SizedBox(width: 8),
+            // Profile avatar
+            GestureDetector(
+              onTap: () => context.push('/profile'),
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.primaryColor,
+                      theme.primaryColor.withValues(alpha: 0.7),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isGlassy
+                        ? const Color(0xFF1E1B4B)
+                        : theme.scaffoldBackgroundColor,
+                  ),
+                  child: CircleAvatar(
+                    radius: 18,
+                    backgroundColor: isGlassy
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : theme.primaryColor.withValues(alpha: 0.1),
+                    child: SvgPicture.asset(
+                      'assets/illustrations/avatar_placeholder.svg',
+                      width: 20,
+                      height: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
