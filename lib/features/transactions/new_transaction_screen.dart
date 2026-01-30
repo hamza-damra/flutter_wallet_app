@@ -149,7 +149,12 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
       );
 
       if (widget.transaction != null) {
-        await ref.read(firestoreServiceProvider).updateTransaction(transaction);
+        // Parse localId from the existing transaction id
+        final localId = int.tryParse(widget.transaction!.id);
+        await ref.read(firestoreServiceProvider).updateTransaction(
+          transaction,
+          localId: localId,
+        );
       } else {
         await ref.read(firestoreServiceProvider).addTransaction(transaction);
       }

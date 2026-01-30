@@ -16,6 +16,7 @@ import '../../services/update_service.dart';
 import 'widgets/balance_card.dart';
 import 'widgets/recent_transactions.dart';
 import '../../core/widgets/connectivity_indicator.dart';
+import '../debts/providers/debts_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -60,6 +61,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final user = ref.watch(authServiceProvider).currentUser;
     final transactionsAsync = ref.watch(transactionsProvider(user?.uid ?? ''));
+    final debtTransactionsAsync = ref.watch(debtTransactionsStreamProvider);
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final themeMode = ref.watch(themeProvider);
@@ -68,6 +70,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     double totalBalance = 0;
     double income = 0;
     double expense = 0;
+    double debtBalance = 0;
     List<TransactionModel> recentTransactions = [];
 
     transactionsAsync.whenData((transactions) {
@@ -82,6 +85,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       recentTransactions = transactions;
     });
+
+    // Include debt transactions in balance
+    // Borrowed money = negative (you owe someone)
+    // Lent money = positive (someone owes you)
+    debtTransactionsAsync.whenData((debtTransactions) {
+      for (var dt in debtTransactions) {
+        if (dt.type == 'lent') {
+          debtBalance += dt.amount;
+        } else {
+          debtBalance -= dt.amount;
+        }
+      }
+    });
+
+    // Add debt balance to total balance
+    totalBalance += debtBalance;
 
     return Scaffold(
       key: _scaffoldKey,
