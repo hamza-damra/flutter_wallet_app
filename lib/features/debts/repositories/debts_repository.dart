@@ -60,7 +60,7 @@ class DebtsRepository {
   }
 
   Future<int> addFriend(FriendModel friend) async {
-    return await _db
+    final localId = await _db
         .into(_db.friends)
         .insert(
           FriendsCompanion.insert(
@@ -71,10 +71,22 @@ class DebtsRepository {
             updatedAtLocal: friend.updatedAt,
           ),
         );
+
+    // Add to sync queue
+    await _db.into(_db.syncQueue).insert(
+          SyncQueueCompanion.insert(
+            entityType: 'friend',
+            entityId: localId.toString(),
+            operation: 'insert',
+            createdAt: DateTime.now(),
+          ),
+        );
+
+    return localId;
   }
 
   Future<int> addDebtTransaction(DebtTransactionModel transaction) async {
-    return await _db
+    final localId = await _db
         .into(_db.debtTransactions)
         .insert(
           DebtTransactionsCompanion.insert(
@@ -88,21 +100,74 @@ class DebtsRepository {
             updatedAtLocal: transaction.updatedAt,
           ),
         );
+
+    // Add to sync queue
+    await _db.into(_db.syncQueue).insert(
+          SyncQueueCompanion.insert(
+            entityType: 'debtTransaction',
+            entityId: localId.toString(),
+            operation: 'insert',
+            createdAt: DateTime.now(),
+          ),
+        );
+
+    return localId;
   }
 
   Future<void> deleteFriend(String id) async {
     await (_db.update(_db.friends)
           ..where((t) => t.localId.equals(int.parse(id))))
         .write(const FriendsCompanion(deleted: Value(true)));
-    // Also delete related transactions or mark them
-    // Ideally we should cascade or handle this logic.
-    // For now, simplicity: just delete friend.
+
+    // Add to sync queue
+    await _db.into(_db.syncQueue).insert(
+          SyncQueueCompanion.insert(
+            entityType: 'friend',
+            entityId: id,
+            operation: 'delete',
+            createdAt: DateTime.now(),
+          ),
+        );
   }
 
   Future<void> deleteDebtTransaction(String id) async {
     await (_db.update(_db.debtTransactions)
           ..where((t) => t.localId.equals(int.parse(id))))
         .write(const DebtTransactionsCompanion(deleted: Value(true)));
+
+    // Add to sync queue
+    await _db.into(_db.syncQueue).insert(
+          SyncQueueCompanion.insert(
+            entityType: 'debtTransaction',
+            entityId: id,
+            operation: 'delete',
+            createdAt: DateTime.now(),
+          ),
+        );
+  }
+
+  Future<void> updateDebtTransaction(DebtTransactionModel transaction) async {
+    await (_db.update(_db.debtTransactions)
+          ..where((t) => t.localId.equals(int.parse(transaction.id))))
+        .write(
+          DebtTransactionsCompanion(
+            amount: Value(transaction.amount),
+            type: Value(transaction.type),
+            date: Value(transaction.date),
+            note: Value(transaction.note),
+            updatedAtLocal: Value(transaction.updatedAt),
+          ),
+        );
+
+    // Add to sync queue
+    await _db.into(_db.syncQueue).insert(
+          SyncQueueCompanion.insert(
+            entityType: 'debtTransaction',
+            entityId: transaction.id,
+            operation: 'update',
+            createdAt: DateTime.now(),
+          ),
+        );
   }
 }
 

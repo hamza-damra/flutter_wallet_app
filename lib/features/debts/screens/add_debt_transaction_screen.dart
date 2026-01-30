@@ -10,8 +10,15 @@ import '../../../services/auth_service.dart';
 
 class AddDebtTransactionScreen extends ConsumerStatefulWidget {
   final FriendModel friend;
+  final DebtTransactionModel? existingTransaction;
 
-  const AddDebtTransactionScreen({super.key, required this.friend});
+  const AddDebtTransactionScreen({
+    super.key,
+    required this.friend,
+    this.existingTransaction,
+  });
+
+  bool get isEditMode => existingTransaction != null;
 
   @override
   ConsumerState<AddDebtTransactionScreen> createState() =>
@@ -25,6 +32,18 @@ class _AddDebtTransactionScreenState
   final _noteController = TextEditingController();
   String _type = 'lent'; // 'lent' or 'borrowed'
   DateTime _selectedDate = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingTransaction != null) {
+      final tx = widget.existingTransaction!;
+      _amountController.text = tx.amount.toString();
+      _noteController.text = tx.note ?? '';
+      _type = tx.type;
+      _selectedDate = tx.date;
+    }
+  }
 
   @override
   void dispose() {
@@ -53,19 +72,37 @@ class _AddDebtTransactionScreenState
       final user = ref.read(authStateProvider).value;
       if (user == null) return;
 
-      final transaction = DebtTransactionModel(
-        id: '0',
-        userId: user.uid,
-        friendId: widget.friend.id,
-        amount: amount,
-        type: _type,
-        date: _selectedDate,
-        note: _noteController.text.isEmpty ? null : _noteController.text,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+      if (widget.isEditMode) {
+        // Update existing transaction
+        final updatedTransaction = DebtTransactionModel(
+          id: widget.existingTransaction!.id,
+          userId: widget.existingTransaction!.userId,
+          friendId: widget.existingTransaction!.friendId,
+          amount: amount,
+          type: _type,
+          date: _selectedDate,
+          note: _noteController.text.isEmpty ? null : _noteController.text,
+          createdAt: widget.existingTransaction!.createdAt,
+          updatedAt: DateTime.now(),
+        );
 
-      await ref.read(debtsRepositoryProvider).addDebtTransaction(transaction);
+        await ref.read(debtsRepositoryProvider).updateDebtTransaction(updatedTransaction);
+      } else {
+        // Add new transaction
+        final transaction = DebtTransactionModel(
+          id: '0',
+          userId: user.uid,
+          friendId: widget.friend.id,
+          amount: amount,
+          type: _type,
+          date: _selectedDate,
+          note: _noteController.text.isEmpty ? null : _noteController.text,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+
+        await ref.read(debtsRepositoryProvider).addDebtTransaction(transaction);
+      }
 
       if (mounted) {
         context.pop();
@@ -82,7 +119,7 @@ class _AddDebtTransactionScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          l10n.newDebtTransaction,
+          widget.isEditMode ? l10n.editDebtTransaction : l10n.newDebtTransaction,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
           ),

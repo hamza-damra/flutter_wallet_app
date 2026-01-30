@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.example.flutter_wallet_app"
     compileSdk = 36
-    ndkVersion = flutter.ndkVersion
+    // ndkVersion = flutter.ndkVersion  // Commented out - NDK not installed
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

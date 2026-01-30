@@ -302,7 +302,13 @@
   "settled": "Settled",
   "deleteFriend": "Delete Friend",
   "deleteFriendConfirm": "Are you sure you want to delete this friend?",
-  "debtTransactions": "Debt Transactions"
+  "debtTransactions": "Debt Transactions",
+  "editDebtTransaction": "Edit Debt Transaction",
+  "deleteDebtTransaction": "Delete Debt Transaction",
+  "deleteDebtTransactionConfirm": "Are you sure you want to delete this debt transaction?",
+  "debtTransactionUpdated": "Debt transaction updated successfully",
+  "debtTransactionDeleted": "Debt transaction deleted successfully",
+  "updatedAt": "Updated"
 }
 
 

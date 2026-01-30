@@ -16,4 +16,29 @@ class FriendModel {
     required this.createdAt,
     required this.updatedAt,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'userId': userId,
+      'name': name,
+      'phoneNumber': phoneNumber,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
+  factory FriendModel.fromMap(String id, Map<String, dynamic> map) {
+    return FriendModel(
+      id: id,
+      userId: map['userId'] ?? '',
+      name: map['name'] ?? '',
+      phoneNumber: map['phoneNumber'],
+      createdAt: map['createdAt'] is String
+          ? DateTime.parse(map['createdAt'])
+          : (map['createdAt']?.toDate() ?? DateTime.now()),
+      updatedAt: map['updatedAt'] is String
+          ? DateTime.parse(map['updatedAt'])
+          : (map['updatedAt']?.toDate() ?? DateTime.now()),
+    );
+  }
 }

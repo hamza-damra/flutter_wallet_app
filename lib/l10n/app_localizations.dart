@@ -1357,6 +1357,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Debt Transactions'**
   String get debtTransactions;
+
+  /// No description provided for @editDebtTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Debt Transaction'**
+  String get editDebtTransaction;
+
+  /// No description provided for @deleteDebtTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Debt Transaction'**
+  String get deleteDebtTransaction;
+
+  /// No description provided for @deleteDebtTransactionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this debt transaction?'**
+  String get deleteDebtTransactionConfirm;
+
+  /// No description provided for @debtTransactionUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt transaction updated successfully'**
+  String get debtTransactionUpdated;
+
+  /// No description provided for @debtTransactionDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt transaction deleted successfully'**
+  String get debtTransactionDeleted;
+
+  /// No description provided for @updatedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated'**
+  String get updatedAt;
 }
 
 class _AppLocalizationsDelegate

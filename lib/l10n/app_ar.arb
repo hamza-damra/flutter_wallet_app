@@ -234,6 +234,12 @@
   "settled": "تمت التسوية",
   "deleteFriend": "حذف صديق",
   "deleteFriendConfirm": "هل أنت متأكد من حذف هذا الصديق؟",
-  "debtTransactions": "معاملات الديون"
+  "debtTransactions": "معاملات الديون",
+  "editDebtTransaction": "تعديل معاملة الدين",
+  "deleteDebtTransaction": "حذف معاملة الدين",
+  "deleteDebtTransactionConfirm": "هل أنت متأكد من حذف معاملة الدين هذه؟",
+  "debtTransactionUpdated": "تم تحديث معاملة الدين بنجاح",
+  "debtTransactionDeleted": "تم حذف معاملة الدين بنجاح",
+  "updatedAt": "تم التحديث"
 }
 

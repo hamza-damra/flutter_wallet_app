@@ -699,4 +699,23 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get debtTransactions => 'معاملات الديون';
+
+  @override
+  String get editDebtTransaction => 'تعديل معاملة الدين';
+
+  @override
+  String get deleteDebtTransaction => 'حذف معاملة الدين';
+
+  @override
+  String get deleteDebtTransactionConfirm =>
+      'هل أنت متأكد من حذف معاملة الدين هذه؟';
+
+  @override
+  String get debtTransactionUpdated => 'تم تحديث معاملة الدين بنجاح';
+
+  @override
+  String get debtTransactionDeleted => 'تم حذف معاملة الدين بنجاح';
+
+  @override
+  String get updatedAt => 'تم التحديث';
 }

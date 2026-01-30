@@ -694,4 +694,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get debtTransactions => 'Debt Transactions';
+
+  @override
+  String get editDebtTransaction => 'Edit Debt Transaction';
+
+  @override
+  String get deleteDebtTransaction => 'Delete Debt Transaction';
+
+  @override
+  String get deleteDebtTransactionConfirm =>
+      'Are you sure you want to delete this debt transaction?';
+
+  @override
+  String get debtTransactionUpdated => 'Debt transaction updated successfully';
+
+  @override
+  String get debtTransactionDeleted => 'Debt transaction deleted successfully';
+
+  @override
+  String get updatedAt => 'Updated';
 }

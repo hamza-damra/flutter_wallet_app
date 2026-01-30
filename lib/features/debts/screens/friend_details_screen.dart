@@ -7,7 +7,6 @@ import '../models/friend_model.dart';
 import '../models/debt_transaction_model.dart';
 import '../providers/debts_provider.dart';
 import '../repositories/debts_repository.dart';
-import '../../../services/auth_service.dart';
 
 class FriendDetailsScreen extends ConsumerWidget {
   final FriendModel friend;
@@ -89,7 +88,7 @@ class FriendDetailsScreen extends ConsumerWidget {
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final tx = transactions[index];
-                    return _buildTransactionItem(context, tx);
+                    return _buildTransactionItem(context, ref, tx);
                   },
                 );
               },
@@ -209,7 +208,11 @@ class FriendDetailsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTransactionItem(BuildContext context, DebtTransactionModel tx) {
+  Widget _buildTransactionItem(
+    BuildContext context,
+    WidgetRef ref,
+    DebtTransactionModel tx,
+  ) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final isLent = tx.type == 'lent';
@@ -219,6 +222,7 @@ class FriendDetailsScreen extends ConsumerWidget {
       decimalDigits: 2,
     );
     final dateFormatter = DateFormat.yMMMd();
+    final dateTimeFormatter = DateFormat.yMMMd().add_jm();
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -229,54 +233,137 @@ class FriendDetailsScreen extends ConsumerWidget {
           BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 5),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              isLent ? Icons.arrow_upward : Icons.arrow_downward,
-              color: color,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isLent ? l10n.lent : l10n.borrowed,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
                 ),
-                Text(
-                  dateFormatter.format(tx.date),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.grey,
-                  ),
+                child: Icon(
+                  isLent ? Icons.arrow_upward : Icons.arrow_downward,
+                  color: color,
+                  size: 20,
                 ),
-                if (tx.note != null && tx.note!.isNotEmpty)
-                  Text(
-                    tx.note!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                      fontStyle: FontStyle.italic,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isLent ? l10n.lent : l10n.borrowed,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-              ],
-            ),
+                    Text(
+                      dateFormatter.format(tx.date),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey,
+                      ),
+                    ),
+                    if (tx.note != null && tx.note!.isNotEmpty)
+                      Text(
+                        tx.note!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[600],
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Text(
+                currencyFormatter.format(tx.amount),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
-          Text(
-            currencyFormatter.format(tx.amount),
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
+          const SizedBox(height: 8),
+          // Updated at row
+          Row(
+            children: [
+              Icon(Icons.update, size: 14, color: Colors.grey[500]),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  '${l10n.updatedAt}: ${dateTimeFormatter.format(tx.updatedAt)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[500],
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Action buttons row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                onPressed: () => context.push(
+                  '/edit-debt-transaction',
+                  extra: {'friend': friend, 'transaction': tx},
+                ),
+                icon: Icon(Icons.edit, size: 18, color: theme.primaryColor),
+                label: Text(
+                  l10n.edit,
+                  style: TextStyle(color: theme.primaryColor),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                ),
+              ),
+              const SizedBox(width: 8),
+              TextButton.icon(
+                onPressed: () => _confirmDeleteTransaction(context, ref, tx.id),
+                icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+                label: Text(
+                  l10n.delete,
+                  style: const TextStyle(color: Colors.red),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteTransaction(
+    BuildContext context,
+    WidgetRef ref,
+    String transactionId,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.deleteDebtTransaction),
+        content: Text(l10n.deleteDebtTransactionConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ref.read(debtsRepositoryProvider).deleteDebtTransaction(transactionId);
+            },
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),

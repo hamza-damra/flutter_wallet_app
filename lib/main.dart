@@ -29,6 +29,7 @@ import 'features/debts/screens/debts_screen.dart';
 import 'features/debts/screens/friend_details_screen.dart';
 import 'features/debts/screens/add_debt_transaction_screen.dart';
 import 'features/debts/models/friend_model.dart';
+import 'features/debts/models/debt_transaction_model.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -225,6 +226,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final friend = state.extra as FriendModel;
           return AddDebtTransactionScreen(friend: friend);
+        },
+      ),
+      GoRoute(
+        path: '/edit-debt-transaction',
+        builder: (context, state) {
+          final data = state.extra as Map<String, dynamic>;
+          final friend = data['friend'] as FriendModel;
+          final transaction = data['transaction'] as DebtTransactionModel;
+          return AddDebtTransactionScreen(
+            friend: friend,
+            existingTransaction: transaction,
+          );
         },
       ),
     ],
