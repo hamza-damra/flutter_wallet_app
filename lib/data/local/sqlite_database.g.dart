@@ -1773,6 +1773,15 @@ class $FriendsTable extends Friends with TableInfo<$FriendsTable, Friend> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _nameArMeta = const VerificationMeta('nameAr');
+  @override
+  late final GeneratedColumn<String> nameAr = GeneratedColumn<String>(
+    'name_ar',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _phoneNumberMeta = const VerificationMeta(
     'phoneNumber',
   );
@@ -1841,6 +1850,7 @@ class $FriendsTable extends Friends with TableInfo<$FriendsTable, Friend> {
     remoteId,
     userId,
     name,
+    nameAr,
     phoneNumber,
     createdAtLocal,
     updatedAtLocal,
@@ -1886,6 +1896,12 @@ class $FriendsTable extends Friends with TableInfo<$FriendsTable, Friend> {
       );
     } else if (isInserting) {
       context.missing(_nameMeta);
+    }
+    if (data.containsKey('name_ar')) {
+      context.handle(
+        _nameArMeta,
+        nameAr.isAcceptableOrUnknown(data['name_ar']!, _nameArMeta),
+      );
     }
     if (data.containsKey('phone_number')) {
       context.handle(
@@ -1955,6 +1971,10 @@ class $FriendsTable extends Friends with TableInfo<$FriendsTable, Friend> {
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
+      nameAr: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name_ar'],
+      ),
       phoneNumber: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}phone_number'],
@@ -1989,6 +2009,7 @@ class Friend extends DataClass implements Insertable<Friend> {
   final String? remoteId;
   final String userId;
   final String name;
+  final String? nameAr;
   final String? phoneNumber;
   final DateTime createdAtLocal;
   final DateTime updatedAtLocal;
@@ -1999,6 +2020,7 @@ class Friend extends DataClass implements Insertable<Friend> {
     this.remoteId,
     required this.userId,
     required this.name,
+    this.nameAr,
     this.phoneNumber,
     required this.createdAtLocal,
     required this.updatedAtLocal,
@@ -2014,6 +2036,9 @@ class Friend extends DataClass implements Insertable<Friend> {
     }
     map['user_id'] = Variable<String>(userId);
     map['name'] = Variable<String>(name);
+    if (!nullToAbsent || nameAr != null) {
+      map['name_ar'] = Variable<String>(nameAr);
+    }
     if (!nullToAbsent || phoneNumber != null) {
       map['phone_number'] = Variable<String>(phoneNumber);
     }
@@ -2032,6 +2057,9 @@ class Friend extends DataClass implements Insertable<Friend> {
           : Value(remoteId),
       userId: Value(userId),
       name: Value(name),
+      nameAr: nameAr == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nameAr),
       phoneNumber: phoneNumber == null && nullToAbsent
           ? const Value.absent()
           : Value(phoneNumber),
@@ -2052,6 +2080,7 @@ class Friend extends DataClass implements Insertable<Friend> {
       remoteId: serializer.fromJson<String?>(json['remoteId']),
       userId: serializer.fromJson<String>(json['userId']),
       name: serializer.fromJson<String>(json['name']),
+      nameAr: serializer.fromJson<String?>(json['nameAr']),
       phoneNumber: serializer.fromJson<String?>(json['phoneNumber']),
       createdAtLocal: serializer.fromJson<DateTime>(json['createdAtLocal']),
       updatedAtLocal: serializer.fromJson<DateTime>(json['updatedAtLocal']),
@@ -2067,6 +2096,7 @@ class Friend extends DataClass implements Insertable<Friend> {
       'remoteId': serializer.toJson<String?>(remoteId),
       'userId': serializer.toJson<String>(userId),
       'name': serializer.toJson<String>(name),
+      'nameAr': serializer.toJson<String?>(nameAr),
       'phoneNumber': serializer.toJson<String?>(phoneNumber),
       'createdAtLocal': serializer.toJson<DateTime>(createdAtLocal),
       'updatedAtLocal': serializer.toJson<DateTime>(updatedAtLocal),
@@ -2080,6 +2110,7 @@ class Friend extends DataClass implements Insertable<Friend> {
     Value<String?> remoteId = const Value.absent(),
     String? userId,
     String? name,
+    Value<String?> nameAr = const Value.absent(),
     Value<String?> phoneNumber = const Value.absent(),
     DateTime? createdAtLocal,
     DateTime? updatedAtLocal,
@@ -2090,6 +2121,7 @@ class Friend extends DataClass implements Insertable<Friend> {
     remoteId: remoteId.present ? remoteId.value : this.remoteId,
     userId: userId ?? this.userId,
     name: name ?? this.name,
+    nameAr: nameAr.present ? nameAr.value : this.nameAr,
     phoneNumber: phoneNumber.present ? phoneNumber.value : this.phoneNumber,
     createdAtLocal: createdAtLocal ?? this.createdAtLocal,
     updatedAtLocal: updatedAtLocal ?? this.updatedAtLocal,
@@ -2102,6 +2134,7 @@ class Friend extends DataClass implements Insertable<Friend> {
       remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
       userId: data.userId.present ? data.userId.value : this.userId,
       name: data.name.present ? data.name.value : this.name,
+      nameAr: data.nameAr.present ? data.nameAr.value : this.nameAr,
       phoneNumber: data.phoneNumber.present
           ? data.phoneNumber.value
           : this.phoneNumber,
@@ -2125,6 +2158,7 @@ class Friend extends DataClass implements Insertable<Friend> {
           ..write('remoteId: $remoteId, ')
           ..write('userId: $userId, ')
           ..write('name: $name, ')
+          ..write('nameAr: $nameAr, ')
           ..write('phoneNumber: $phoneNumber, ')
           ..write('createdAtLocal: $createdAtLocal, ')
           ..write('updatedAtLocal: $updatedAtLocal, ')
@@ -2140,6 +2174,7 @@ class Friend extends DataClass implements Insertable<Friend> {
     remoteId,
     userId,
     name,
+    nameAr,
     phoneNumber,
     createdAtLocal,
     updatedAtLocal,
@@ -2154,6 +2189,7 @@ class Friend extends DataClass implements Insertable<Friend> {
           other.remoteId == this.remoteId &&
           other.userId == this.userId &&
           other.name == this.name &&
+          other.nameAr == this.nameAr &&
           other.phoneNumber == this.phoneNumber &&
           other.createdAtLocal == this.createdAtLocal &&
           other.updatedAtLocal == this.updatedAtLocal &&
@@ -2166,6 +2202,7 @@ class FriendsCompanion extends UpdateCompanion<Friend> {
   final Value<String?> remoteId;
   final Value<String> userId;
   final Value<String> name;
+  final Value<String?> nameAr;
   final Value<String?> phoneNumber;
   final Value<DateTime> createdAtLocal;
   final Value<DateTime> updatedAtLocal;
@@ -2176,6 +2213,7 @@ class FriendsCompanion extends UpdateCompanion<Friend> {
     this.remoteId = const Value.absent(),
     this.userId = const Value.absent(),
     this.name = const Value.absent(),
+    this.nameAr = const Value.absent(),
     this.phoneNumber = const Value.absent(),
     this.createdAtLocal = const Value.absent(),
     this.updatedAtLocal = const Value.absent(),
@@ -2187,6 +2225,7 @@ class FriendsCompanion extends UpdateCompanion<Friend> {
     this.remoteId = const Value.absent(),
     required String userId,
     required String name,
+    this.nameAr = const Value.absent(),
     this.phoneNumber = const Value.absent(),
     required DateTime createdAtLocal,
     required DateTime updatedAtLocal,
@@ -2201,6 +2240,7 @@ class FriendsCompanion extends UpdateCompanion<Friend> {
     Expression<String>? remoteId,
     Expression<String>? userId,
     Expression<String>? name,
+    Expression<String>? nameAr,
     Expression<String>? phoneNumber,
     Expression<DateTime>? createdAtLocal,
     Expression<DateTime>? updatedAtLocal,
@@ -2212,6 +2252,7 @@ class FriendsCompanion extends UpdateCompanion<Friend> {
       if (remoteId != null) 'remote_id': remoteId,
       if (userId != null) 'user_id': userId,
       if (name != null) 'name': name,
+      if (nameAr != null) 'name_ar': nameAr,
       if (phoneNumber != null) 'phone_number': phoneNumber,
       if (createdAtLocal != null) 'created_at_local': createdAtLocal,
       if (updatedAtLocal != null) 'updated_at_local': updatedAtLocal,
@@ -2225,6 +2266,7 @@ class FriendsCompanion extends UpdateCompanion<Friend> {
     Value<String?>? remoteId,
     Value<String>? userId,
     Value<String>? name,
+    Value<String?>? nameAr,
     Value<String?>? phoneNumber,
     Value<DateTime>? createdAtLocal,
     Value<DateTime>? updatedAtLocal,
@@ -2236,6 +2278,7 @@ class FriendsCompanion extends UpdateCompanion<Friend> {
       remoteId: remoteId ?? this.remoteId,
       userId: userId ?? this.userId,
       name: name ?? this.name,
+      nameAr: nameAr ?? this.nameAr,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       createdAtLocal: createdAtLocal ?? this.createdAtLocal,
       updatedAtLocal: updatedAtLocal ?? this.updatedAtLocal,
@@ -2258,6 +2301,9 @@ class FriendsCompanion extends UpdateCompanion<Friend> {
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
+    }
+    if (nameAr.present) {
+      map['name_ar'] = Variable<String>(nameAr.value);
     }
     if (phoneNumber.present) {
       map['phone_number'] = Variable<String>(phoneNumber.value);
@@ -2284,6 +2330,7 @@ class FriendsCompanion extends UpdateCompanion<Friend> {
           ..write('remoteId: $remoteId, ')
           ..write('userId: $userId, ')
           ..write('name: $name, ')
+          ..write('nameAr: $nameAr, ')
           ..write('phoneNumber: $phoneNumber, ')
           ..write('createdAtLocal: $createdAtLocal, ')
           ..write('updatedAtLocal: $updatedAtLocal, ')
@@ -2424,6 +2471,32 @@ class $DebtTransactionsTable extends DebtTransactions
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _settledMeta = const VerificationMeta(
+    'settled',
+  );
+  @override
+  late final GeneratedColumn<bool> settled = GeneratedColumn<bool>(
+    'settled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("settled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _settledAtMeta = const VerificationMeta(
+    'settledAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> settledAt = GeneratedColumn<DateTime>(
+    'settled_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _syncStatusMeta = const VerificationMeta(
     'syncStatus',
   );
@@ -2449,6 +2522,8 @@ class $DebtTransactionsTable extends DebtTransactions
     createdAtLocal,
     updatedAtLocal,
     deleted,
+    settled,
+    settledAt,
     syncStatus,
   ];
   @override
@@ -2549,6 +2624,18 @@ class $DebtTransactionsTable extends DebtTransactions
         deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
       );
     }
+    if (data.containsKey('settled')) {
+      context.handle(
+        _settledMeta,
+        settled.isAcceptableOrUnknown(data['settled']!, _settledMeta),
+      );
+    }
+    if (data.containsKey('settled_at')) {
+      context.handle(
+        _settledAtMeta,
+        settledAt.isAcceptableOrUnknown(data['settled_at']!, _settledAtMeta),
+      );
+    }
     if (data.containsKey('sync_status')) {
       context.handle(
         _syncStatusMeta,
@@ -2608,6 +2695,14 @@ class $DebtTransactionsTable extends DebtTransactions
         DriftSqlType.bool,
         data['${effectivePrefix}deleted'],
       )!,
+      settled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}settled'],
+      )!,
+      settledAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}settled_at'],
+      ),
       syncStatus: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}sync_status'],
@@ -2633,6 +2728,8 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
   final DateTime createdAtLocal;
   final DateTime updatedAtLocal;
   final bool deleted;
+  final bool settled;
+  final DateTime? settledAt;
   final String syncStatus;
   const DebtTransaction({
     required this.localId,
@@ -2646,6 +2743,8 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
     required this.createdAtLocal,
     required this.updatedAtLocal,
     required this.deleted,
+    required this.settled,
+    this.settledAt,
     required this.syncStatus,
   });
   @override
@@ -2666,6 +2765,10 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
     map['created_at_local'] = Variable<DateTime>(createdAtLocal);
     map['updated_at_local'] = Variable<DateTime>(updatedAtLocal);
     map['deleted'] = Variable<bool>(deleted);
+    map['settled'] = Variable<bool>(settled);
+    if (!nullToAbsent || settledAt != null) {
+      map['settled_at'] = Variable<DateTime>(settledAt);
+    }
     map['sync_status'] = Variable<String>(syncStatus);
     return map;
   }
@@ -2685,6 +2788,10 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
       createdAtLocal: Value(createdAtLocal),
       updatedAtLocal: Value(updatedAtLocal),
       deleted: Value(deleted),
+      settled: Value(settled),
+      settledAt: settledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(settledAt),
       syncStatus: Value(syncStatus),
     );
   }
@@ -2706,6 +2813,8 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
       createdAtLocal: serializer.fromJson<DateTime>(json['createdAtLocal']),
       updatedAtLocal: serializer.fromJson<DateTime>(json['updatedAtLocal']),
       deleted: serializer.fromJson<bool>(json['deleted']),
+      settled: serializer.fromJson<bool>(json['settled']),
+      settledAt: serializer.fromJson<DateTime?>(json['settledAt']),
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
     );
   }
@@ -2724,6 +2833,8 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
       'createdAtLocal': serializer.toJson<DateTime>(createdAtLocal),
       'updatedAtLocal': serializer.toJson<DateTime>(updatedAtLocal),
       'deleted': serializer.toJson<bool>(deleted),
+      'settled': serializer.toJson<bool>(settled),
+      'settledAt': serializer.toJson<DateTime?>(settledAt),
       'syncStatus': serializer.toJson<String>(syncStatus),
     };
   }
@@ -2740,6 +2851,8 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
     DateTime? createdAtLocal,
     DateTime? updatedAtLocal,
     bool? deleted,
+    bool? settled,
+    Value<DateTime?> settledAt = const Value.absent(),
     String? syncStatus,
   }) => DebtTransaction(
     localId: localId ?? this.localId,
@@ -2753,6 +2866,8 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
     createdAtLocal: createdAtLocal ?? this.createdAtLocal,
     updatedAtLocal: updatedAtLocal ?? this.updatedAtLocal,
     deleted: deleted ?? this.deleted,
+    settled: settled ?? this.settled,
+    settledAt: settledAt.present ? settledAt.value : this.settledAt,
     syncStatus: syncStatus ?? this.syncStatus,
   );
   DebtTransaction copyWithCompanion(DebtTransactionsCompanion data) {
@@ -2772,6 +2887,8 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
           ? data.updatedAtLocal.value
           : this.updatedAtLocal,
       deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      settled: data.settled.present ? data.settled.value : this.settled,
+      settledAt: data.settledAt.present ? data.settledAt.value : this.settledAt,
       syncStatus: data.syncStatus.present
           ? data.syncStatus.value
           : this.syncStatus,
@@ -2792,6 +2909,8 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
           ..write('createdAtLocal: $createdAtLocal, ')
           ..write('updatedAtLocal: $updatedAtLocal, ')
           ..write('deleted: $deleted, ')
+          ..write('settled: $settled, ')
+          ..write('settledAt: $settledAt, ')
           ..write('syncStatus: $syncStatus')
           ..write(')'))
         .toString();
@@ -2810,6 +2929,8 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
     createdAtLocal,
     updatedAtLocal,
     deleted,
+    settled,
+    settledAt,
     syncStatus,
   );
   @override
@@ -2827,6 +2948,8 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
           other.createdAtLocal == this.createdAtLocal &&
           other.updatedAtLocal == this.updatedAtLocal &&
           other.deleted == this.deleted &&
+          other.settled == this.settled &&
+          other.settledAt == this.settledAt &&
           other.syncStatus == this.syncStatus);
 }
 
@@ -2842,6 +2965,8 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
   final Value<DateTime> createdAtLocal;
   final Value<DateTime> updatedAtLocal;
   final Value<bool> deleted;
+  final Value<bool> settled;
+  final Value<DateTime?> settledAt;
   final Value<String> syncStatus;
   const DebtTransactionsCompanion({
     this.localId = const Value.absent(),
@@ -2855,6 +2980,8 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
     this.createdAtLocal = const Value.absent(),
     this.updatedAtLocal = const Value.absent(),
     this.deleted = const Value.absent(),
+    this.settled = const Value.absent(),
+    this.settledAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
   });
   DebtTransactionsCompanion.insert({
@@ -2869,6 +2996,8 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
     required DateTime createdAtLocal,
     required DateTime updatedAtLocal,
     this.deleted = const Value.absent(),
+    this.settled = const Value.absent(),
+    this.settledAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
   }) : userId = Value(userId),
        friendId = Value(friendId),
@@ -2889,6 +3018,8 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
     Expression<DateTime>? createdAtLocal,
     Expression<DateTime>? updatedAtLocal,
     Expression<bool>? deleted,
+    Expression<bool>? settled,
+    Expression<DateTime>? settledAt,
     Expression<String>? syncStatus,
   }) {
     return RawValuesInsertable({
@@ -2903,6 +3034,8 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
       if (createdAtLocal != null) 'created_at_local': createdAtLocal,
       if (updatedAtLocal != null) 'updated_at_local': updatedAtLocal,
       if (deleted != null) 'deleted': deleted,
+      if (settled != null) 'settled': settled,
+      if (settledAt != null) 'settled_at': settledAt,
       if (syncStatus != null) 'sync_status': syncStatus,
     });
   }
@@ -2919,6 +3052,8 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
     Value<DateTime>? createdAtLocal,
     Value<DateTime>? updatedAtLocal,
     Value<bool>? deleted,
+    Value<bool>? settled,
+    Value<DateTime?>? settledAt,
     Value<String>? syncStatus,
   }) {
     return DebtTransactionsCompanion(
@@ -2933,6 +3068,8 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
       createdAtLocal: createdAtLocal ?? this.createdAtLocal,
       updatedAtLocal: updatedAtLocal ?? this.updatedAtLocal,
       deleted: deleted ?? this.deleted,
+      settled: settled ?? this.settled,
+      settledAt: settledAt ?? this.settledAt,
       syncStatus: syncStatus ?? this.syncStatus,
     );
   }
@@ -2973,6 +3110,12 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
     if (deleted.present) {
       map['deleted'] = Variable<bool>(deleted.value);
     }
+    if (settled.present) {
+      map['settled'] = Variable<bool>(settled.value);
+    }
+    if (settledAt.present) {
+      map['settled_at'] = Variable<DateTime>(settledAt.value);
+    }
     if (syncStatus.present) {
       map['sync_status'] = Variable<String>(syncStatus.value);
     }
@@ -2993,6 +3136,8 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
           ..write('createdAtLocal: $createdAtLocal, ')
           ..write('updatedAtLocal: $updatedAtLocal, ')
           ..write('deleted: $deleted, ')
+          ..write('settled: $settled, ')
+          ..write('settledAt: $settledAt, ')
           ..write('syncStatus: $syncStatus')
           ..write(')'))
         .toString();
@@ -3875,6 +4020,7 @@ typedef $$FriendsTableCreateCompanionBuilder =
       Value<String?> remoteId,
       required String userId,
       required String name,
+      Value<String?> nameAr,
       Value<String?> phoneNumber,
       required DateTime createdAtLocal,
       required DateTime updatedAtLocal,
@@ -3887,6 +4033,7 @@ typedef $$FriendsTableUpdateCompanionBuilder =
       Value<String?> remoteId,
       Value<String> userId,
       Value<String> name,
+      Value<String?> nameAr,
       Value<String?> phoneNumber,
       Value<DateTime> createdAtLocal,
       Value<DateTime> updatedAtLocal,
@@ -3948,6 +4095,11 @@ class $$FriendsTableFilterComposer
 
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nameAr => $composableBuilder(
+    column: $table.nameAr,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4031,6 +4183,11 @@ class $$FriendsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get nameAr => $composableBuilder(
+    column: $table.nameAr,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get phoneNumber => $composableBuilder(
     column: $table.phoneNumber,
     builder: (column) => ColumnOrderings(column),
@@ -4077,6 +4234,9 @@ class $$FriendsTableAnnotationComposer
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get nameAr =>
+      $composableBuilder(column: $table.nameAr, builder: (column) => column);
 
   GeneratedColumn<String> get phoneNumber => $composableBuilder(
     column: $table.phoneNumber,
@@ -4159,6 +4319,7 @@ class $$FriendsTableTableManager
                 Value<String?> remoteId = const Value.absent(),
                 Value<String> userId = const Value.absent(),
                 Value<String> name = const Value.absent(),
+                Value<String?> nameAr = const Value.absent(),
                 Value<String?> phoneNumber = const Value.absent(),
                 Value<DateTime> createdAtLocal = const Value.absent(),
                 Value<DateTime> updatedAtLocal = const Value.absent(),
@@ -4169,6 +4330,7 @@ class $$FriendsTableTableManager
                 remoteId: remoteId,
                 userId: userId,
                 name: name,
+                nameAr: nameAr,
                 phoneNumber: phoneNumber,
                 createdAtLocal: createdAtLocal,
                 updatedAtLocal: updatedAtLocal,
@@ -4181,6 +4343,7 @@ class $$FriendsTableTableManager
                 Value<String?> remoteId = const Value.absent(),
                 required String userId,
                 required String name,
+                Value<String?> nameAr = const Value.absent(),
                 Value<String?> phoneNumber = const Value.absent(),
                 required DateTime createdAtLocal,
                 required DateTime updatedAtLocal,
@@ -4191,6 +4354,7 @@ class $$FriendsTableTableManager
                 remoteId: remoteId,
                 userId: userId,
                 name: name,
+                nameAr: nameAr,
                 phoneNumber: phoneNumber,
                 createdAtLocal: createdAtLocal,
                 updatedAtLocal: updatedAtLocal,
@@ -4269,6 +4433,8 @@ typedef $$DebtTransactionsTableCreateCompanionBuilder =
       required DateTime createdAtLocal,
       required DateTime updatedAtLocal,
       Value<bool> deleted,
+      Value<bool> settled,
+      Value<DateTime?> settledAt,
       Value<String> syncStatus,
     });
 typedef $$DebtTransactionsTableUpdateCompanionBuilder =
@@ -4284,6 +4450,8 @@ typedef $$DebtTransactionsTableUpdateCompanionBuilder =
       Value<DateTime> createdAtLocal,
       Value<DateTime> updatedAtLocal,
       Value<bool> deleted,
+      Value<bool> settled,
+      Value<DateTime?> settledAt,
       Value<String> syncStatus,
     });
 
@@ -4375,6 +4543,16 @@ class $$DebtTransactionsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get settled => $composableBuilder(
+    column: $table.settled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get settledAt => $composableBuilder(
+    column: $table.settledAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get syncStatus => $composableBuilder(
     column: $table.syncStatus,
     builder: (column) => ColumnFilters(column),
@@ -4463,6 +4641,16 @@ class $$DebtTransactionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get settled => $composableBuilder(
+    column: $table.settled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get settledAt => $composableBuilder(
+    column: $table.settledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get syncStatus => $composableBuilder(
     column: $table.syncStatus,
     builder: (column) => ColumnOrderings(column),
@@ -4535,6 +4723,12 @@ class $$DebtTransactionsTableAnnotationComposer
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
 
+  GeneratedColumn<bool> get settled =>
+      $composableBuilder(column: $table.settled, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get settledAt =>
+      $composableBuilder(column: $table.settledAt, builder: (column) => column);
+
   GeneratedColumn<String> get syncStatus => $composableBuilder(
     column: $table.syncStatus,
     builder: (column) => column,
@@ -4605,6 +4799,8 @@ class $$DebtTransactionsTableTableManager
                 Value<DateTime> createdAtLocal = const Value.absent(),
                 Value<DateTime> updatedAtLocal = const Value.absent(),
                 Value<bool> deleted = const Value.absent(),
+                Value<bool> settled = const Value.absent(),
+                Value<DateTime?> settledAt = const Value.absent(),
                 Value<String> syncStatus = const Value.absent(),
               }) => DebtTransactionsCompanion(
                 localId: localId,
@@ -4618,6 +4814,8 @@ class $$DebtTransactionsTableTableManager
                 createdAtLocal: createdAtLocal,
                 updatedAtLocal: updatedAtLocal,
                 deleted: deleted,
+                settled: settled,
+                settledAt: settledAt,
                 syncStatus: syncStatus,
               ),
           createCompanionCallback:
@@ -4633,6 +4831,8 @@ class $$DebtTransactionsTableTableManager
                 required DateTime createdAtLocal,
                 required DateTime updatedAtLocal,
                 Value<bool> deleted = const Value.absent(),
+                Value<bool> settled = const Value.absent(),
+                Value<DateTime?> settledAt = const Value.absent(),
                 Value<String> syncStatus = const Value.absent(),
               }) => DebtTransactionsCompanion.insert(
                 localId: localId,
@@ -4646,6 +4846,8 @@ class $$DebtTransactionsTableTableManager
                 createdAtLocal: createdAtLocal,
                 updatedAtLocal: updatedAtLocal,
                 deleted: deleted,
+                settled: settled,
+                settledAt: settledAt,
                 syncStatus: syncStatus,
               ),
           withReferenceMapper: (p0) => p0

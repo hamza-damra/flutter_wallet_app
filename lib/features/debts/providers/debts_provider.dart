@@ -44,8 +44,8 @@ final friendsProvider = Provider<AsyncValue<List<FriendModel>>>((ref) {
 
   final updatedFriends = friends.map((f) {
     double balance = 0;
-    // Filter transactions for this friend
-    final friendTx = transactions.where((t) => t.friendId == f.id);
+    // Filter transactions for this friend, excluding settled ones
+    final friendTx = transactions.where((t) => t.friendId == f.id && !t.settled);
 
     for (var t in friendTx) {
       if (t.type == 'lent') {

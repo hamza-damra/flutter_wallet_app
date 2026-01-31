@@ -53,6 +53,7 @@ class Friends extends Table {
   TextColumn get remoteId => text().nullable()();
   TextColumn get userId => text()();
   TextColumn get name => text()();
+  TextColumn get nameAr => text().nullable()();
   TextColumn get phoneNumber => text().nullable()();
   DateTimeColumn get createdAtLocal => dateTime()();
   DateTimeColumn get updatedAtLocal => dateTime()();
@@ -72,6 +73,8 @@ class DebtTransactions extends Table {
   DateTimeColumn get createdAtLocal => dateTime()();
   DateTimeColumn get updatedAtLocal => dateTime()();
   BoolColumn get deleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get settled => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get settledAt => dateTime().nullable()();
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
 }
 
@@ -82,7 +85,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -93,6 +96,15 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await m.createTable(friends);
         await m.createTable(debtTransactions);
+      }
+      if (from < 3) {
+        // Add settled and settledAt columns to debtTransactions
+        await m.database.customStatement(
+          'ALTER TABLE debt_transactions ADD COLUMN settled INTEGER NOT NULL DEFAULT 0',
+        );
+        await m.database.customStatement(
+          'ALTER TABLE debt_transactions ADD COLUMN settled_at INTEGER',
+        );
       }
     },
   );

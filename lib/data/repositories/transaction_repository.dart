@@ -22,6 +22,14 @@ class TransactionRepository {
         .map((rows) => rows.map((row) => _mapRowToModel(row)).toList());
   }
 
+  Stream<TransactionModel?> watchTransactionByLocalId(int localId) {
+    return (_db.select(_db.transactions)
+          ..where((t) => t.localId.equals(localId))
+          ..where((t) => t.deleted.equals(false)))
+        .watchSingleOrNull()
+        .map((row) => row != null ? _mapRowToModel(row) : null);
+  }
+
   Future<void> addTransaction(TransactionModel transaction) async {
     final companion = TransactionsCompanion.insert(
       userId: transaction.userId,
@@ -123,6 +131,7 @@ class TransactionRepository {
   TransactionModel _mapRowToModel(Transaction row) {
     return TransactionModel(
       id: row.remoteId ?? row.localId.toString(),
+      localId: row.localId,
       userId: row.userId,
       title: row.title,
       titleAr: row.titleAr,
@@ -151,4 +160,9 @@ final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
 final transactionsStreamProvider =
     StreamProvider.family<List<TransactionModel>, String>((ref, userId) {
       return ref.watch(transactionRepositoryProvider).watchTransactions(userId);
+    });
+
+final transactionByLocalIdProvider =
+    StreamProvider.family<TransactionModel?, int>((ref, localId) {
+      return ref.watch(transactionRepositoryProvider).watchTransactionByLocalId(localId);
     });

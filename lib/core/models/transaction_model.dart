@@ -1,5 +1,6 @@
 class TransactionModel {
   final String id;
+  final int? localId; // Local database ID for updates
   final String userId;
   final String title;
   final String? titleAr;
@@ -13,6 +14,7 @@ class TransactionModel {
 
   TransactionModel({
     required this.id,
+    this.localId,
     required this.userId,
     required this.title,
     this.titleAr,

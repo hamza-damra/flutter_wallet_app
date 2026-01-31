@@ -10,6 +10,7 @@ import 'auth_service.dart';
 // Bridge providers for backwards compatibility with existing UI
 final transactionsProvider = transactionsStreamProvider;
 final categoriesProvider = categoriesStreamProvider;
+final transactionByIdProvider = transactionByLocalIdProvider;
 
 final userProfileProvider = StreamProvider<UserModel?>((ref) {
   final authState = ref.watch(authStateProvider);

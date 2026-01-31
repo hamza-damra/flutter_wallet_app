@@ -16,7 +16,9 @@ import '../../services/update_service.dart';
 import 'widgets/balance_card.dart';
 import 'widgets/recent_transactions.dart';
 import '../../core/widgets/connectivity_indicator.dart';
-import '../debts/providers/debts_provider.dart';
+import 'providers/home_stats_provider.dart';
+import '../../core/constants/app_avatars.dart';
+import '../help/help_support_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -61,46 +63,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final user = ref.watch(authServiceProvider).currentUser;
     final transactionsAsync = ref.watch(transactionsProvider(user?.uid ?? ''));
-    final debtTransactionsAsync = ref.watch(debtTransactionsStreamProvider);
+    final homeStatsAsync = ref.watch(homeStatsProvider);
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final themeMode = ref.watch(themeProvider);
 
-    // Calculate totals
-    double totalBalance = 0;
-    double income = 0;
-    double expense = 0;
-    double debtBalance = 0;
-    List<TransactionModel> recentTransactions = [];
+    // Get computed stats from reactive provider
+    final stats = homeStatsAsync.value ?? const HomeStats();
+    final totalBalance = stats.totalBalance;
+    final income = stats.income;
+    final expense = stats.expense;
 
+    // Get recent transactions for display
+    List<TransactionModel> recentTransactions = [];
     transactionsAsync.whenData((transactions) {
-      for (var tx in transactions) {
-        if (tx.type == 'income') {
-          income += tx.amount;
-          totalBalance += tx.amount;
-        } else {
-          expense += tx.amount;
-          totalBalance -= tx.amount;
-        }
-      }
       recentTransactions = transactions;
     });
-
-    // Include debt transactions in balance
-    // Borrowed money = negative (you owe someone)
-    // Lent money = positive (someone owes you)
-    debtTransactionsAsync.whenData((debtTransactions) {
-      for (var dt in debtTransactions) {
-        if (dt.type == 'lent') {
-          debtBalance += dt.amount;
-        } else {
-          debtBalance -= dt.amount;
-        }
-      }
-    });
-
-    // Add debt balance to total balance
-    totalBalance += debtBalance;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -303,19 +281,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       ),
                                     ],
                                   ),
-                                  child: Builder(
-                                    builder: (context) {
-                                      final isRtl =
-                                          Directionality.of(context) ==
-                                          TextDirection.rtl;
-                                      return Icon(
-                                        isRtl
-                                            ? Icons.chevron_left_rounded
-                                            : Icons.chevron_right_rounded,
-                                        color: theme.primaryColor,
-                                        size: 20,
-                                      );
-                                    },
+                                  child: Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: theme.primaryColor,
+                                    size: 20,
                                   ),
                                 ),
                               ],
@@ -486,36 +455,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
         ),
-        // Notification & Profile actions
+        // Profile action
         Row(
           children: [
-            // Notification bell (placeholder for future)
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  // Future: notifications
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: isGlassy
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.notifications_outlined,
-                    size: 20,
-                    color: isGlassy
-                        ? Colors.white.withValues(alpha: 0.8)
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
             // Profile avatar
             GestureDetector(
               onTap: () => context.push('/profile'),
@@ -613,10 +555,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         padding: const EdgeInsets.all(4),
                         child: ClipOval(
                           child: profile?.photoUrl != null
-                              ? Image.network(
-                                  profile!.photoUrl!,
-                                  fit: BoxFit.cover,
-                                )
+                              ? AppAvatars.isAppAvatar(profile!.photoUrl)
+                                  ? SvgPicture.asset(
+                                      profile.photoUrl!,
+                                      width: 72,
+                                      height: 72,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.network(
+                                      profile.photoUrl!,
+                                      fit: BoxFit.cover,
+                                    )
                               : SvgPicture.asset(
                                   'assets/illustrations/avatar_placeholder.svg',
                                   fit: BoxFit.cover,
@@ -706,7 +655,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     title: l10n.helpSupport,
                     onTap: () {
                       Navigator.pop(context);
-                      _showComingSoonSnackbar(l10n.helpSupport);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HelpSupportScreen(),
+                        ),
+                      );
                     },
                   ),
                   _buildDrawerItem(
@@ -753,7 +707,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             padding: const EdgeInsets.only(bottom: 16),
             child: Text(
               '${l10n.version} 1.0.0',
-              style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
             ),
           ),
         ],
@@ -793,18 +749,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             )
           : null,
-      trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+      trailing: Icon(Icons.chevron_right, color: theme.colorScheme.onSurface.withValues(alpha: 0.5), size: 20),
       onTap: onTap,
-    );
-  }
-
-  void _showComingSoonSnackbar(String feature) {
-    final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.comingSoon(feature)),
-        duration: const Duration(seconds: 2),
-      ),
     );
   }
 
@@ -1047,7 +993,88 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 20),
+                  // Developer Info Section
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.primaryColor.withValues(alpha: 0.1),
+                          theme.primaryColor.withValues(alpha: 0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: theme.primaryColor.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          Localizations.localeOf(context).languageCode == 'ar'
+                              ? 'تم التطوير بواسطة'
+                              : 'Developed by',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: themeMode == AppThemeMode.glassy
+                                ? Colors.white.withValues(alpha: 0.6)
+                                : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Eng. Hamza Damra',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: themeMode == AppThemeMode.glassy
+                                ? Colors.white
+                                : theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.email_outlined,
+                              size: 16,
+                              color: theme.primaryColor,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'hamzadamra321@gmail.com',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: themeMode == AppThemeMode.glassy
+                                    ? Colors.white.withValues(alpha: 0.8)
+                                    : theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.phone_outlined,
+                              size: 16,
+                              color: theme.primaryColor,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '0593690711',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: themeMode == AppThemeMode.glassy
+                                    ? Colors.white.withValues(alpha: 0.8)
+                                    : theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(

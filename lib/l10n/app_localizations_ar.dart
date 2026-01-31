@@ -718,4 +718,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get updatedAt => 'تم التحديث';
+
+  @override
+  String get chooseAvatar => 'اختر صورتك الرمزية';
+
+  @override
+  String get tapToChooseAvatar => 'اضغط لاختيار صورة رمزية';
+
+  @override
+  String get saveAvatar => 'حفظ الصورة الرمزية';
 }

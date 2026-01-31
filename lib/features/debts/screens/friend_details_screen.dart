@@ -18,14 +18,17 @@ class FriendDetailsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    // Watch fresh data
+    // Watch fresh data - use reactive data for UI updates
     final friendAsync = ref.watch(friendDetailsProvider(friend.id));
     final transactionsAsync = ref.watch(friendTransactionsProvider(friend.id));
+    
+    // Get current friend data (reactive) or fallback to initial
+    final currentFriend = friendAsync.value ?? friend;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          friend.name,
+          currentFriend.name,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -36,8 +39,12 @@ class FriendDetailsScreen extends ConsumerWidget {
         leading: BackButton(color: theme.colorScheme.onSurface),
         actions: [
           IconButton(
+            icon: Icon(Icons.edit_outlined, color: theme.primaryColor),
+            onPressed: () => _showEditFriendDialog(context, ref, currentFriend),
+          ),
+          IconButton(
             icon: const Icon(Icons.delete_outline, color: Colors.red),
-            onPressed: () => _confirmDeleteFriend(context, ref, friend.id),
+            onPressed: () => _confirmDeleteFriend(context, ref, currentFriend.id),
           ),
         ],
       ),
@@ -128,6 +135,8 @@ class FriendDetailsScreen extends ConsumerWidget {
             double lent = 0;
             double borrowed = 0;
             for (var t in transactions) {
+              // Only count unsettled debts in the totals
+              if (t.settled) continue;
               if (t.type == 'lent')
                 lent += t.amount;
               else
@@ -216,19 +225,26 @@ class FriendDetailsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final isLent = tx.type == 'lent';
-    final color = isLent ? Colors.green : Colors.red;
+    final isSettled = tx.settled;
+    final color = isSettled ? Colors.grey : (isLent ? Colors.green : Colors.red);
     final currencyFormatter = NumberFormat.currency(
       symbol: '₪',
       decimalDigits: 2,
     );
     final dateFormatter = DateFormat.yMMMd();
     final dateTimeFormatter = DateFormat.yMMMd().add_jm();
+    final isArabic = l10n.localeName == 'ar';
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: isSettled 
+            ? theme.colorScheme.surface.withValues(alpha: 0.7)
+            : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
+        border: isSettled 
+            ? Border.all(color: Colors.green.withValues(alpha: 0.3), width: 1)
+            : null,
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 5),
         ],
@@ -245,7 +261,9 @@ class FriendDetailsScreen extends ConsumerWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  isLent ? Icons.arrow_upward : Icons.arrow_downward,
+                  isSettled 
+                      ? Icons.check_circle 
+                      : (isLent ? Icons.arrow_upward : Icons.arrow_downward),
                   color: color,
                   size: 20,
                 ),
@@ -255,11 +273,34 @@ class FriendDetailsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      isLent ? l10n.lent : l10n.borrowed,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          isLent ? l10n.lent : l10n.borrowed,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            decoration: isSettled ? TextDecoration.lineThrough : null,
+                            color: isSettled ? Colors.grey : null,
+                          ),
+                        ),
+                        if (isSettled) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              isArabic ? 'مسدد' : 'Settled',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     Text(
                       dateFormatter.format(tx.date),
@@ -275,6 +316,14 @@ class FriendDetailsScreen extends ConsumerWidget {
                           fontStyle: FontStyle.italic,
                         ),
                       ),
+                    if (isSettled && tx.settledAt != null)
+                      Text(
+                        '${isArabic ? "تمت التسوية:" : "Settled on:"} ${dateFormatter.format(tx.settledAt!)}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.green[600],
+                          fontSize: 11,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -283,6 +332,7 @@ class FriendDetailsScreen extends ConsumerWidget {
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: color,
                   fontWeight: FontWeight.bold,
+                  decoration: isSettled ? TextDecoration.lineThrough : null,
                 ),
               ),
             ],
@@ -305,37 +355,39 @@ class FriendDetailsScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 8),
-          // Action buttons row
+          // Action buttons row - only show settle button if not already settled
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton.icon(
-                onPressed: () => _showSettleDebtDialog(context, ref, tx),
-                icon: Icon(Icons.check_circle_outline, size: 18, color: Colors.green),
-                label: Text(
-                  l10n.settled,
-                  style: const TextStyle(color: Colors.green),
+              if (!isSettled)
+                TextButton.icon(
+                  onPressed: () => _showSettleDebtDialog(context, ref, tx),
+                  icon: Icon(Icons.check_circle_outline, size: 18, color: Colors.green),
+                  label: Text(
+                    l10n.settled,
+                    style: const TextStyle(color: Colors.green),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                  ),
                 ),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+              if (!isSettled) const SizedBox(width: 4),
+              if (!isSettled)
+                TextButton.icon(
+                  onPressed: () => context.push(
+                    '/edit-debt-transaction',
+                    extra: {'friend': friend, 'transaction': tx},
+                  ),
+                  icon: Icon(Icons.edit, size: 18, color: theme.primaryColor),
+                  label: Text(
+                    l10n.edit,
+                    style: TextStyle(color: theme.primaryColor),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 4),
-              TextButton.icon(
-                onPressed: () => context.push(
-                  '/edit-debt-transaction',
-                  extra: {'friend': friend, 'transaction': tx},
-                ),
-                icon: Icon(Icons.edit, size: 18, color: theme.primaryColor),
-                label: Text(
-                  l10n.edit,
-                  style: TextStyle(color: theme.primaryColor),
-                ),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                ),
-              ),
-              const SizedBox(width: 4),
+              if (!isSettled) const SizedBox(width: 4),
               TextButton.icon(
                 onPressed: () => _confirmDeleteTransaction(context, ref, tx.id),
                 icon: const Icon(Icons.delete, size: 18, color: Colors.red),
@@ -405,6 +457,150 @@ class FriendDetailsScreen extends ConsumerWidget {
               context.pop(); // Go back to list
             },
             child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditFriendDialog(BuildContext context, WidgetRef ref, FriendModel currentFriend) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isArabic = l10n.localeName == 'ar';
+    
+    final nameController = TextEditingController(text: currentFriend.name);
+    final nameArController = TextEditingController(text: currentFriend.nameAr ?? '');
+    final phoneController = TextEditingController(text: currentFriend.phoneNumber ?? '');
+
+    final inputDecoration = InputDecoration(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: theme.colorScheme.outline),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.5)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: theme.primaryColor, width: 1.5),
+      ),
+      filled: true,
+      fillColor: theme.colorScheme.surface,
+    );
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: theme.primaryColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.edit, color: theme.primaryColor, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                isArabic ? 'تعديل معلومات الصديق' : 'Edit Friend Info',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: inputDecoration.copyWith(
+                  labelText: l10n.friendName,
+                  prefixIcon: Icon(Icons.person_outline, color: theme.primaryColor),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nameArController,
+                decoration: inputDecoration.copyWith(
+                  labelText: l10n.nameArHint,
+                  prefixIcon: Icon(Icons.person_outline, color: theme.primaryColor),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: phoneController,
+                decoration: inputDecoration.copyWith(
+                  labelText: l10n.phoneNumber,
+                  prefixIcon: Icon(Icons.phone_outlined, color: theme.primaryColor),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton.icon(
+            onPressed: () async {
+              if (nameController.text.trim().isEmpty) {
+                return;
+              }
+              
+              final updatedFriend = FriendModel(
+                id: currentFriend.id,
+                userId: currentFriend.userId,
+                name: nameController.text.trim(),
+                nameAr: nameArController.text.trim().isEmpty 
+                    ? null 
+                    : nameArController.text.trim(),
+                phoneNumber: phoneController.text.trim().isEmpty 
+                    ? null 
+                    : phoneController.text.trim(),
+                createdAt: currentFriend.createdAt,
+                updatedAt: DateTime.now(),
+                netBalance: currentFriend.netBalance,
+              );
+              
+              await ref.read(debtsRepositoryProvider).updateFriend(updatedFriend);
+              
+              if (ctx.mounted) {
+                Navigator.pop(ctx);
+              }
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      isArabic ? 'تم تحديث معلومات الصديق' : 'Friend info updated',
+                    ),
+                    backgroundColor: Colors.green,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.save, size: 18),
+            label: Text(l10n.save),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
           ),
         ],
       ),
@@ -488,8 +684,8 @@ class FriendDetailsScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             Text(
               isArabic
-                  ? 'سيتم إنشاء معاملة معاكسة لتسوية هذا الدين.'
-                  : 'An opposite transaction will be created to settle this debt.',
+                  ? 'سيتم تسوية هذا الدين وإزالته من الحسابات النشطة.'
+                  : 'This debt will be marked as settled and removed from active balances.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: Colors.grey[600],
                 fontStyle: FontStyle.italic,
@@ -537,22 +733,7 @@ class FriendDetailsScreen extends ConsumerWidget {
   }
 
   Future<void> _settleDebt(WidgetRef ref, DebtTransactionModel tx) async {
-    // Create an opposite transaction to settle the debt
-    // If original was 'lent', create 'borrowed' and vice versa
-    final oppositeType = tx.type == 'lent' ? 'borrowed' : 'lent';
-    
-    final settlementTransaction = DebtTransactionModel(
-      id: '0', // Will be assigned by DB
-      userId: tx.userId,
-      friendId: tx.friendId,
-      amount: tx.amount,
-      type: oppositeType,
-      date: DateTime.now(),
-      note: 'Settlement for ${tx.type == 'lent' ? 'lent' : 'borrowed'} amount',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-
-    await ref.read(debtsRepositoryProvider).addDebtTransaction(settlementTransaction);
+    // Mark the debt as settled instead of creating an opposite transaction
+    await ref.read(debtsRepositoryProvider).settleDebtTransaction(tx.id);
   }
 }

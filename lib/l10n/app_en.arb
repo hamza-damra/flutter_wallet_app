@@ -308,7 +308,10 @@
   "deleteDebtTransactionConfirm": "Are you sure you want to delete this debt transaction?",
   "debtTransactionUpdated": "Debt transaction updated successfully",
   "debtTransactionDeleted": "Debt transaction deleted successfully",
-  "updatedAt": "Updated"
+  "updatedAt": "Updated",
+  "chooseAvatar": "Choose Your Avatar",
+  "tapToChooseAvatar": "Tap to choose avatar",
+  "saveAvatar": "Save Avatar"
 }
 
 

@@ -6,7 +6,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/app_state/connectivity_controller.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/update_service.dart';
-import '../../services/push_notification_service.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -52,9 +51,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       final updateService = ref.read(updateServiceProvider);
       await updateService.initialize();
 
-      // Initialize push notification service
-      final pushService = ref.read(pushNotificationServiceProvider);
-      await pushService.initialize();
     } catch (e) {
       // Log error but don't block app startup
       debugPrint('Error initializing services: $e');

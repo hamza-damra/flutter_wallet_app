@@ -713,4 +713,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updatedAt => 'Updated';
+
+  @override
+  String get chooseAvatar => 'Choose Your Avatar';
+
+  @override
+  String get tapToChooseAvatar => 'Tap to choose avatar';
+
+  @override
+  String get saveAvatar => 'Save Avatar';
 }

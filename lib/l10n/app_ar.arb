@@ -240,6 +240,9 @@
   "deleteDebtTransactionConfirm": "هل أنت متأكد من حذف معاملة الدين هذه؟",
   "debtTransactionUpdated": "تم تحديث معاملة الدين بنجاح",
   "debtTransactionDeleted": "تم حذف معاملة الدين بنجاح",
-  "updatedAt": "تم التحديث"
+  "updatedAt": "تم التحديث",
+  "chooseAvatar": "اختر صورتك الرمزية",
+  "tapToChooseAvatar": "اضغط لاختيار صورة رمزية",
+  "saveAvatar": "حفظ الصورة الرمزية"
 }
 

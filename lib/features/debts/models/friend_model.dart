@@ -2,6 +2,7 @@ class FriendModel {
   final String id; // localId.toString() or remoteId
   final String userId;
   final String name;
+  final String? nameAr;
   final String? phoneNumber;
   final double netBalance; // Calculated
   final DateTime createdAt;
@@ -11,6 +12,7 @@ class FriendModel {
     required this.id,
     required this.userId,
     required this.name,
+    this.nameAr,
     this.phoneNumber,
     this.netBalance = 0.0,
     required this.createdAt,
@@ -21,6 +23,7 @@ class FriendModel {
     return {
       'userId': userId,
       'name': name,
+      'nameAr': nameAr,
       'phoneNumber': phoneNumber,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
@@ -32,6 +35,7 @@ class FriendModel {
       id: id,
       userId: map['userId'] ?? '',
       name: map['name'] ?? '',
+      nameAr: map['nameAr'],
       phoneNumber: map['phoneNumber'],
       createdAt: map['createdAt'] is String
           ? DateTime.parse(map['createdAt'])

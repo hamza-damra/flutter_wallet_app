@@ -149,8 +149,8 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
       );
 
       if (widget.transaction != null) {
-        // Parse localId from the existing transaction id
-        final localId = int.tryParse(widget.transaction!.id);
+        // Use the localId directly from the transaction model
+        final localId = widget.transaction!.localId;
         await ref.read(firestoreServiceProvider).updateTransaction(
           transaction,
           localId: localId,

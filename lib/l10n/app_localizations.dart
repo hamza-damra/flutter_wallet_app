@@ -1393,6 +1393,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Updated'**
   String get updatedAt;
+
+  /// No description provided for @chooseAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Your Avatar'**
+  String get chooseAvatar;
+
+  /// No description provided for @tapToChooseAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to choose avatar'**
+  String get tapToChooseAvatar;
+
+  /// No description provided for @saveAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Avatar'**
+  String get saveAvatar;
 }
 
 class _AppLocalizationsDelegate

@@ -10,6 +10,7 @@ import '../../core/utils/icon_helper.dart';
 import '../../core/localization/translation_helper.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../services/firestore_service.dart';
+import '../../core/providers/currency_provider.dart';
 import 'new_transaction_screen.dart';
 
 class TransactionDetailsScreen extends ConsumerStatefulWidget {
@@ -25,6 +26,13 @@ class TransactionDetailsScreen extends ConsumerStatefulWidget {
 class _TransactionDetailsScreenState
     extends ConsumerState<TransactionDetailsScreen> {
   bool _isDeleting = false;
+  late int? _localId;
+
+  @override
+  void initState() {
+    super.initState();
+    _localId = widget.transaction.localId;
+  }
 
   Future<void> _handleDelete() async {
     final l10n = AppLocalizations.of(context);
@@ -61,9 +69,11 @@ class _TransactionDetailsScreenState
     if (confirm == true) {
       setState(() => _isDeleting = true);
       try {
+        // Use localId for deletion if available, otherwise use id
+        final idToDelete = _localId?.toString() ?? widget.transaction.id;
         await ref
             .read(firestoreServiceProvider)
-            .deleteTransaction(widget.transaction.id);
+            .deleteTransaction(idToDelete);
         if (mounted) {
           context.pop(); // Go back to history or home
           ScaffoldMessenger.of(
@@ -86,13 +96,21 @@ class _TransactionDetailsScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final tx = widget.transaction;
-    final isIncome = tx.type == 'income';
-    final color = isIncome ? AppColors.income : AppColors.expense;
-    final currency = NumberFormat.simpleCurrency(name: 'ILS');
+    final themeMode = ref.watch(themeProvider);
+    final currencyModel = ref.watch(currencyProvider);
+    final currency = NumberFormat.simpleCurrency(name: currencyModel.code);
     final dateFormat = DateFormat.yMMMMEEEEd().add_jm();
     final locale = Localizations.localeOf(context).languageCode;
-    final themeMode = ref.watch(themeProvider);
+
+    // Watch the transaction reactively if we have a localId
+    final transactionAsync = _localId != null
+        ? ref.watch(transactionByIdProvider(_localId!))
+        : null;
+
+    // Use the watched transaction or fall back to the initial one
+    final tx = transactionAsync?.value ?? widget.transaction;
+    final isIncome = tx.type == 'income';
+    final color = isIncome ? AppColors.income : AppColors.expense;
 
     final displayTitle =
         (locale == 'ar' && tx.titleAr != null && tx.titleAr!.isNotEmpty)
@@ -157,7 +175,7 @@ class _TransactionDetailsScreenState
           SafeArea(
             child: Column(
               children: [
-                _buildAppBar(context, l10n, theme),
+                _buildAppBar(context, l10n, theme, tx),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -212,6 +230,7 @@ class _TransactionDetailsScreenState
     BuildContext context,
     AppLocalizations l10n,
     ThemeData theme,
+    TransactionModel tx,
   ) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -262,7 +281,7 @@ class _TransactionDetailsScreenState
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) =>
-                        NewTransactionScreen(transaction: widget.transaction),
+                        NewTransactionScreen(transaction: tx),
                   ),
                 );
               },

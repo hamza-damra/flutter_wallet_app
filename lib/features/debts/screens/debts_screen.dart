@@ -80,33 +80,67 @@ class DebtsScreen extends ConsumerWidget {
 
   void _showAddFriendDialog(BuildContext context, WidgetRef ref) {
     final nameController = TextEditingController();
+    final nameArController = TextEditingController();
     final phoneController = TextEditingController();
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    final inputDecoration = InputDecoration(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: theme.colorScheme.outline),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.5)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: theme.primaryColor, width: 1.5),
+      ),
+      filled: true,
+      fillColor: theme.colorScheme.surface,
+    );
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.addFriend),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(
-                labelText: l10n.friendName,
-                border: const OutlineInputBorder(),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          l10n.addFriend,
+          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: inputDecoration.copyWith(
+                  labelText: l10n.friendName,
+                  prefixIcon: Icon(Icons.person_outline, color: theme.primaryColor),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: phoneController,
-              decoration: InputDecoration(
-                labelText: l10n.phoneNumber,
-                border: const OutlineInputBorder(),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nameArController,
+                decoration: inputDecoration.copyWith(
+                  labelText: l10n.nameArHint,
+                  prefixIcon: Icon(Icons.person_outline, color: theme.primaryColor),
+                ),
               ),
-              keyboardType: TextInputType.phone,
-            ),
-          ],
+              const SizedBox(height: 16),
+              TextField(
+                controller: phoneController,
+                decoration: inputDecoration.copyWith(
+                  labelText: l10n.phoneNumber,
+                  prefixIcon: Icon(Icons.phone_outlined, color: theme.primaryColor),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -125,7 +159,8 @@ class DebtsScreen extends ConsumerWidget {
                         id: '0',
                         userId: user.uid,
                         name: nameController.text,
-                        phoneNumber: phoneController.text,
+                        nameAr: nameArController.text.isEmpty ? null : nameArController.text,
+                        phoneNumber: phoneController.text.isEmpty ? null : phoneController.text,
                         createdAt: DateTime.now(),
                         updatedAt: DateTime.now(),
                       ),
@@ -137,6 +172,12 @@ class DebtsScreen extends ConsumerWidget {
                 }
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.primaryColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
             child: Text(l10n.add),
           ),
         ],
