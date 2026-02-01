@@ -49,13 +49,15 @@ class DebtsRepository {
                   userId: row.userId,
                   friendId: row.friendId.toString(),
                   amount: row.amount,
-                  type: row.type,
+                  type: DebtEventTypeExtension.fromString(row.type),
                   date: row.date,
                   note: row.note,
                   settled: row.settled,
                   settledAt: row.settledAt,
                   createdAt: row.createdAtLocal,
                   updatedAt: row.updatedAtLocal,
+                  affectMainBalance: row.affectMainBalance,
+                  linkedTransactionId: row.linkedTransactionId,
                 ),
               )
               .toList(),
@@ -97,11 +99,13 @@ class DebtsRepository {
             userId: transaction.userId,
             friendId: int.parse(transaction.friendId),
             amount: transaction.amount,
-            type: transaction.type,
+            type: transaction.type.value,
             date: transaction.date,
             note: Value(transaction.note),
             createdAtLocal: transaction.createdAt,
             updatedAtLocal: transaction.updatedAt,
+            affectMainBalance: Value(transaction.affectMainBalance),
+            linkedTransactionId: Value(transaction.linkedTransactionId),
           ),
         );
 
@@ -179,12 +183,14 @@ class DebtsRepository {
         .write(
           DebtTransactionsCompanion(
             amount: Value(transaction.amount),
-            type: Value(transaction.type),
+            type: Value(transaction.type.value),
             date: Value(transaction.date),
             note: Value(transaction.note),
             settled: Value(transaction.settled),
             settledAt: Value(transaction.settledAt),
             updatedAtLocal: Value(transaction.updatedAt),
+            affectMainBalance: Value(transaction.affectMainBalance),
+            linkedTransactionId: Value(transaction.linkedTransactionId),
           ),
         );
 

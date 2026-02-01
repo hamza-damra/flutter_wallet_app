@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/firestore_service.dart';
 import '../../debts/providers/debts_provider.dart';
+import '../../debts/models/debt_transaction_model.dart';
 
 /// Model class to hold computed home statistics
 class HomeStats {
@@ -84,17 +85,29 @@ final homeStatsProvider = Provider<AsyncValue<HomeStats>>((ref) {
     }
   }
 
-  // Compute debt balance (excluding settled debts)
+  // Compute debt balance (excluding settled debts and those already affecting main balance)
+  // When affectMainBalance is true, a linked transaction is created that already
+  // accounts for the cash flow, so we don't double-count it in debt balance.
   double debtBalance = 0;
   final debtTransactions = debtTransactionsAsync.value ?? [];
   for (var dt in debtTransactions) {
-    // Only count unsettled debts
+    // Only count unsettled debts that don't affect main balance via linked transactions
     if (dt.settled) continue;
+    if (dt.affectMainBalance) continue; // Already counted via linked transaction
 
-    if (dt.type == 'lent') {
-      debtBalance += dt.amount;
-    } else {
-      debtBalance -= dt.amount;
+    switch (dt.type) {
+      case DebtEventType.lend:
+        debtBalance += dt.amount;
+        break;
+      case DebtEventType.borrow:
+        debtBalance -= dt.amount;
+        break;
+      case DebtEventType.settlePay:
+        debtBalance += dt.amount; // Paid back what I owe
+        break;
+      case DebtEventType.settleReceive:
+        debtBalance -= dt.amount; // Received what they owe
+        break;
     }
   }
 

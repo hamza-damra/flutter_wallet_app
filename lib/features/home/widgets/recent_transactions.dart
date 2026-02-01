@@ -175,6 +175,7 @@ class RecentTransactions extends ConsumerWidget {
   ) {
     final isGlassy = themeMode == AppThemeMode.glassy;
     final isIncome = tx.type == 'income';
+    final isDebtRelated = tx.categoryId == 'debt';
     final amountColor = isIncome ? AppColors.income : AppColors.expense;
     final currency = NumberFormat.simpleCurrency(
       locale: locale.toString(),
@@ -278,15 +279,43 @@ class RecentTransactions extends ConsumerWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            '$dateString • $displayCategoryName',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color:
-                                  (isGlassy
-                                          ? Colors.white
-                                          : theme.colorScheme.onSurface)
-                                      .withValues(alpha: 0.6),
-                            ),
+                          Row(
+                            children: [
+                              if (isDebtRelated) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.purple.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    l10n.debtCategory,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: Colors.purple,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                              ],
+                              Flexible(
+                                child: Text(
+                                  '$dateString • $displayCategoryName',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color:
+                                        (isGlassy
+                                                ? Colors.white
+                                                : theme.colorScheme.onSurface)
+                                            .withValues(alpha: 0.6),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),

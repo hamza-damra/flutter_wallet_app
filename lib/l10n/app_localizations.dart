@@ -1411,6 +1411,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save Avatar'**
   String get saveAvatar;
+
+  /// No description provided for @settlePay.
+  ///
+  /// In en, this message translates to:
+  /// **'I Paid Back'**
+  String get settlePay;
+
+  /// No description provided for @settleReceive.
+  ///
+  /// In en, this message translates to:
+  /// **'I Received'**
+  String get settleReceive;
+
+  /// No description provided for @affectMainBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Affect Main Balance'**
+  String get affectMainBalance;
+
+  /// No description provided for @affectMainBalanceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your wallet balance and create a home transaction'**
+  String get affectMainBalanceHint;
+
+  /// No description provided for @debtCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt'**
+  String get debtCategory;
+
+  /// No description provided for @debtBorrowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Borrowed from {friendName}'**
+  String debtBorrowTitle(String friendName);
+
+  /// No description provided for @debtLendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lent to {friendName}'**
+  String debtLendTitle(String friendName);
+
+  /// No description provided for @debtSettlePayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid back {friendName}'**
+  String debtSettlePayTitle(String friendName);
+
+  /// No description provided for @debtSettleReceiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Received from {friendName}'**
+  String debtSettleReceiveTitle(String friendName);
+
+  /// No description provided for @settleAmountExceedsDebt.
+  ///
+  /// In en, this message translates to:
+  /// **'Settlement amount exceeds outstanding debt'**
+  String get settleAmountExceedsDebt;
+
+  /// No description provided for @iOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'I Owe'**
+  String get iOwe;
+
+  /// No description provided for @owesMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Owes Me'**
+  String get owesMe;
+
+  /// No description provided for @debtSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt Summary'**
+  String get debtSummary;
+
+  /// No description provided for @totalOwed.
+  ///
+  /// In en, this message translates to:
+  /// **'Total I Owe'**
+  String get totalOwed;
+
+  /// No description provided for @totalOwedToMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Owed to Me'**
+  String get totalOwedToMe;
+
+  /// No description provided for @netDebt.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Debt'**
+  String get netDebt;
+
+  /// No description provided for @debtTransactionsInPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt Transactions in Period'**
+  String get debtTransactionsInPeriod;
+
+  /// No description provided for @noDebtTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'No debt transactions in this period'**
+  String get noDebtTransactions;
+
+  /// No description provided for @youOweOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe others'**
+  String get youOweOthers;
+
+  /// No description provided for @othersOweYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Others owe you'**
+  String get othersOweYou;
+
+  /// No description provided for @debtSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt Settled'**
+  String get debtSettled;
 }
 
 class _AppLocalizationsDelegate

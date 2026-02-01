@@ -727,4 +727,76 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get saveAvatar => 'حفظ الصورة الرمزية';
+
+  @override
+  String get settlePay => 'دفعت';
+
+  @override
+  String get settleReceive => 'استلمت';
+
+  @override
+  String get affectMainBalance => 'التأثير على الرصيد الرئيسي';
+
+  @override
+  String get affectMainBalanceHint =>
+      'تحديث رصيد المحفظة وإنشاء معاملة في الصفحة الرئيسية';
+
+  @override
+  String get debtCategory => 'دين';
+
+  @override
+  String debtBorrowTitle(String friendName) {
+    return 'اقترضت من $friendName';
+  }
+
+  @override
+  String debtLendTitle(String friendName) {
+    return 'أقرضت $friendName';
+  }
+
+  @override
+  String debtSettlePayTitle(String friendName) {
+    return 'دفعت إلى $friendName';
+  }
+
+  @override
+  String debtSettleReceiveTitle(String friendName) {
+    return 'استلمت من $friendName';
+  }
+
+  @override
+  String get settleAmountExceedsDebt => 'مبلغ التسوية يتجاوز الدين المستحق';
+
+  @override
+  String get iOwe => 'أنا مدين';
+
+  @override
+  String get owesMe => 'مدين لي';
+
+  @override
+  String get debtSummary => 'ملخص الديون';
+
+  @override
+  String get totalOwed => 'إجمالي ما أدين به';
+
+  @override
+  String get totalOwedToMe => 'إجمالي المدين لي';
+
+  @override
+  String get netDebt => 'صافي الديون';
+
+  @override
+  String get debtTransactionsInPeriod => 'معاملات الديون في الفترة';
+
+  @override
+  String get noDebtTransactions => 'لا توجد معاملات ديون في هذه الفترة';
+
+  @override
+  String get youOweOthers => 'أنت مدين للآخرين';
+
+  @override
+  String get othersOweYou => 'الآخرون مدينون لك';
+
+  @override
+  String get debtSettled => 'تمت تسوية الدين';
 }

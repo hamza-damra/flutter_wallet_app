@@ -722,4 +722,77 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get saveAvatar => 'Save Avatar';
+
+  @override
+  String get settlePay => 'I Paid Back';
+
+  @override
+  String get settleReceive => 'I Received';
+
+  @override
+  String get affectMainBalance => 'Affect Main Balance';
+
+  @override
+  String get affectMainBalanceHint =>
+      'Update your wallet balance and create a home transaction';
+
+  @override
+  String get debtCategory => 'Debt';
+
+  @override
+  String debtBorrowTitle(String friendName) {
+    return 'Borrowed from $friendName';
+  }
+
+  @override
+  String debtLendTitle(String friendName) {
+    return 'Lent to $friendName';
+  }
+
+  @override
+  String debtSettlePayTitle(String friendName) {
+    return 'Paid back $friendName';
+  }
+
+  @override
+  String debtSettleReceiveTitle(String friendName) {
+    return 'Received from $friendName';
+  }
+
+  @override
+  String get settleAmountExceedsDebt =>
+      'Settlement amount exceeds outstanding debt';
+
+  @override
+  String get iOwe => 'I Owe';
+
+  @override
+  String get owesMe => 'Owes Me';
+
+  @override
+  String get debtSummary => 'Debt Summary';
+
+  @override
+  String get totalOwed => 'Total I Owe';
+
+  @override
+  String get totalOwedToMe => 'Total Owed to Me';
+
+  @override
+  String get netDebt => 'Net Debt';
+
+  @override
+  String get debtTransactionsInPeriod => 'Debt Transactions in Period';
+
+  @override
+  String get noDebtTransactions => 'No debt transactions in this period';
+
+  @override
+  String get youOweOthers => 'You owe others';
+
+  @override
+  String get othersOweYou => 'Others owe you';
+
+  @override
+  String get debtSettled => 'Debt Settled';
 }

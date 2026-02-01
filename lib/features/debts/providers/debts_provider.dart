@@ -43,17 +43,30 @@ final friendsProvider = Provider<AsyncValue<List<FriendModel>>>((ref) {
   final transactions = transactionsAsync.value ?? [];
 
   final updatedFriends = friends.map((f) {
-    double balance = 0;
-    // Filter transactions for this friend, excluding settled ones
-    final friendTx = transactions.where((t) => t.friendId == f.id && !t.settled);
+    double iOwe = 0;
+    double owesMe = 0;
+    // Filter transactions for this friend
+    final friendTx = transactions.where((t) => t.friendId == f.id);
 
     for (var t in friendTx) {
-      if (t.type == 'lent') {
-        balance += t.amount;
-      } else {
-        balance -= t.amount;
+      switch (t.type) {
+        case DebtEventType.borrow:
+          iOwe += t.amount;
+          break;
+        case DebtEventType.lend:
+          owesMe += t.amount;
+          break;
+        case DebtEventType.settlePay:
+          iOwe -= t.amount;
+          break;
+        case DebtEventType.settleReceive:
+          owesMe -= t.amount;
+          break;
       }
     }
+
+    // Net balance: positive means they owe me, negative means I owe them
+    final netBalance = owesMe - iOwe;
 
     return FriendModel(
       id: f.id,
@@ -62,7 +75,9 @@ final friendsProvider = Provider<AsyncValue<List<FriendModel>>>((ref) {
       phoneNumber: f.phoneNumber,
       createdAt: f.createdAt,
       updatedAt: f.updatedAt,
-      netBalance: balance,
+      netBalance: netBalance,
+      iOwe: iOwe > 0 ? iOwe : 0,
+      owesMe: owesMe > 0 ? owesMe : 0,
     );
   }).toList();
 

@@ -14,6 +14,11 @@ class PdfGenerator {
     required double totalExpense,
     required double netBalance,
     required Map<String, double> categoryTotals,
+    // Debt data (optional)
+    double totalBorrowed = 0,
+    double totalLent = 0,
+    double netDebt = 0,
+    bool hasDebtData = false,
   }) async {
     final pdf = pw.Document();
     final dateFormat = DateFormat('yyyy-MM-dd');
@@ -110,6 +115,64 @@ class PdfGenerator {
             ),
           ),
           pw.SizedBox(height: 32),
+
+          // Debt Summary (if available)
+          if (hasDebtData) ...[
+            pw.Text(
+              'Debt Summary',
+              style: pw.TextStyle(
+                fontSize: 18,
+                fontWeight: pw.FontWeight.bold,
+                color: greyColor,
+              ),
+            ),
+            pw.Divider(),
+            pw.SizedBox(height: 8),
+            pw.Row(
+              children: [
+                _buildSummaryBox('Borrowed', totalBorrowed, expenseColor),
+                pw.SizedBox(width: 16),
+                _buildSummaryBox('Lent', totalLent, incomeColor),
+              ],
+            ),
+            pw.SizedBox(height: 12),
+            pw.Container(
+              padding: const pw.EdgeInsets.all(12),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.white,
+                border: pw.Border.all(
+                  color: netDebt >= 0 ? incomeColor : expenseColor,
+                  width: 1,
+                ),
+                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text('Net Debt', style: const pw.TextStyle(fontSize: 10)),
+                      pw.SizedBox(height: 2),
+                      pw.Text(
+                        netDebt >= 0 ? 'Others owe you' : 'You owe others',
+                        style: pw.TextStyle(fontSize: 8, color: greyColor),
+                      ),
+                    ],
+                  ),
+                  pw.Text(
+                    '${netDebt.abs().toStringAsFixed(2)} ILS',
+                    style: pw.TextStyle(
+                      fontSize: 14,
+                      fontWeight: pw.FontWeight.bold,
+                      color: netDebt >= 0 ? incomeColor : expenseColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 32),
+          ],
 
           // Transaction Table
           pw.Text(

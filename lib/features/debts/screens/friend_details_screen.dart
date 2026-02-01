@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../data/repositories/transaction_repository.dart';
+import '../../home/providers/home_stats_provider.dart';
 import '../models/friend_model.dart';
 import '../models/debt_transaction_model.dart';
 import '../providers/debts_provider.dart';
 import '../repositories/debts_repository.dart';
+import '../services/debt_service.dart';
 
 class FriendDetailsScreen extends ConsumerWidget {
   final FriendModel friend;
@@ -132,24 +135,37 @@ class FriendDetailsScreen extends ConsumerWidget {
         );
         return transactionsAsync.when(
           data: (transactions) {
-            double lent = 0;
-            double borrowed = 0;
-            for (var t in transactions) {
-              // Only count unsettled debts in the totals
-              if (t.settled) continue;
-              if (t.type == 'lent')
-                lent += t.amount;
-              else
-                borrowed += t.amount;
+            double owesMe = 0;
+            double iOwe = 0;
+            // Only count unsettled debts for the summary
+            final unsettledTransactions = transactions.where((t) => !t.settled);
+            for (var t in unsettledTransactions) {
+              switch (t.type) {
+                case DebtEventType.lend:
+                  owesMe += t.amount;
+                  break;
+                case DebtEventType.borrow:
+                  iOwe += t.amount;
+                  break;
+                case DebtEventType.settlePay:
+                  iOwe -= t.amount;
+                  break;
+                case DebtEventType.settleReceive:
+                  owesMe -= t.amount;
+                  break;
+              }
             }
+            // Ensure we don't show negative values
+            owesMe = owesMe > 0 ? owesMe : 0;
+            iOwe = iOwe > 0 ? iOwe : 0;
 
             return Row(
               children: [
                 Expanded(
                   child: _buildInfoCard(
                     context,
-                    AppLocalizations.of(context).totalLent,
-                    lent,
+                    AppLocalizations.of(context).owesMe,
+                    owesMe,
                     Colors.green,
                   ),
                 ),
@@ -157,8 +173,8 @@ class FriendDetailsScreen extends ConsumerWidget {
                 Expanded(
                   child: _buildInfoCard(
                     context,
-                    AppLocalizations.of(context).totalBorrowed,
-                    borrowed,
+                    AppLocalizations.of(context).iOwe,
+                    iOwe,
                     Colors.red,
                   ),
                 ),
@@ -224,9 +240,20 @@ class FriendDetailsScreen extends ConsumerWidget {
   ) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final isLent = tx.type == 'lent';
+    final isLend = tx.type == DebtEventType.lend;
+    final isSettleReceive = tx.type == DebtEventType.settleReceive;
+    final isSettlementType = tx.type.isSettlement;
     final isSettled = tx.settled;
-    final color = isSettled ? Colors.grey : (isLent ? Colors.green : Colors.red);
+    
+    // Color logic: lend/settleReceive = green (money coming to me), borrow/settlePay = red (money going out)
+    Color color;
+    if (isSettled) {
+      color = Colors.grey;
+    } else if (isLend || isSettleReceive) {
+      color = Colors.green;
+    } else {
+      color = Colors.red;
+    }
     final currencyFormatter = NumberFormat.currency(
       symbol: '₪',
       decimalDigits: 2,
@@ -263,7 +290,9 @@ class FriendDetailsScreen extends ConsumerWidget {
                 child: Icon(
                   isSettled 
                       ? Icons.check_circle 
-                      : (isLent ? Icons.arrow_upward : Icons.arrow_downward),
+                      : (isSettlementType 
+                          ? Icons.swap_horiz
+                          : (isLend ? Icons.arrow_upward : Icons.arrow_downward)),
                   color: color,
                   size: 20,
                 ),
@@ -276,7 +305,7 @@ class FriendDetailsScreen extends ConsumerWidget {
                     Row(
                       children: [
                         Text(
-                          isLent ? l10n.lent : l10n.borrowed,
+                          _getTypeLabel(tx.type, l10n),
                           style: theme.textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             decoration: isSettled ? TextDecoration.lineThrough : null,
@@ -619,121 +648,198 @@ class FriendDetailsScreen extends ConsumerWidget {
       symbol: '₪',
       decimalDigits: 2,
     );
+    bool affectMainBalance = true;
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check_circle, color: Colors.green, size: 24),
               ),
-              child: const Icon(Icons.check_circle, color: Colors.green, size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  isArabic ? 'تأكيد السداد' : 'Confirm Settlement',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isArabic
+                    ? 'هل تريد تسجيل سداد هذا الدين؟'
+                    : 'Do you want to mark this debt as paid?',
+                style: theme.textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      isArabic ? 'المبلغ:' : 'Amount:',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    Text(
+                      currencyFormatter.format(tx.amount),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: (tx.type == DebtEventType.lend || tx.type == DebtEventType.settleReceive) ? Colors.green : Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Affect Main Balance Toggle
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: affectMainBalance
+                      ? Colors.blue.withValues(alpha: 0.1)
+                      : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: affectMainBalance
+                      ? Border.all(color: Colors.blue.withValues(alpha: 0.3))
+                      : null,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.affectMainBalance,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            tx.type == DebtEventType.lend
+                                ? (isArabic ? 'سيُضاف المبلغ إلى رصيدك الرئيسي' : 'Amount will be added to your main balance')
+                                : (isArabic ? 'سيُخصم المبلغ من رصيدك الرئيسي' : 'Amount will be deducted from your main balance'),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: affectMainBalance,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          affectMainBalance = value;
+                        });
+                      },
+                      activeColor: Colors.blue,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                isArabic
+                    ? 'سيتم تسوية هذا الدين وإزالته من الحسابات النشطة.'
+                    : 'This debt will be marked as settled and removed from active balances.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[600],
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.cancel),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                isArabic ? 'تأكيد السداد' : 'Confirm Settlement',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+            ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.pop(ctx);
+                await _settleDebt(ref, tx, affectMainBalance);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        isArabic ? 'تم تسوية الدين بنجاح' : 'Debt settled successfully',
+                      ),
+                      backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.check, size: 18),
+              label: Text(l10n.confirm),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
             ),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              isArabic
-                  ? 'هل تريد تسجيل سداد هذا الدين؟'
-                  : 'Do you want to mark this debt as paid?',
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    isArabic ? 'المبلغ:' : 'Amount:',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  Text(
-                    currencyFormatter.format(tx.amount),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: tx.type == 'lent' ? Colors.green : Colors.red,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              isArabic
-                  ? 'سيتم تسوية هذا الدين وإزالته من الحسابات النشطة.'
-                  : 'This debt will be marked as settled and removed from active balances.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.cancel),
-          ),
-          ElevatedButton.icon(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await _settleDebt(ref, tx);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      isArabic ? 'تم تسوية الدين بنجاح' : 'Debt settled successfully',
-                    ),
-                    backgroundColor: Colors.green,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                );
-              }
-            },
-            icon: const Icon(Icons.check, size: 18),
-            label: Text(l10n.confirm),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
 
-  Future<void> _settleDebt(WidgetRef ref, DebtTransactionModel tx) async {
-    // Mark the debt as settled instead of creating an opposite transaction
-    await ref.read(debtsRepositoryProvider).settleDebtTransaction(tx.id);
+  Future<void> _settleDebt(WidgetRef ref, DebtTransactionModel tx, bool affectMainBalance) async {
+    final debtService = ref.read(debtServiceProvider);
+    await debtService.settleDebt(
+      debtEventId: tx.id,
+      friendName: friend.name,
+      amount: tx.amount,
+      originalType: tx.type,
+      affectMainBalance: affectMainBalance,
+    );
+    // Refresh providers to update state across screens
+    final userId = tx.userId;
+    ref.invalidate(debtTransactionsStreamProvider);
+    ref.invalidate(rawFriendsStreamProvider);
+    ref.invalidate(transactionsStreamProvider(userId));
+    ref.invalidate(homeStatsProvider);
+  }
+
+  String _getTypeLabel(DebtEventType type, AppLocalizations l10n) {
+    switch (type) {
+      case DebtEventType.lend:
+        return l10n.lent;
+      case DebtEventType.borrow:
+        return l10n.borrowed;
+      case DebtEventType.settlePay:
+        return l10n.settlePay;
+      case DebtEventType.settleReceive:
+        return l10n.settleReceive;
+    }
   }
 }

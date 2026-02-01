@@ -350,13 +350,15 @@ class SyncService with WidgetsBindingObserver {
       userId: row.userId,
       friendId: remoteFriendId, // Use the REMOTE friendId for Firestore
       amount: row.amount,
-      type: row.type,
+      type: DebtEventTypeExtension.fromString(row.type),
       date: row.date,
       note: row.note,
       settled: row.settled,
       settledAt: row.settledAt,
       createdAt: row.createdAtLocal,
       updatedAt: row.updatedAtLocal,
+      affectMainBalance: row.affectMainBalance,
+      linkedTransactionId: row.linkedTransactionId,
     );
 
     if (item.operation == 'insert') {
@@ -552,7 +554,7 @@ class SyncService with WidgetsBindingObserver {
                   userId: remote.userId,
                   friendId: localFriendId,
                   amount: remote.amount,
-                  type: remote.type,
+                  type: remote.type.value,
                   date: remote.date,
                   note: Value(remote.note),
                   settled: Value(remote.settled),
@@ -560,6 +562,8 @@ class SyncService with WidgetsBindingObserver {
                   createdAtLocal: remote.createdAt,
                   updatedAtLocal: remote.updatedAt,
                   syncStatus: const Value('synced'),
+                  affectMainBalance: Value(remote.affectMainBalance),
+                  linkedTransactionId: Value(remote.linkedTransactionId),
                 ),
               );
         }
@@ -567,7 +571,7 @@ class SyncService with WidgetsBindingObserver {
         await (_db.update(_db.debtTransactions)..where((d) => d.localId.equals(local.localId)))
             .write(DebtTransactionsCompanion(
               amount: Value(remote.amount),
-              type: Value(remote.type),
+              type: Value(remote.type.value),
               date: Value(remote.date),
               note: Value(remote.note),
               settled: Value(remote.settled),
@@ -575,6 +579,8 @@ class SyncService with WidgetsBindingObserver {
               updatedAtLocal: Value(remote.updatedAt),
               syncStatus: const Value('synced'),
               deleted: const Value(false),
+              affectMainBalance: Value(remote.affectMainBalance),
+              linkedTransactionId: Value(remote.linkedTransactionId),
             ));
       }
     }

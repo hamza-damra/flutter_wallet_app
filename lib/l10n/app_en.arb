@@ -311,7 +311,58 @@
   "updatedAt": "Updated",
   "chooseAvatar": "Choose Your Avatar",
   "tapToChooseAvatar": "Tap to choose avatar",
-  "saveAvatar": "Save Avatar"
+  "saveAvatar": "Save Avatar",
+  
+  "settlePay": "I Paid Back",
+  "settleReceive": "I Received",
+  "affectMainBalance": "Affect Main Balance",
+  "affectMainBalanceHint": "Update your wallet balance and create a home transaction",
+  "debtCategory": "Debt",
+  "debtBorrowTitle": "Borrowed from {friendName}",
+  "@debtBorrowTitle": {
+    "placeholders": {
+      "friendName": {
+        "type": "String"
+      }
+    }
+  },
+  "debtLendTitle": "Lent to {friendName}",
+  "@debtLendTitle": {
+    "placeholders": {
+      "friendName": {
+        "type": "String"
+      }
+    }
+  },
+  "debtSettlePayTitle": "Paid back {friendName}",
+  "@debtSettlePayTitle": {
+    "placeholders": {
+      "friendName": {
+        "type": "String"
+      }
+    }
+  },
+  "debtSettleReceiveTitle": "Received from {friendName}",
+  "@debtSettleReceiveTitle": {
+    "placeholders": {
+      "friendName": {
+        "type": "String"
+      }
+    }
+  },
+  "settleAmountExceedsDebt": "Settlement amount exceeds outstanding debt",
+  "iOwe": "I Owe",
+  "owesMe": "Owes Me",
+  
+  "debtSummary": "Debt Summary",
+  "totalOwed": "Total I Owe",
+  "totalOwedToMe": "Total Owed to Me",
+  "netDebt": "Net Debt",
+  "debtTransactionsInPeriod": "Debt Transactions in Period",
+  "noDebtTransactions": "No debt transactions in this period",
+  "youOweOthers": "You owe others",
+  "othersOweYou": "Others owe you",
+  "debtSettled": "Debt Settled"
 }
 
 

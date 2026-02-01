@@ -67,7 +67,7 @@ class DebtTransactions extends Table {
   TextColumn get userId => text()();
   IntColumn get friendId => integer().references(Friends, #localId)();
   RealColumn get amount => real()();
-  TextColumn get type => text()(); // 'lent' or 'borrowed'
+  TextColumn get type => text()(); // 'borrow', 'lend', 'settle_pay', 'settle_receive'
   DateTimeColumn get date => dateTime()();
   TextColumn get note => text().nullable()();
   DateTimeColumn get createdAtLocal => dateTime()();
@@ -76,6 +76,8 @@ class DebtTransactions extends Table {
   BoolColumn get settled => boolean().withDefault(const Constant(false))();
   DateTimeColumn get settledAt => dateTime().nullable()();
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+  BoolColumn get affectMainBalance => boolean().withDefault(const Constant(false))();
+  IntColumn get linkedTransactionId => integer().nullable()();
 }
 
 @DriftDatabase(
@@ -85,7 +87,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -104,6 +106,15 @@ class AppDatabase extends _$AppDatabase {
         );
         await m.database.customStatement(
           'ALTER TABLE debt_transactions ADD COLUMN settled_at INTEGER',
+        );
+      }
+      if (from < 4) {
+        // Add affectMainBalance and linkedTransactionId columns to debtTransactions
+        await m.database.customStatement(
+          'ALTER TABLE debt_transactions ADD COLUMN affect_main_balance INTEGER NOT NULL DEFAULT 0',
+        );
+        await m.database.customStatement(
+          'ALTER TABLE debt_transactions ADD COLUMN linked_transaction_id INTEGER',
         );
       }
     },

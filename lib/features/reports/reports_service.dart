@@ -59,6 +59,11 @@ class ReportsService {
     required double totalExpense,
     required double netBalance,
     required Map<String, double> categoryTotals,
+    // Debt data (optional)
+    double totalBorrowed = 0,
+    double totalLent = 0,
+    double netDebt = 0,
+    bool hasDebtData = false,
   }) async {
     final pdfBytes = await PdfGenerator.generateTransactionReport(
       userName: userName,
@@ -69,6 +74,10 @@ class ReportsService {
       totalExpense: totalExpense,
       netBalance: netBalance,
       categoryTotals: categoryTotals,
+      totalBorrowed: totalBorrowed,
+      totalLent: totalLent,
+      netDebt: netDebt,
+      hasDebtData: hasDebtData,
     );
 
     final directory = await getTemporaryDirectory();

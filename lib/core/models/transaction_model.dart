@@ -1,3 +1,31 @@
+class DebtRelatedInfo {
+  final int debtEventId;
+  final String friendId;
+  final String debtEventType;
+
+  DebtRelatedInfo({
+    required this.debtEventId,
+    required this.friendId,
+    required this.debtEventType,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'debtEventId': debtEventId,
+      'friendId': friendId,
+      'debtEventType': debtEventType,
+    };
+  }
+
+  factory DebtRelatedInfo.fromMap(Map<String, dynamic> map) {
+    return DebtRelatedInfo(
+      debtEventId: map['debtEventId'] ?? 0,
+      friendId: map['friendId'] ?? '',
+      debtEventType: map['debtEventType'] ?? '',
+    );
+  }
+}
+
 class TransactionModel {
   final String id;
   final int? localId; // Local database ID for updates
@@ -11,6 +39,7 @@ class TransactionModel {
   final String categoryIcon; // Denormalized
   final DateTime createdAt;
   final DateTime updatedAt;
+  final DebtRelatedInfo? debtRelated; // Link to debt event if this is debt-related
 
   TransactionModel({
     required this.id,
@@ -25,7 +54,10 @@ class TransactionModel {
     required this.categoryIcon,
     required this.createdAt,
     required this.updatedAt,
+    this.debtRelated,
   });
+
+  bool get isDebtRelated => debtRelated != null;
 
   factory TransactionModel.fromMap(String id, Map<String, dynamic> data) {
     return TransactionModel(
@@ -46,6 +78,9 @@ class TransactionModel {
           : (data['createdAt'] != null
                 ? (data['createdAt']).toDate()
                 : DateTime.now()),
+      debtRelated: data['debtRelated'] != null
+          ? DebtRelatedInfo.fromMap(data['debtRelated'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -61,6 +96,39 @@ class TransactionModel {
       'categoryIcon': categoryIcon,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
+      if (debtRelated != null) 'debtRelated': debtRelated!.toMap(),
     };
+  }
+
+  TransactionModel copyWith({
+    String? id,
+    int? localId,
+    String? userId,
+    String? title,
+    String? titleAr,
+    double? amount,
+    String? type,
+    String? categoryId,
+    String? categoryName,
+    String? categoryIcon,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    DebtRelatedInfo? debtRelated,
+  }) {
+    return TransactionModel(
+      id: id ?? this.id,
+      localId: localId ?? this.localId,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      titleAr: titleAr ?? this.titleAr,
+      amount: amount ?? this.amount,
+      type: type ?? this.type,
+      categoryId: categoryId ?? this.categoryId,
+      categoryName: categoryName ?? this.categoryName,
+      categoryIcon: categoryIcon ?? this.categoryIcon,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      debtRelated: debtRelated ?? this.debtRelated,
+    );
   }
 }

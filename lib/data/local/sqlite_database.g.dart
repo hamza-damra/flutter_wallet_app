@@ -2509,6 +2509,31 @@ class $DebtTransactionsTable extends DebtTransactions
     requiredDuringInsert: false,
     defaultValue: const Constant('pending'),
   );
+  static const VerificationMeta _affectMainBalanceMeta = const VerificationMeta(
+    'affectMainBalance',
+  );
+  @override
+  late final GeneratedColumn<bool> affectMainBalance = GeneratedColumn<bool>(
+    'affect_main_balance',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("affect_main_balance" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _linkedTransactionIdMeta =
+      const VerificationMeta('linkedTransactionId');
+  @override
+  late final GeneratedColumn<int> linkedTransactionId = GeneratedColumn<int>(
+    'linked_transaction_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     localId,
@@ -2525,6 +2550,8 @@ class $DebtTransactionsTable extends DebtTransactions
     settled,
     settledAt,
     syncStatus,
+    affectMainBalance,
+    linkedTransactionId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2642,6 +2669,24 @@ class $DebtTransactionsTable extends DebtTransactions
         syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
       );
     }
+    if (data.containsKey('affect_main_balance')) {
+      context.handle(
+        _affectMainBalanceMeta,
+        affectMainBalance.isAcceptableOrUnknown(
+          data['affect_main_balance']!,
+          _affectMainBalanceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('linked_transaction_id')) {
+      context.handle(
+        _linkedTransactionIdMeta,
+        linkedTransactionId.isAcceptableOrUnknown(
+          data['linked_transaction_id']!,
+          _linkedTransactionIdMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2707,6 +2752,14 @@ class $DebtTransactionsTable extends DebtTransactions
         DriftSqlType.string,
         data['${effectivePrefix}sync_status'],
       )!,
+      affectMainBalance: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}affect_main_balance'],
+      )!,
+      linkedTransactionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}linked_transaction_id'],
+      ),
     );
   }
 
@@ -2731,6 +2784,8 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
   final bool settled;
   final DateTime? settledAt;
   final String syncStatus;
+  final bool affectMainBalance;
+  final int? linkedTransactionId;
   const DebtTransaction({
     required this.localId,
     this.remoteId,
@@ -2746,6 +2801,8 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
     required this.settled,
     this.settledAt,
     required this.syncStatus,
+    required this.affectMainBalance,
+    this.linkedTransactionId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2770,6 +2827,10 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
       map['settled_at'] = Variable<DateTime>(settledAt);
     }
     map['sync_status'] = Variable<String>(syncStatus);
+    map['affect_main_balance'] = Variable<bool>(affectMainBalance);
+    if (!nullToAbsent || linkedTransactionId != null) {
+      map['linked_transaction_id'] = Variable<int>(linkedTransactionId);
+    }
     return map;
   }
 
@@ -2793,6 +2854,10 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
           ? const Value.absent()
           : Value(settledAt),
       syncStatus: Value(syncStatus),
+      affectMainBalance: Value(affectMainBalance),
+      linkedTransactionId: linkedTransactionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(linkedTransactionId),
     );
   }
 
@@ -2816,6 +2881,10 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
       settled: serializer.fromJson<bool>(json['settled']),
       settledAt: serializer.fromJson<DateTime?>(json['settledAt']),
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      affectMainBalance: serializer.fromJson<bool>(json['affectMainBalance']),
+      linkedTransactionId: serializer.fromJson<int?>(
+        json['linkedTransactionId'],
+      ),
     );
   }
   @override
@@ -2836,6 +2905,8 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
       'settled': serializer.toJson<bool>(settled),
       'settledAt': serializer.toJson<DateTime?>(settledAt),
       'syncStatus': serializer.toJson<String>(syncStatus),
+      'affectMainBalance': serializer.toJson<bool>(affectMainBalance),
+      'linkedTransactionId': serializer.toJson<int?>(linkedTransactionId),
     };
   }
 
@@ -2854,6 +2925,8 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
     bool? settled,
     Value<DateTime?> settledAt = const Value.absent(),
     String? syncStatus,
+    bool? affectMainBalance,
+    Value<int?> linkedTransactionId = const Value.absent(),
   }) => DebtTransaction(
     localId: localId ?? this.localId,
     remoteId: remoteId.present ? remoteId.value : this.remoteId,
@@ -2869,6 +2942,10 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
     settled: settled ?? this.settled,
     settledAt: settledAt.present ? settledAt.value : this.settledAt,
     syncStatus: syncStatus ?? this.syncStatus,
+    affectMainBalance: affectMainBalance ?? this.affectMainBalance,
+    linkedTransactionId: linkedTransactionId.present
+        ? linkedTransactionId.value
+        : this.linkedTransactionId,
   );
   DebtTransaction copyWithCompanion(DebtTransactionsCompanion data) {
     return DebtTransaction(
@@ -2892,6 +2969,12 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
       syncStatus: data.syncStatus.present
           ? data.syncStatus.value
           : this.syncStatus,
+      affectMainBalance: data.affectMainBalance.present
+          ? data.affectMainBalance.value
+          : this.affectMainBalance,
+      linkedTransactionId: data.linkedTransactionId.present
+          ? data.linkedTransactionId.value
+          : this.linkedTransactionId,
     );
   }
 
@@ -2911,7 +2994,9 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
           ..write('deleted: $deleted, ')
           ..write('settled: $settled, ')
           ..write('settledAt: $settledAt, ')
-          ..write('syncStatus: $syncStatus')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('affectMainBalance: $affectMainBalance, ')
+          ..write('linkedTransactionId: $linkedTransactionId')
           ..write(')'))
         .toString();
   }
@@ -2932,6 +3017,8 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
     settled,
     settledAt,
     syncStatus,
+    affectMainBalance,
+    linkedTransactionId,
   );
   @override
   bool operator ==(Object other) =>
@@ -2950,7 +3037,9 @@ class DebtTransaction extends DataClass implements Insertable<DebtTransaction> {
           other.deleted == this.deleted &&
           other.settled == this.settled &&
           other.settledAt == this.settledAt &&
-          other.syncStatus == this.syncStatus);
+          other.syncStatus == this.syncStatus &&
+          other.affectMainBalance == this.affectMainBalance &&
+          other.linkedTransactionId == this.linkedTransactionId);
 }
 
 class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
@@ -2968,6 +3057,8 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
   final Value<bool> settled;
   final Value<DateTime?> settledAt;
   final Value<String> syncStatus;
+  final Value<bool> affectMainBalance;
+  final Value<int?> linkedTransactionId;
   const DebtTransactionsCompanion({
     this.localId = const Value.absent(),
     this.remoteId = const Value.absent(),
@@ -2983,6 +3074,8 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
     this.settled = const Value.absent(),
     this.settledAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
+    this.affectMainBalance = const Value.absent(),
+    this.linkedTransactionId = const Value.absent(),
   });
   DebtTransactionsCompanion.insert({
     this.localId = const Value.absent(),
@@ -2999,6 +3092,8 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
     this.settled = const Value.absent(),
     this.settledAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
+    this.affectMainBalance = const Value.absent(),
+    this.linkedTransactionId = const Value.absent(),
   }) : userId = Value(userId),
        friendId = Value(friendId),
        amount = Value(amount),
@@ -3021,6 +3116,8 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
     Expression<bool>? settled,
     Expression<DateTime>? settledAt,
     Expression<String>? syncStatus,
+    Expression<bool>? affectMainBalance,
+    Expression<int>? linkedTransactionId,
   }) {
     return RawValuesInsertable({
       if (localId != null) 'local_id': localId,
@@ -3037,6 +3134,9 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
       if (settled != null) 'settled': settled,
       if (settledAt != null) 'settled_at': settledAt,
       if (syncStatus != null) 'sync_status': syncStatus,
+      if (affectMainBalance != null) 'affect_main_balance': affectMainBalance,
+      if (linkedTransactionId != null)
+        'linked_transaction_id': linkedTransactionId,
     });
   }
 
@@ -3055,6 +3155,8 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
     Value<bool>? settled,
     Value<DateTime?>? settledAt,
     Value<String>? syncStatus,
+    Value<bool>? affectMainBalance,
+    Value<int?>? linkedTransactionId,
   }) {
     return DebtTransactionsCompanion(
       localId: localId ?? this.localId,
@@ -3071,6 +3173,8 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
       settled: settled ?? this.settled,
       settledAt: settledAt ?? this.settledAt,
       syncStatus: syncStatus ?? this.syncStatus,
+      affectMainBalance: affectMainBalance ?? this.affectMainBalance,
+      linkedTransactionId: linkedTransactionId ?? this.linkedTransactionId,
     );
   }
 
@@ -3119,6 +3223,12 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
     if (syncStatus.present) {
       map['sync_status'] = Variable<String>(syncStatus.value);
     }
+    if (affectMainBalance.present) {
+      map['affect_main_balance'] = Variable<bool>(affectMainBalance.value);
+    }
+    if (linkedTransactionId.present) {
+      map['linked_transaction_id'] = Variable<int>(linkedTransactionId.value);
+    }
     return map;
   }
 
@@ -3138,7 +3248,9 @@ class DebtTransactionsCompanion extends UpdateCompanion<DebtTransaction> {
           ..write('deleted: $deleted, ')
           ..write('settled: $settled, ')
           ..write('settledAt: $settledAt, ')
-          ..write('syncStatus: $syncStatus')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('affectMainBalance: $affectMainBalance, ')
+          ..write('linkedTransactionId: $linkedTransactionId')
           ..write(')'))
         .toString();
   }
@@ -4436,6 +4548,8 @@ typedef $$DebtTransactionsTableCreateCompanionBuilder =
       Value<bool> settled,
       Value<DateTime?> settledAt,
       Value<String> syncStatus,
+      Value<bool> affectMainBalance,
+      Value<int?> linkedTransactionId,
     });
 typedef $$DebtTransactionsTableUpdateCompanionBuilder =
     DebtTransactionsCompanion Function({
@@ -4453,6 +4567,8 @@ typedef $$DebtTransactionsTableUpdateCompanionBuilder =
       Value<bool> settled,
       Value<DateTime?> settledAt,
       Value<String> syncStatus,
+      Value<bool> affectMainBalance,
+      Value<int?> linkedTransactionId,
     });
 
 final class $$DebtTransactionsTableReferences
@@ -4558,6 +4674,16 @@ class $$DebtTransactionsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get affectMainBalance => $composableBuilder(
+    column: $table.affectMainBalance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get linkedTransactionId => $composableBuilder(
+    column: $table.linkedTransactionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$FriendsTableFilterComposer get friendId {
     final $$FriendsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -4656,6 +4782,16 @@ class $$DebtTransactionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get affectMainBalance => $composableBuilder(
+    column: $table.affectMainBalance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get linkedTransactionId => $composableBuilder(
+    column: $table.linkedTransactionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$FriendsTableOrderingComposer get friendId {
     final $$FriendsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -4734,6 +4870,16 @@ class $$DebtTransactionsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get affectMainBalance => $composableBuilder(
+    column: $table.affectMainBalance,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get linkedTransactionId => $composableBuilder(
+    column: $table.linkedTransactionId,
+    builder: (column) => column,
+  );
+
   $$FriendsTableAnnotationComposer get friendId {
     final $$FriendsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -4802,6 +4948,8 @@ class $$DebtTransactionsTableTableManager
                 Value<bool> settled = const Value.absent(),
                 Value<DateTime?> settledAt = const Value.absent(),
                 Value<String> syncStatus = const Value.absent(),
+                Value<bool> affectMainBalance = const Value.absent(),
+                Value<int?> linkedTransactionId = const Value.absent(),
               }) => DebtTransactionsCompanion(
                 localId: localId,
                 remoteId: remoteId,
@@ -4817,6 +4965,8 @@ class $$DebtTransactionsTableTableManager
                 settled: settled,
                 settledAt: settledAt,
                 syncStatus: syncStatus,
+                affectMainBalance: affectMainBalance,
+                linkedTransactionId: linkedTransactionId,
               ),
           createCompanionCallback:
               ({
@@ -4834,6 +4984,8 @@ class $$DebtTransactionsTableTableManager
                 Value<bool> settled = const Value.absent(),
                 Value<DateTime?> settledAt = const Value.absent(),
                 Value<String> syncStatus = const Value.absent(),
+                Value<bool> affectMainBalance = const Value.absent(),
+                Value<int?> linkedTransactionId = const Value.absent(),
               }) => DebtTransactionsCompanion.insert(
                 localId: localId,
                 remoteId: remoteId,
@@ -4849,6 +5001,8 @@ class $$DebtTransactionsTableTableManager
                 settled: settled,
                 settledAt: settledAt,
                 syncStatus: syncStatus,
+                affectMainBalance: affectMainBalance,
+                linkedTransactionId: linkedTransactionId,
               ),
           withReferenceMapper: (p0) => p0
               .map(

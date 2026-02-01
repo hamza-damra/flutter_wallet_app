@@ -4,7 +4,9 @@ class FriendModel {
   final String name;
   final String? nameAr;
   final String? phoneNumber;
-  final double netBalance; // Calculated
+  final double netBalance; // Calculated: positive = they owe me, negative = I owe them
+  final double iOwe; // Total amount I owe this friend
+  final double owesMe; // Total amount this friend owes me
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -15,6 +17,8 @@ class FriendModel {
     this.nameAr,
     this.phoneNumber,
     this.netBalance = 0.0,
+    this.iOwe = 0.0,
+    this.owesMe = 0.0,
     required this.createdAt,
     required this.updatedAt,
   });

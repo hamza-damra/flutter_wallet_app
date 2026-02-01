@@ -27,6 +27,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
   final ReportsService _reportsService = ReportsService();
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
+  
+  // Loading states for share buttons
+  bool _isGeneratingPdf = false;
+  bool _isGeneratingImage = false;
 
   @override
   void initState() {
@@ -200,7 +204,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
                     data: (summary) {
                       final hasData =
                           summary['totalIncome'] > 0 ||
-                          summary['totalExpense'] > 0;
+                          summary['totalExpense'] > 0 ||
+                          (summary['hasDebtData'] ?? false);
 
                       if (!hasData) {
                         return _buildEmptyReportsState(
@@ -239,6 +244,14 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
                                 ),
                                 const SizedBox(height: 32),
                                 _buildCategoriesBreakdown(
+                                  context,
+                                  l10n,
+                                  summary,
+                                  theme,
+                                  themeMode,
+                                ),
+                                const SizedBox(height: 32),
+                                _buildDebtSummarySection(
                                   context,
                                   l10n,
                                   summary,
@@ -1065,6 +1078,316 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
     );
   }
 
+  Widget _buildDebtSummarySection(
+    BuildContext context,
+    AppLocalizations l10n,
+    Map<String, dynamic> summary,
+    ThemeData theme,
+    AppThemeMode themeMode,
+  ) {
+    final isGlassy = themeMode == AppThemeMode.glassy;
+    final hasDebtData = summary['hasDebtData'] ?? false;
+    
+    if (!hasDebtData) {
+      return const SizedBox.shrink();
+    }
+
+    final totalBorrowed = summary['totalBorrowed'] as double;
+    final totalLent = summary['totalLent'] as double;
+    final netDebtInPeriod = summary['netDebtInPeriod'] as double;
+
+    // Colors for debt cards
+    const borrowedColors = [Color(0xFFF43F5E), Color(0xFFE11D48)]; // Red - I owe
+    const lentColors = [Color(0xFF10B981), Color(0xFF059669)]; // Green - They owe me
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle(l10n.debtSummary, theme, isGlassy),
+        const SizedBox(height: 16),
+        
+        // Borrowed and Lent cards
+        Row(
+          children: [
+            Expanded(
+              child: _buildDebtCard(
+                context,
+                icon: Icons.arrow_downward_rounded,
+                label: l10n.totalBorrowed,
+                amount: totalBorrowed,
+                gradientColors: borrowedColors,
+                theme: theme,
+                isGlassy: isGlassy,
+                l10n: l10n,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildDebtCard(
+                context,
+                icon: Icons.arrow_upward_rounded,
+                label: l10n.totalLent,
+                amount: totalLent,
+                gradientColors: lentColors,
+                theme: theme,
+                isGlassy: isGlassy,
+                l10n: l10n,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        
+        // Net debt card
+        _buildNetDebtCard(
+          context,
+          l10n,
+          netDebtInPeriod,
+          theme,
+          isGlassy,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDebtCard(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required double amount,
+    required List<Color> gradientColors,
+    required ThemeData theme,
+    required bool isGlassy,
+    required AppLocalizations l10n,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: isGlassy
+            ? ImageFilter.blur(sigmaX: 10, sigmaY: 10)
+            : ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: isGlassy
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withValues(alpha: 0.12),
+                      Colors.white.withValues(alpha: 0.05),
+                    ],
+                  )
+                : null,
+            color: isGlassy ? null : theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: isGlassy
+                ? Border.all(color: Colors.white.withValues(alpha: 0.15))
+                : null,
+            boxShadow: isGlassy
+                ? [
+                    BoxShadow(
+                      color: gradientColors[0].withValues(alpha: 0.2),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: gradientColors[0].withValues(alpha: 0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: isGlassy
+                      ? LinearGradient(colors: gradientColors)
+                      : null,
+                  color: isGlassy ? null : gradientColors[0].withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: isGlassy
+                      ? [
+                          BoxShadow(
+                            color: gradientColors[0].withValues(alpha: 0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Icon(
+                  icon,
+                  color: isGlassy ? Colors.white : gradientColors[0],
+                  size: 18,
+                ),
+              ),
+              const SizedBox(height: 12),
+              FittedBox(
+                child: Text(
+                  l10n.currencyFormat(amount),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isGlassy
+                      ? Colors.white.withValues(alpha: 0.6)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  fontSize: 11,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNetDebtCard(
+    BuildContext context,
+    AppLocalizations l10n,
+    double netDebt,
+    ThemeData theme,
+    bool isGlassy,
+  ) {
+    // Positive = others owe me, Negative = I owe others
+    final isPositive = netDebt >= 0;
+    final color = isPositive ? AppColors.income : AppColors.expense;
+    final gradientColors = isPositive
+        ? [const Color(0xFF10B981), const Color(0xFF059669)]
+        : [const Color(0xFFF43F5E), const Color(0xFFE11D48)];
+    final statusText = isPositive ? l10n.othersOweYou : l10n.youOweOthers;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: isGlassy
+            ? ImageFilter.blur(sigmaX: 12, sigmaY: 12)
+            : ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: isGlassy
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      gradientColors[0].withValues(alpha: 0.2),
+                      gradientColors[1].withValues(alpha: 0.1),
+                    ],
+                  )
+                : LinearGradient(
+                    colors: [
+                      color.withValues(alpha: 0.1),
+                      color.withValues(alpha: 0.05),
+                    ],
+                  ),
+            borderRadius: BorderRadius.circular(20),
+            border: isGlassy
+                ? Border.all(
+                    color: gradientColors[0].withValues(alpha: 0.3),
+                    width: 1.5,
+                  )
+                : Border.all(color: color.withValues(alpha: 0.2)),
+            boxShadow: isGlassy
+                ? [
+                    BoxShadow(
+                      color: gradientColors[0].withValues(alpha: 0.3),
+                      blurRadius: 25,
+                      offset: const Offset(0, 10),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.netDebt,
+                      style: TextStyle(
+                        color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      statusText,
+                      style: TextStyle(
+                        color: isGlassy
+                            ? Colors.white.withValues(alpha: 0.6)
+                            : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ShaderMask(
+                      shaderCallback: isGlassy
+                          ? (bounds) => LinearGradient(
+                              colors: gradientColors,
+                            ).createShader(bounds)
+                          : (bounds) => LinearGradient(
+                              colors: [color, color],
+                            ).createShader(bounds),
+                      child: Text(
+                        l10n.currencyFormat(netDebt.abs()),
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: isGlassy
+                      ? LinearGradient(colors: gradientColors)
+                      : null,
+                  color: isGlassy ? null : color.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                  boxShadow: isGlassy
+                      ? [
+                          BoxShadow(
+                            color: gradientColors[0].withValues(alpha: 0.4),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Icon(
+                  isPositive ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                  color: isGlassy ? Colors.white : color,
+                  size: 24,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildShareActions(
     BuildContext context,
     AppLocalizations l10n,
@@ -1102,41 +1425,91 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
                       ]
                     : null,
               ),
-              child: ElevatedButton.icon(
-                onPressed: () => _reportsService.shareAsPdf(
-                  context: context,
-                  userName: userName,
-                  startDate: state.startDate,
-                  endDate: state.endDate,
-                  transactions: summary['transactions'],
-                  totalIncome: summary['totalIncome'],
-                  totalExpense: summary['totalExpense'],
-                  netBalance: summary['netBalance'],
-                  categoryTotals: summary['categoryTotals'],
-                ),
-                icon: Icon(
-                  Icons.picture_as_pdf_rounded,
-                  color: isGlassy ? Colors.white : theme.colorScheme.onPrimary,
-                ),
-                label: Text(
-                  l10n.shareAsPdf,
-                  style: TextStyle(
-                    color: isGlassy
-                        ? Colors.white
-                        : theme.colorScheme.onPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+              child: ElevatedButton(
+                onPressed: _isGeneratingPdf
+                    ? null
+                    : () async {
+                        setState(() => _isGeneratingPdf = true);
+                        try {
+                          // Don't await shareAsPdf - it waits for share dialog dismissal
+                          _reportsService.shareAsPdf(
+                            context: context,
+                            userName: userName,
+                            startDate: state.startDate,
+                            endDate: state.endDate,
+                            transactions: summary['transactions'],
+                            totalIncome: summary['totalIncome'],
+                            totalExpense: summary['totalExpense'],
+                            netBalance: summary['netBalance'],
+                            categoryTotals: summary['categoryTotals'],
+                            totalBorrowed: summary['totalBorrowed'] ?? 0,
+                            totalLent: summary['totalLent'] ?? 0,
+                            netDebt: summary['netDebtInPeriod'] ?? 0,
+                            hasDebtData: summary['hasDebtData'] ?? false,
+                          );
+                          // Small delay to show loading, then reset
+                          await Future.delayed(const Duration(milliseconds: 500));
+                        } finally {
+                          if (mounted) setState(() => _isGeneratingPdf = false);
+                        }
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isGlassy
                       ? Colors.transparent
                       : theme.primaryColor,
+                  disabledBackgroundColor: isGlassy
+                      ? Colors.transparent
+                      : theme.primaryColor.withValues(alpha: 0.7),
                   shadowColor: Colors.transparent,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                   elevation: 0,
+                ),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: _isGeneratingPdf
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isGlassy ? Colors.white : theme.colorScheme.onPrimary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              l10n.loading,
+                              style: TextStyle(
+                                color: isGlassy ? Colors.white : theme.colorScheme.onPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.picture_as_pdf_rounded,
+                              color: isGlassy ? Colors.white : theme.colorScheme.onPrimary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              l10n.shareAsPdf,
+                              style: TextStyle(
+                                color: isGlassy ? Colors.white : theme.colorScheme.onPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
             ),
@@ -1169,54 +1542,103 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
                       )
                     : null,
               ),
-              child: OutlinedButton.icon(
-                onPressed: () async {
-                  final dateFormat = DateFormat.yMMMMd(
-                    Localizations.localeOf(context).toString(),
-                  );
+              child: OutlinedButton(
+                onPressed: _isGeneratingImage
+                    ? null
+                    : () async {
+                        setState(() => _isGeneratingImage = true);
+                        try {
+                          final dateFormat = DateFormat.yMMMMd(
+                            Localizations.localeOf(context).toString(),
+                          );
 
-                  final image = await _reportsService.captureReportCard(
-                    userName: userName,
-                    startDate: state.startDate,
-                    endDate: state.endDate,
-                    totalIncome: summary['totalIncome'],
-                    totalExpense: summary['totalExpense'],
-                    netBalance: summary['netBalance'],
-                    appName: l10n.appName,
-                    textDirection: Directionality.of(context),
-                    financialSummaryLabel: l10n.reportSummary,
-                    totalBalanceLabel: l10n.totalBalance,
-                    incomeLabel: l10n.income,
-                    expenseLabel: l10n.expenses,
-                    preparedForLabel: l10n.preparedFor,
-                    dateRange:
-                        '${dateFormat.format(state.startDate)} - ${dateFormat.format(state.endDate)}',
-                  );
-                  await _reportsService.shareAsImage(image);
-                },
-                icon: Icon(
-                  Icons.image_rounded,
-                  color: isGlassy
-                      ? const Color(0xFF8B5CF6)
-                      : theme.primaryColor,
-                ),
-                label: Text(
-                  l10n.shareAsImage,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: isGlassy ? Colors.white : theme.primaryColor,
-                  ),
-                ),
+                          final image = await _reportsService.captureReportCard(
+                            userName: userName,
+                            startDate: state.startDate,
+                            endDate: state.endDate,
+                            totalIncome: summary['totalIncome'],
+                            totalExpense: summary['totalExpense'],
+                            netBalance: summary['netBalance'],
+                            appName: l10n.appName,
+                            textDirection: Directionality.of(context),
+                            financialSummaryLabel: l10n.reportSummary,
+                            totalBalanceLabel: l10n.totalBalance,
+                            incomeLabel: l10n.income,
+                            expenseLabel: l10n.expenses,
+                            preparedForLabel: l10n.preparedFor,
+                            dateRange:
+                                '${dateFormat.format(state.startDate)} - ${dateFormat.format(state.endDate)}',
+                          );
+                          // Don't await shareAsImage - it waits for share dialog dismissal
+                          _reportsService.shareAsImage(image);
+                          await Future.delayed(const Duration(milliseconds: 300));
+                        } finally {
+                          if (mounted) setState(() => _isGeneratingImage = false);
+                        }
+                      },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: isGlassy ? Colors.white : theme.primaryColor,
+                  disabledForegroundColor: isGlassy
+                      ? Colors.white.withValues(alpha: 0.7)
+                      : theme.primaryColor.withValues(alpha: 0.7),
                   side: isGlassy
                       ? BorderSide.none
-                      : BorderSide(color: theme.primaryColor),
+                      : BorderSide(
+                          color: _isGeneratingImage
+                              ? theme.primaryColor.withValues(alpha: 0.5)
+                              : theme.primaryColor,
+                        ),
                   backgroundColor: isGlassy ? Colors.transparent : null,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
+                ),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: _isGeneratingImage
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isGlassy ? const Color(0xFF8B5CF6) : theme.primaryColor,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              l10n.loading,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: isGlassy ? Colors.white : theme.primaryColor,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.image_rounded,
+                              color: isGlassy
+                                  ? const Color(0xFF8B5CF6)
+                                  : theme.primaryColor,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              l10n.shareAsImage,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: isGlassy ? Colors.white : theme.primaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
             ),

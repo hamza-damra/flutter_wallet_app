@@ -243,6 +243,29 @@
   "updatedAt": "تم التحديث",
   "chooseAvatar": "اختر صورتك الرمزية",
   "tapToChooseAvatar": "اضغط لاختيار صورة رمزية",
-  "saveAvatar": "حفظ الصورة الرمزية"
+  "saveAvatar": "حفظ الصورة الرمزية",
+  
+  "settlePay": "دفعت",
+  "settleReceive": "استلمت",
+  "affectMainBalance": "التأثير على الرصيد الرئيسي",
+  "affectMainBalanceHint": "تحديث رصيد المحفظة وإنشاء معاملة في الصفحة الرئيسية",
+  "debtCategory": "دين",
+  "debtBorrowTitle": "اقترضت من {friendName}",
+  "debtLendTitle": "أقرضت {friendName}",
+  "debtSettlePayTitle": "دفعت إلى {friendName}",
+  "debtSettleReceiveTitle": "استلمت من {friendName}",
+  "settleAmountExceedsDebt": "مبلغ التسوية يتجاوز الدين المستحق",
+  "iOwe": "أنا مدين",
+  "owesMe": "مدين لي",
+  
+  "debtSummary": "ملخص الديون",
+  "totalOwed": "إجمالي ما أدين به",
+  "totalOwedToMe": "إجمالي المدين لي",
+  "netDebt": "صافي الديون",
+  "debtTransactionsInPeriod": "معاملات الديون في الفترة",
+  "noDebtTransactions": "لا توجد معاملات ديون في هذه الفترة",
+  "youOweOthers": "أنت مدين للآخرين",
+  "othersOweYou": "الآخرون مدينون لك",
+  "debtSettled": "تمت تسوية الدين"
 }
 

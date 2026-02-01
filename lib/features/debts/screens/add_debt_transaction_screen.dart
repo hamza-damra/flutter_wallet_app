@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../data/repositories/transaction_repository.dart';
+import '../../home/providers/home_stats_provider.dart';
 import '../models/friend_model.dart';
 import '../models/debt_transaction_model.dart';
+import '../providers/debts_provider.dart';
 import '../repositories/debts_repository.dart';
+import '../services/debt_service.dart';
 import '../../../services/auth_service.dart';
 
 class AddDebtTransactionScreen extends ConsumerStatefulWidget {
@@ -30,8 +34,9 @@ class _AddDebtTransactionScreenState
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
-  String _type = 'lent'; // 'lent' or 'borrowed'
+  DebtEventType _type = DebtEventType.lend;
   DateTime _selectedDate = DateTime.now();
+  bool _affectMainBalance = true;
 
   @override
   void initState() {
@@ -42,6 +47,7 @@ class _AddDebtTransactionScreenState
       _noteController.text = tx.note ?? '';
       _type = tx.type;
       _selectedDate = tx.date;
+      _affectMainBalance = tx.affectMainBalance;
     }
   }
 
@@ -72,6 +78,8 @@ class _AddDebtTransactionScreenState
       final user = ref.read(authStateProvider).value;
       if (user == null) return;
 
+      final debtService = ref.read(debtServiceProvider);
+
       if (widget.isEditMode) {
         // Update existing transaction
         final updatedTransaction = DebtTransactionModel(
@@ -84,25 +92,33 @@ class _AddDebtTransactionScreenState
           note: _noteController.text.isEmpty ? null : _noteController.text,
           createdAt: widget.existingTransaction!.createdAt,
           updatedAt: DateTime.now(),
+          affectMainBalance: _affectMainBalance,
+          linkedTransactionId: widget.existingTransaction!.linkedTransactionId,
         );
 
         await ref.read(debtsRepositoryProvider).updateDebtTransaction(updatedTransaction);
       } else {
-        // Add new transaction
-        final transaction = DebtTransactionModel(
-          id: '0',
+        // Add new transaction using DebtService for atomic handling
+        await debtService.recordDebtEvent(
           userId: user.uid,
           friendId: widget.friend.id,
+          friendName: widget.friend.name,
           amount: amount,
           type: _type,
           date: _selectedDate,
           note: _noteController.text.isEmpty ? null : _noteController.text,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
+          affectMainBalance: _affectMainBalance,
         );
-
-        await ref.read(debtsRepositoryProvider).addDebtTransaction(transaction);
       }
+
+      // Wait a moment for Drift streams to emit new values
+      await Future.delayed(const Duration(milliseconds: 50));
+      
+      // Refresh providers to update state across screens
+      ref.invalidate(debtTransactionsStreamProvider);
+      ref.invalidate(rawFriendsStreamProvider);
+      ref.invalidate(transactionsStreamProvider(user.uid));
+      ref.invalidate(homeStatsProvider);
 
       if (mounted) {
         context.pop();
@@ -114,7 +130,8 @@ class _AddDebtTransactionScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isLent = _type == 'lent';
+    final isLend = _type == DebtEventType.lend;
+    final isBorrow = _type == DebtEventType.borrow;
 
     return Scaffold(
       appBar: AppBar(
@@ -146,7 +163,16 @@ class _AddDebtTransactionScreenState
               ),
               const SizedBox(height: 24),
 
-              // Type Selector (Toggle)
+              // Debt/Settlement Type Selector
+              Text(
+                l10n.type,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Primary actions: Lend / Borrow
               Container(
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surface,
@@ -157,18 +183,18 @@ class _AddDebtTransactionScreenState
                   children: [
                     Expanded(
                       child: GestureDetector(
-                        onTap: () => setState(() => _type = 'lent'),
+                        onTap: () => setState(() => _type = DebtEventType.lend),
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: isLent ? Colors.green : Colors.transparent,
+                            color: isLend ? Colors.orange : Colors.transparent,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             l10n.lent,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: isLent
+                              color: isLend
                                   ? Colors.white
                                   : theme.colorScheme.onSurface,
                               fontWeight: FontWeight.bold,
@@ -179,18 +205,18 @@ class _AddDebtTransactionScreenState
                     ),
                     Expanded(
                       child: GestureDetector(
-                        onTap: () => setState(() => _type = 'borrowed'),
+                        onTap: () => setState(() => _type = DebtEventType.borrow),
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: !isLent ? Colors.red : Colors.transparent,
+                            color: isBorrow ? Colors.blue : Colors.transparent,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             l10n.borrowed,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: !isLent
+                              color: isBorrow
                                   ? Colors.white
                                   : theme.colorScheme.onSurface,
                               fontWeight: FontWeight.bold,
@@ -280,7 +306,59 @@ class _AddDebtTransactionScreenState
                   ),
                 ),
                 maxLines: 3,
-              ), // Corrected maxLines syntax
+              ),
+              const SizedBox(height: 24),
+
+              // Affect Main Balance Toggle
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _affectMainBalance
+                        ? theme.primaryColor.withValues(alpha: 0.5)
+                        : Colors.grey.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.account_balance_wallet_outlined,
+                      color: _affectMainBalance
+                          ? theme.primaryColor
+                          : Colors.grey,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.affectMainBalance,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            l10n.affectMainBalanceHint,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: _affectMainBalance,
+                      onChanged: (value) {
+                        setState(() => _affectMainBalance = value);
+                      },
+                      activeColor: theme.primaryColor,
+                    ),
+                  ],
+                ),
+              ),
 
               const SizedBox(height: 40),
 
