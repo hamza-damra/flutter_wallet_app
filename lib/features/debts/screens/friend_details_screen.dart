@@ -818,6 +818,7 @@ class FriendDetailsScreen extends ConsumerWidget {
     await debtService.settleDebt(
       debtEventId: tx.id,
       friendName: friend.name,
+      friendNameAr: friend.nameAr,
       amount: tx.amount,
       originalType: tx.type,
       affectMainBalance: affectMainBalance,

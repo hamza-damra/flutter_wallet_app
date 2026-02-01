@@ -34,8 +34,48 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
+  // Email validation regex
+  bool _isValidEmail(String email) {
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+    return emailRegex.hasMatch(email);
+  }
+
   Future<void> _handleRegister() async {
     final l10n = AppLocalizations.of(context);
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    // Validate email
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.fieldRequired)),
+      );
+      return;
+    }
+
+    if (!_isValidEmail(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.invalidEmail)),
+      );
+      return;
+    }
+
+    // Validate password
+    if (password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.fieldRequired)),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.passwordTooShort)),
+      );
+      return;
+    }
 
     // Check connectivity for registration
     final connectivity = ref.read(connectivityControllerProvider);
@@ -56,10 +96,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     try {
       final credential = await ref
           .read(authServiceProvider)
-          .signUp(
-            _emailController.text.trim(),
-            _passwordController.text.trim(),
-          );
+          .signUp(email, password);
 
       if (credential.user != null) {
         // Create User in Firestore

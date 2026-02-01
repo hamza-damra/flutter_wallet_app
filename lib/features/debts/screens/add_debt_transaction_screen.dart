@@ -103,6 +103,7 @@ class _AddDebtTransactionScreenState
           userId: user.uid,
           friendId: widget.friend.id,
           friendName: widget.friend.name,
+          friendNameAr: widget.friend.nameAr,
           amount: amount,
           type: _type,
           date: _selectedDate,

@@ -79,6 +79,7 @@ class DebtsScreen extends ConsumerWidget {
   }
 
   void _showAddFriendDialog(BuildContext context, WidgetRef ref) {
+    final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController();
     final nameArController = TextEditingController();
     final phoneController = TextEditingController();
@@ -99,6 +100,14 @@ class DebtsScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: theme.primaryColor, width: 1.5),
       ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: theme.colorScheme.error),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: theme.colorScheme.error, width: 1.5),
+      ),
       filled: true,
       fillColor: theme.colorScheme.surface,
     );
@@ -112,34 +121,49 @@ class DebtsScreen extends ConsumerWidget {
           style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: inputDecoration.copyWith(
-                  labelText: l10n.friendName,
-                  prefixIcon: Icon(Icons.person_outline, color: theme.primaryColor),
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  decoration: inputDecoration.copyWith(
+                    labelText: l10n.friendName,
+                    prefixIcon: Icon(Icons.person_outline, color: theme.primaryColor),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return l10n.fieldRequired;
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: nameArController,
-                decoration: inputDecoration.copyWith(
-                  labelText: l10n.nameArHint,
-                  prefixIcon: Icon(Icons.person_outline, color: theme.primaryColor),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: nameArController,
+                  decoration: inputDecoration.copyWith(
+                    labelText: l10n.nameArHint,
+                    prefixIcon: Icon(Icons.person_outline, color: theme.primaryColor),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return l10n.fieldRequired;
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: phoneController,
-                decoration: inputDecoration.copyWith(
-                  labelText: l10n.phoneNumber,
-                  prefixIcon: Icon(Icons.phone_outlined, color: theme.primaryColor),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: phoneController,
+                  decoration: inputDecoration.copyWith(
+                    labelText: l10n.phoneNumber,
+                    prefixIcon: Icon(Icons.phone_outlined, color: theme.primaryColor),
+                  ),
+                  keyboardType: TextInputType.phone,
                 ),
-                keyboardType: TextInputType.phone,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         actions: [
@@ -149,7 +173,7 @@ class DebtsScreen extends ConsumerWidget {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (nameController.text.isNotEmpty) {
+              if (formKey.currentState!.validate()) {
                 try {
                   final repo = ref.read(debtsRepositoryProvider);
                   final user = ref.read(authStateProvider).value;
@@ -159,7 +183,7 @@ class DebtsScreen extends ConsumerWidget {
                         id: '0',
                         userId: user.uid,
                         name: nameController.text,
-                        nameAr: nameArController.text.isEmpty ? null : nameArController.text,
+                        nameAr: nameArController.text,
                         phoneNumber: phoneController.text.isEmpty ? null : phoneController.text,
                         createdAt: DateTime.now(),
                         updatedAt: DateTime.now(),

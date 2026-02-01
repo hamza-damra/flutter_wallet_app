@@ -15,6 +15,7 @@ class DebtService {
     required String userId,
     required String friendId,
     required String friendName,
+    String? friendNameAr,
     required double amount,
     required DebtEventType type,
     required DateTime date,
@@ -53,24 +54,26 @@ class DebtService {
         final transactionType = type.increasesMainBalance ? 'income' : 'expense';
         
         // Create title based on debt event type
+        // Use Arabic name for Arabic title if available
+        final arName = friendNameAr ?? friendName;
         String title;
         String? titleAr;
         switch (type) {
           case DebtEventType.borrow:
             title = 'Borrowed from $friendName';
-            titleAr = 'اقترضت من $friendName';
+            titleAr = 'اقترضت من $arName';
             break;
           case DebtEventType.lend:
             title = 'Lent to $friendName';
-            titleAr = 'أقرضت $friendName';
+            titleAr = 'أقرضت $arName';
             break;
           case DebtEventType.settlePay:
             title = 'Paid back $friendName';
-            titleAr = 'دفعت إلى $friendName';
+            titleAr = 'دفعت إلى $arName';
             break;
           case DebtEventType.settleReceive:
             title = 'Received from $friendName';
-            titleAr = 'استلمت من $friendName';
+            titleAr = 'استلمت من $arName';
             break;
         }
 
@@ -203,6 +206,7 @@ class DebtService {
   Future<void> settleDebt({
     required String debtEventId,
     required String friendName,
+    String? friendNameAr,
     required double amount,
     required DebtEventType originalType,
     required bool affectMainBalance,
@@ -228,14 +232,16 @@ class DebtService {
         final isReceiving = originalType == DebtEventType.lend;
         final transactionType = isReceiving ? 'income' : 'expense';
 
+        // Use Arabic name for Arabic title if available
+        final arName = friendNameAr ?? friendName;
         String title;
         String? titleAr;
         if (isReceiving) {
           title = 'Received from $friendName (Settlement)';
-          titleAr = 'استلمت من $friendName (تسوية)';
+          titleAr = 'استلمت من $arName (تسوية)';
         } else {
           title = 'Paid back $friendName (Settlement)';
-          titleAr = 'دفعت إلى $friendName (تسوية)';
+          titleAr = 'دفعت إلى $arName (تسوية)';
         }
 
         // Insert the linked transaction

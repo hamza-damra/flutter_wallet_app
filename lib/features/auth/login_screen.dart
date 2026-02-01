@@ -29,8 +29,48 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  // Email validation regex
+  bool _isValidEmail(String email) {
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+    return emailRegex.hasMatch(email);
+  }
+
   Future<void> _handleLogin() async {
     final l10n = AppLocalizations.of(context);
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    // Validate email
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.fieldRequired)),
+      );
+      return;
+    }
+
+    if (!_isValidEmail(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.invalidEmail)),
+      );
+      return;
+    }
+
+    // Validate password
+    if (password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.fieldRequired)),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.passwordTooShort)),
+      );
+      return;
+    }
 
     // Check connectivity for first login
     final connectivity = ref.read(connectivityControllerProvider);
@@ -51,10 +91,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await ref
           .read(authServiceProvider)
-          .signIn(
-            _emailController.text.trim(),
-            _passwordController.text.trim(),
-          );
+          .signIn(email, password);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

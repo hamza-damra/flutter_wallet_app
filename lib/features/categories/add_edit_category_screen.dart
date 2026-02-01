@@ -39,10 +39,24 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
   void initState() {
     super.initState();
     if (isEditMode) {
+      // For system categories (cat_*), we keep the key but will display translated name
+      // For user categories, just use the name as-is
       _nameController.text = widget.category!.name;
       _nameArController.text = widget.category!.nameAr ?? '';
       _selectedType = widget.category!.type;
       _selectedIcon = widget.category!.icon;
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Update name field with translated name for system categories
+    if (isEditMode && TranslationHelper.isSystemCategory(widget.category!.name)) {
+      final translatedName = TranslationHelper.getCategoryName(context, widget.category!.name);
+      if (_nameController.text != translatedName) {
+        _nameController.text = translatedName;
+      }
     }
   }
 
@@ -463,11 +477,12 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
   }
 
   Widget _buildIconPreview(Color activeColor) {
-    final iconData =
-        _getIconOptions(
-              AppLocalizations.of(context),
-            ).firstWhere((e) => e['name'] == _selectedIcon)['icon']
-            as IconData;
+    final iconOptions = _getIconOptions(AppLocalizations.of(context));
+    final iconOption = iconOptions.firstWhere(
+      (e) => e['name'] == _selectedIcon,
+      orElse: () => iconOptions.last, // Default to 'other' icon
+    );
+    final iconData = iconOption['icon'] as IconData;
 
     return Container(
       width: 100,

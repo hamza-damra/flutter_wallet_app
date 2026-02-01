@@ -72,6 +72,7 @@ final friendsProvider = Provider<AsyncValue<List<FriendModel>>>((ref) {
       id: f.id,
       userId: f.userId,
       name: f.name,
+      nameAr: f.nameAr,
       phoneNumber: f.phoneNumber,
       createdAt: f.createdAt,
       updatedAt: f.updatedAt,

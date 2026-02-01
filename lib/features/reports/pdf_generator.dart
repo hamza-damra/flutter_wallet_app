@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import '../../core/models/transaction_model.dart';
 
 class PdfGenerator {
@@ -20,6 +21,10 @@ class PdfGenerator {
     double netDebt = 0,
     bool hasDebtData = false,
   }) async {
+    // Load Unicode fonts for proper character rendering
+    final regularFont = await PdfGoogleFonts.notoSansRegular();
+    final boldFont = await PdfGoogleFonts.notoSansBold();
+    
     final pdf = pw.Document();
     final dateFormat = DateFormat('yyyy-MM-dd');
 
@@ -28,11 +33,18 @@ class PdfGenerator {
     final incomeColor = PdfColor.fromInt(0xFF4CAF50);
     final expenseColor = PdfColor.fromInt(0xFFE53935);
     final greyColor = PdfColors.grey700;
+    
+    // Create theme with Unicode fonts
+    final pdfTheme = pw.ThemeData.withFont(
+      base: regularFont,
+      bold: boldFont,
+    );
 
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
+        theme: pdfTheme,
         build: (context) => [
           // Header
           pw.Row(
