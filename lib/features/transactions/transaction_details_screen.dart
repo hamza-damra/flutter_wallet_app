@@ -10,6 +10,7 @@ import '../../core/utils/icon_helper.dart';
 import '../../core/localization/translation_helper.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../services/firestore_service.dart';
+import '../../data/repositories/category_repository.dart';
 import '../../core/providers/currency_provider.dart';
 import 'new_transaction_screen.dart';
 
@@ -99,8 +100,8 @@ class _TransactionDetailsScreenState
     final themeMode = ref.watch(themeProvider);
     final currencyModel = ref.watch(currencyProvider);
     final currency = NumberFormat.simpleCurrency(name: currencyModel.code);
-    final dateFormat = DateFormat.yMMMMEEEEd().add_jm();
     final locale = Localizations.localeOf(context).languageCode;
+    final dateFormat = DateFormat.yMMMMEEEEd(locale).add_jm();
 
     // Watch the transaction reactively if we have a localId
     final transactionAsync = _localId != null
@@ -117,9 +118,11 @@ class _TransactionDetailsScreenState
         ? tx.titleAr!
         : tx.title;
 
-    final displayCategory = TranslationHelper.getCategoryName(
+    final categoryNameArMap = ref.watch(categoryNameArMapProvider);
+    final displayCategory = TranslationHelper.getCategoryDisplayName(
       context,
       tx.categoryName,
+      categoryNameArMap,
     );
 
     return Scaffold(
@@ -421,7 +424,7 @@ class _TransactionDetailsScreenState
           ),
           _buildDetailItem(
             l10n.category,
-            TranslationHelper.getCategoryName(context, tx.categoryName),
+            TranslationHelper.getCategoryDisplayName(context, tx.categoryName, ref.watch(categoryNameArMapProvider)),
             Icons.category_rounded,
             theme,
           ),

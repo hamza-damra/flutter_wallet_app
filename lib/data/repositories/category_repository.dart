@@ -235,6 +235,19 @@ final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
   return CategoryRepository(db);
 });
 
+/// Maps English category name → Arabic category name for locale-aware display
+final categoryNameArMapProvider = Provider<Map<String, String>>((ref) {
+  final categoriesAsync = ref.watch(categoriesStreamProvider);
+  final categories = categoriesAsync.value ?? [];
+  final map = <String, String>{};
+  for (final cat in categories) {
+    if (cat.nameAr != null && cat.nameAr!.isNotEmpty) {
+      map[cat.name] = cat.nameAr!;
+    }
+  }
+  return map;
+});
+
 final categoriesStreamProvider = StreamProvider<List<CategoryModel>>((ref) {
   final authState = ref.watch(authStateProvider);
   final uid = authState.value?.uid;

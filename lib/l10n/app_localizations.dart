@@ -1537,6 +1537,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Debt Settled'**
   String get debtSettled;
+
+  /// No description provided for @transactionHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction History'**
+  String get transactionHistory;
+
+  /// No description provided for @settledOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled on:'**
+  String get settledOn;
+
+  /// No description provided for @exportPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Export PDF'**
+  String get exportPdf;
+
+  /// No description provided for @editFriendInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Friend Info'**
+  String get editFriendInfo;
+
+  /// No description provided for @friendInfoUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend info updated'**
+  String get friendInfoUpdated;
+
+  /// No description provided for @confirmSettlement.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Settlement'**
+  String get confirmSettlement;
+
+  /// No description provided for @confirmSettlementMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to mark this debt as paid?'**
+  String get confirmSettlementMessage;
+
+  /// No description provided for @amountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount:'**
+  String get amountLabel;
+
+  /// No description provided for @amountAddedToBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount will be added to your main balance'**
+  String get amountAddedToBalance;
+
+  /// No description provided for @amountDeductedFromBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount will be deducted from your main balance'**
+  String get amountDeductedFromBalance;
+
+  /// No description provided for @debtSettledMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This debt will be marked as settled and removed from active balances.'**
+  String get debtSettledMessage;
+
+  /// No description provided for @debtSettledSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt settled successfully'**
+  String get debtSettledSuccess;
+
+  /// No description provided for @generatingReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating report...'**
+  String get generatingReport;
+
+  /// No description provided for @debtReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt Report'**
+  String get debtReport;
+
+  /// No description provided for @failedToGenerateReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to generate report'**
+  String get failedToGenerateReport;
+
+  /// No description provided for @searchTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Search transactions...'**
+  String get searchTransactions;
+
+  /// No description provided for @filterTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter Transactions'**
+  String get filterTransactions;
+
+  /// No description provided for @transactionType.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction Type'**
+  String get transactionType;
+
+  /// No description provided for @allTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get allTypes;
+
+  /// No description provided for @dateRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Date Range'**
+  String get dateRange;
+
+  /// No description provided for @customRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Range'**
+  String get customRange;
+
+  /// No description provided for @amountRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount Range'**
+  String get amountRange;
+
+  /// No description provided for @minAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Min'**
+  String get minAmount;
+
+  /// No description provided for @maxAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Max'**
+  String get maxAmount;
+
+  /// No description provided for @selectCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Categories'**
+  String get selectCategories;
+
+  /// No description provided for @activeFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active'**
+  String activeFilters(int count);
+
+  /// No description provided for @clearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Filters'**
+  String get clearFilters;
+
+  /// No description provided for @noMatchingTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching transactions'**
+  String get noMatchingTransactions;
+
+  /// No description provided for @tryAdjustingFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Try adjusting your search or filters'**
+  String get tryAdjustingFilters;
+
+  /// No description provided for @last7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 Days'**
+  String get last7Days;
+
+  /// No description provided for @last30DaysFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 Days'**
+  String get last30DaysFilter;
+
+  /// No description provided for @thisMonthFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get thisMonthFilter;
+
+  /// No description provided for @thisYearFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'This Year'**
+  String get thisYearFilter;
+
+  /// No description provided for @choosePdfLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose PDF Language'**
+  String get choosePdfLanguage;
 }
 
 class _AppLocalizationsDelegate

@@ -517,13 +517,14 @@ class SyncService with WidgetsBindingObserver {
               ),
             );
       } else if (remote.updatedAt.isAfter(local.updatedAtLocal)) {
+        // Don't overwrite locally soft-deleted records; pending sync queue will handle remote deletion
+        if (local.deleted) continue;
         await (_db.update(_db.friends)..where((f) => f.localId.equals(local.localId)))
             .write(FriendsCompanion(
               name: Value(remote.name),
               phoneNumber: Value(remote.phoneNumber),
               updatedAtLocal: Value(remote.updatedAt),
               syncStatus: const Value('synced'),
-              deleted: const Value(false),
             ));
       }
     }
@@ -568,6 +569,8 @@ class SyncService with WidgetsBindingObserver {
               );
         }
       } else if (remote.updatedAt.isAfter(local.updatedAtLocal)) {
+        // Don't overwrite locally soft-deleted records; pending sync queue will handle remote deletion
+        if (local.deleted) continue;
         await (_db.update(_db.debtTransactions)..where((d) => d.localId.equals(local.localId)))
             .write(DebtTransactionsCompanion(
               amount: Value(remote.amount),
@@ -578,7 +581,6 @@ class SyncService with WidgetsBindingObserver {
               settledAt: Value(remote.settledAt),
               updatedAtLocal: Value(remote.updatedAt),
               syncStatus: const Value('synced'),
-              deleted: const Value(false),
               affectMainBalance: Value(remote.affectMainBalance),
               linkedTransactionId: Value(remote.linkedTransactionId),
             ));

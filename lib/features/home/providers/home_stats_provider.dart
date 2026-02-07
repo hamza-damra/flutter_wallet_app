@@ -111,9 +111,10 @@ final homeStatsProvider = Provider<AsyncValue<HomeStats>>((ref) {
     }
   }
 
-  // Total balance = income - expense + debt balance
-  // Debt balance: positive means others owe you, negative means you owe others
-  final totalBalance = (income - expense) + debtBalance;
+  // Total balance = income - expense
+  // Debts with affectMainBalance=true already have linked transactions in income/expense.
+  // Debts with affectMainBalance=false should not affect the main balance at all.
+  final totalBalance = income - expense;
 
   return AsyncValue.data(HomeStats(
     totalBalance: totalBalance,

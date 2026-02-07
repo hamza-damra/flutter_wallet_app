@@ -10,6 +10,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/icon_helper.dart';
 import '../../../core/localization/translation_helper.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../data/repositories/category_repository.dart';
 
 /// Widget displaying a list of recent transactions or an empty state
 class RecentTransactions extends ConsumerWidget {
@@ -29,12 +30,13 @@ class RecentTransactions extends ConsumerWidget {
     final locale = Localizations.localeOf(context);
 
     final themeMode = ref.watch(themeProvider);
+    final categoryNameArMap = ref.watch(categoryNameArMapProvider);
 
     if (transactions.isEmpty) {
       return _buildEmptyState(context, l10n, theme, themeMode);
     }
 
-    return _buildTransactionsList(context, l10n, theme, locale, themeMode);
+    return _buildTransactionsList(context, l10n, theme, locale, themeMode, categoryNameArMap);
   }
 
   Widget _buildEmptyState(
@@ -146,6 +148,7 @@ class RecentTransactions extends ConsumerWidget {
     ThemeData theme,
     Locale locale,
     AppThemeMode themeMode,
+    Map<String, String> categoryNameArMap,
   ) {
     return ListView.builder(
       physics: const NeverScrollableScrollPhysics(),
@@ -160,6 +163,7 @@ class RecentTransactions extends ConsumerWidget {
           locale,
           l10n,
           themeMode,
+          categoryNameArMap,
         );
       },
     );
@@ -172,6 +176,7 @@ class RecentTransactions extends ConsumerWidget {
     Locale locale,
     AppLocalizations l10n,
     AppThemeMode themeMode,
+    Map<String, String> categoryNameArMap,
   ) {
     final isGlassy = themeMode == AppThemeMode.glassy;
     final isIncome = tx.type == 'income';
@@ -209,9 +214,10 @@ class RecentTransactions extends ConsumerWidget {
         : tx.title;
 
     // Get translated category name
-    final displayCategoryName = TranslationHelper.getCategoryName(
+    final displayCategoryName = TranslationHelper.getCategoryDisplayName(
       context,
       tx.categoryName,
+      categoryNameArMap,
     );
 
     return ClipRRect(
@@ -332,7 +338,7 @@ class RecentTransactions extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          DateFormat.jm().format(tx.createdAt),
+                          DateFormat.jm(locale.toString()).format(tx.createdAt),
                           style: theme.textTheme.labelSmall?.copyWith(
                             color:
                                 (isGlassy

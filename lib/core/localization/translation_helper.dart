@@ -29,6 +29,24 @@ class TranslationHelper {
     return getCategoryName(context, category.name);
   }
 
+  /// Get localized category name using a pre-built name→nameAr map.
+  /// This resolves user-created category names to Arabic when locale is Arabic.
+  /// Falls back to [getCategoryName] for system categories and English locale.
+  static String getCategoryDisplayName(
+    BuildContext context,
+    String categoryName,
+    Map<String, String> categoryNameArMap,
+  ) {
+    final locale = Localizations.localeOf(context);
+    if (locale.languageCode == 'ar') {
+      final arName = categoryNameArMap[categoryName];
+      if (arName != null && arName.isNotEmpty) {
+        return arName;
+      }
+    }
+    return getCategoryName(context, categoryName);
+  }
+
   /// Get localized category name from a key or human-readable name.
   /// If the key is a known localization key (e.g., "cat_food"), returns the localized string.
   /// If the key is a human-readable name (e.g., "Food & Drinks"), maps it to a key first.
@@ -81,6 +99,10 @@ class TranslationHelper {
         return l10n.cat_investment;
       case 'cat_freelance':
         return l10n.cat_freelance;
+      case 'cat_debt':
+      case 'debt':
+      case 'Debt':
+        return l10n.debtCategory;
       default:
         // Return the key itself for user-created categories
         return key;
@@ -116,6 +138,7 @@ class TranslationHelper {
       'salary': 'cat_salary',
       'investment': 'cat_investment',
       'freelance': 'cat_freelance',
+      'debt': 'cat_debt',
     };
 
     return mapping[normalized];

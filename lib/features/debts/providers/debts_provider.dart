@@ -46,7 +46,7 @@ final friendsProvider = Provider<AsyncValue<List<FriendModel>>>((ref) {
     double iOwe = 0;
     double owesMe = 0;
     // Filter transactions for this friend
-    final friendTx = transactions.where((t) => t.friendId == f.id);
+    final friendTx = transactions.where((t) => t.friendId == f.id && !t.settled);
 
     for (var t in friendTx) {
       switch (t.type) {

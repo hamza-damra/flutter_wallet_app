@@ -685,7 +685,7 @@ class CategoriesScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              isIncome ? 'Income' : 'Expense',
+                              TranslationHelper.getTransactionType(context, category.type),
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: color,
                                 fontWeight: FontWeight.w500,

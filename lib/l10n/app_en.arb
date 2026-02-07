@@ -362,7 +362,49 @@
   "noDebtTransactions": "No debt transactions in this period",
   "youOweOthers": "You owe others",
   "othersOweYou": "Others owe you",
-  "debtSettled": "Debt Settled"
+  "debtSettled": "Debt Settled",
+  "transactionHistory": "Transaction History",
+  "settledOn": "Settled on:",
+  "exportPdf": "Export PDF",
+  "editFriendInfo": "Edit Friend Info",
+  "friendInfoUpdated": "Friend info updated",
+  "confirmSettlement": "Confirm Settlement",
+  "confirmSettlementMessage": "Do you want to mark this debt as paid?",
+  "amountLabel": "Amount:",
+  "amountAddedToBalance": "Amount will be added to your main balance",
+  "amountDeductedFromBalance": "Amount will be deducted from your main balance",
+  "debtSettledMessage": "This debt will be marked as settled and removed from active balances.",
+  "debtSettledSuccess": "Debt settled successfully",
+  "generatingReport": "Generating report...",
+  "debtReport": "Debt Report",
+  "failedToGenerateReport": "Failed to generate report",
+
+  "searchTransactions": "Search transactions...",
+  "filterTransactions": "Filter Transactions",
+  "transactionType": "Transaction Type",
+  "allTypes": "All",
+  "dateRange": "Date Range",
+  "customRange": "Custom Range",
+  "amountRange": "Amount Range",
+  "minAmount": "Min",
+  "maxAmount": "Max",
+  "selectCategories": "Select Categories",
+  "activeFilters": "{count} active",
+  "@activeFilters": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clearFilters": "Clear Filters",
+  "noMatchingTransactions": "No matching transactions",
+  "tryAdjustingFilters": "Try adjusting your search or filters",
+  "last7Days": "Last 7 Days",
+  "last30DaysFilter": "Last 30 Days",
+  "thisMonthFilter": "This Month",
+  "thisYearFilter": "This Year",
+  "choosePdfLanguage": "Choose PDF Language"
 }
 
 

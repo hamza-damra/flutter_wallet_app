@@ -14,6 +14,7 @@ import 'reports_service.dart';
 import 'widgets/date_range_selection_sheet.dart';
 
 import '../../core/theme/theme_provider.dart';
+import '../../data/repositories/category_repository.dart';
 
 class ReportsScreen extends ConsumerStatefulWidget {
   const ReportsScreen({super.key});
@@ -973,7 +974,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
                         ),
                       ),
                       title: Text(
-                        TranslationHelper.getCategoryName(context, e.key),
+                        TranslationHelper.getCategoryDisplayName(context, e.key, ref.watch(categoryNameArMapProvider)),
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           color: isGlassy
@@ -1429,6 +1430,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
                 onPressed: _isGeneratingPdf
                     ? null
                     : () async {
+                        final selectedLanguage = await _showPdfLanguageDialog(context, l10n, theme);
+                        if (selectedLanguage == null) return;
+                        final isArabicPdf = selectedLanguage == 'ar';
                         setState(() => _isGeneratingPdf = true);
                         try {
                           // Don't await shareAsPdf - it waits for share dialog dismissal
@@ -1446,6 +1450,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
                             totalLent: summary['totalLent'] ?? 0,
                             netDebt: summary['netDebtInPeriod'] ?? 0,
                             hasDebtData: summary['hasDebtData'] ?? false,
+                            isArabic: isArabicPdf,
+                            categoryNameArMap: ref.read(categoryNameArMapProvider),
                           );
                           // Small delay to show loading, then reset
                           await Future.delayed(const Duration(milliseconds: 500));
@@ -1799,6 +1805,95 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
           ],
         ),
       ),
+    );
+  }
+
+  Future<String?> _showPdfLanguageDialog(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+  ) {
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            l10n.choosePdfLanguage,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.of(ctx).pop('en'),
+                  icon: const Text('🇺🇸', style: TextStyle(fontSize: 20)),
+                  label: Text(
+                    l10n.english,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.primaryColor,
+                    foregroundColor: theme.colorScheme.onPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.of(ctx).pop('ar'),
+                  icon: const Text('🇸🇦', style: TextStyle(fontSize: 20)),
+                  label: Text(
+                    l10n.arabic,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.primaryColor,
+                    foregroundColor: theme.colorScheme.onPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actionsPadding: const EdgeInsets.only(bottom: 12, right: 16, left: 16),
+          actions: [
+            Center(
+              child: TextButton(
+                onPressed: () => Navigator.of(ctx).pop(null),
+                child: Text(
+                  l10n.cancel,
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

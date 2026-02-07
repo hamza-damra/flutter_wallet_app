@@ -64,6 +64,8 @@ class ReportsService {
     double totalLent = 0,
     double netDebt = 0,
     bool hasDebtData = false,
+    bool isArabic = false,
+    Map<String, String> categoryNameArMap = const {},
   }) async {
     final pdfBytes = await PdfGenerator.generateTransactionReport(
       userName: userName,
@@ -78,6 +80,8 @@ class ReportsService {
       totalLent: totalLent,
       netDebt: netDebt,
       hasDebtData: hasDebtData,
+      isArabic: isArabic,
+      categoryNameArMap: categoryNameArMap,
     );
 
     final directory = await getTemporaryDirectory();

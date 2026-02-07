@@ -795,4 +795,112 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get debtSettled => 'Debt Settled';
+
+  @override
+  String get transactionHistory => 'Transaction History';
+
+  @override
+  String get settledOn => 'Settled on:';
+
+  @override
+  String get exportPdf => 'Export PDF';
+
+  @override
+  String get editFriendInfo => 'Edit Friend Info';
+
+  @override
+  String get friendInfoUpdated => 'Friend info updated';
+
+  @override
+  String get confirmSettlement => 'Confirm Settlement';
+
+  @override
+  String get confirmSettlementMessage =>
+      'Do you want to mark this debt as paid?';
+
+  @override
+  String get amountLabel => 'Amount:';
+
+  @override
+  String get amountAddedToBalance =>
+      'Amount will be added to your main balance';
+
+  @override
+  String get amountDeductedFromBalance =>
+      'Amount will be deducted from your main balance';
+
+  @override
+  String get debtSettledMessage =>
+      'This debt will be marked as settled and removed from active balances.';
+
+  @override
+  String get debtSettledSuccess => 'Debt settled successfully';
+
+  @override
+  String get generatingReport => 'Generating report...';
+
+  @override
+  String get debtReport => 'Debt Report';
+
+  @override
+  String get failedToGenerateReport => 'Failed to generate report';
+
+  @override
+  String get searchTransactions => 'Search transactions...';
+
+  @override
+  String get filterTransactions => 'Filter Transactions';
+
+  @override
+  String get transactionType => 'Transaction Type';
+
+  @override
+  String get allTypes => 'All';
+
+  @override
+  String get dateRange => 'Date Range';
+
+  @override
+  String get customRange => 'Custom Range';
+
+  @override
+  String get amountRange => 'Amount Range';
+
+  @override
+  String get minAmount => 'Min';
+
+  @override
+  String get maxAmount => 'Max';
+
+  @override
+  String get selectCategories => 'Select Categories';
+
+  @override
+  String activeFilters(int count) {
+    return '$count active';
+  }
+
+  @override
+  String get clearFilters => 'Clear Filters';
+
+  @override
+  String get noMatchingTransactions => 'No matching transactions';
+
+  @override
+  String get tryAdjustingFilters => 'Try adjusting your search or filters';
+
+  @override
+  String get last7Days => 'Last 7 Days';
+
+  @override
+  String get last30DaysFilter => 'Last 30 Days';
+
+  @override
+  String get thisMonthFilter => 'This Month';
+
+  @override
+  String get thisYearFilter => 'This Year';
+
+  @override
+  String get choosePdfLanguage => 'Choose PDF Language';
 }

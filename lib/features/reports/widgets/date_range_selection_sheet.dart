@@ -259,7 +259,7 @@ class _DateRangeSelectionSheetState
     required bool isGlassy,
     required ThemeData theme,
   }) {
-    final dateFormat = DateFormat.yMMMd();
+    final dateFormat = DateFormat.yMMMd(Localizations.localeOf(context).toString());
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

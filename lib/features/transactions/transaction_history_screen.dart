@@ -11,6 +11,10 @@ import '../../core/localization/translation_helper.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
 import '../../core/theme/theme_provider.dart';
+import '../../data/repositories/category_repository.dart';
+import 'models/transaction_filter.dart';
+import 'providers/transaction_filter_provider.dart';
+import 'widgets/transaction_filter_sheet.dart';
 
 class TransactionHistoryScreen extends ConsumerStatefulWidget {
   const TransactionHistoryScreen({super.key});
@@ -22,6 +26,16 @@ class TransactionHistoryScreen extends ConsumerStatefulWidget {
 
 class _TransactionHistoryScreenState
     extends ConsumerState<TransactionHistoryScreen> {
+  final _searchController = TextEditingController();
+  final _searchFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -31,31 +45,36 @@ class _TransactionHistoryScreenState
 
     final user = ref.watch(authServiceProvider).currentUser;
     final transactionsAsync = ref.watch(transactionsProvider(user?.uid ?? ''));
+    final filter = ref.watch(transactionFilterProvider);
+    final categoryNameArMap = ref.watch(categoryNameArMapProvider);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: Stack(
-        children: [
-          // Background for Glassy
-          if (isGlassy)
-            Positioned.fill(
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF0F172A),
-                      Color(0xFF1E1B4B),
-                      Color(0xFF312E81),
-                    ],
+      body: GestureDetector(
+        onTap: () => _searchFocusNode.unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: Stack(
+          children: [
+            // Background for Glassy
+            if (isGlassy)
+              Positioned.fill(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF0F172A),
+                        Color(0xFF1E1B4B),
+                        Color(0xFF312E81),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
 
-          // Decorative elements for other themes
-          if (!isGlassy) ...[
+            // Decorative elements for other themes
+            if (!isGlassy) ...[
             Positioned(
               top: -80,
               right: -80,
@@ -89,23 +108,38 @@ class _TransactionHistoryScreenState
                 // Custom App Bar
                 _buildAppBar(context, l10n, theme, isGlassy),
 
+                // Search bar + filter button
+                _buildSearchBar(l10n, theme, isGlassy, filter),
+
                 // Content
                 Expanded(
                   child: transactionsAsync.when(
-                    data: (transactions) {
-                      if (transactions.isEmpty) {
+                    data: (allTransactions) {
+                      if (allTransactions.isEmpty) {
                         return _buildEmptyState(context, l10n, theme, isGlassy);
                       }
 
-                      // Calculate summary
+                      // Apply search & filters
+                      final transactions = filter.apply(
+                        allTransactions,
+                        categoryNameArMap: categoryNameArMap,
+                      );
+
+                      // Calculate summary from ALL transactions (unfiltered)
                       double totalIncome = 0;
                       double totalExpense = 0;
-                      for (var tx in transactions) {
+                      for (var tx in allTransactions) {
                         if (tx.type == 'income') {
                           totalIncome += tx.amount;
                         } else {
                           totalExpense += tx.amount;
                         }
+                      }
+
+                      // Show empty-filter state if filters yield no results
+                      if (transactions.isEmpty) {
+                        return _buildFilterEmptyState(
+                            l10n, theme, isGlassy, totalIncome, totalExpense);
                       }
 
                       // Group transactions by date
@@ -209,6 +243,223 @@ class _TransactionHistoryScreenState
           ),
         ],
       ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar(
+    AppLocalizations l10n,
+    ThemeData theme,
+    bool isGlassy,
+    TransactionFilter filter,
+  ) {
+    final notifier = ref.read(transactionFilterProvider.notifier);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: isGlassy
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: isGlassy
+                    ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+                    : null,
+                boxShadow: isGlassy
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                onChanged: (val) => notifier.setSearchQuery(val),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: isGlassy
+                      ? Colors.white
+                      : theme.colorScheme.onSurface,
+                ),
+                decoration: InputDecoration(
+                  hintText: l10n.searchTransactions,
+                  hintStyle: TextStyle(
+                    color: isGlassy
+                        ? Colors.white.withValues(alpha: 0.4)
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search_rounded,
+                    color: isGlassy
+                        ? Colors.white.withValues(alpha: 0.5)
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    size: 22,
+                  ),
+                  suffixIcon: filter.hasSearchQuery
+                      ? IconButton(
+                          icon: Icon(
+                            Icons.close_rounded,
+                            color: isGlassy
+                                ? Colors.white.withValues(alpha: 0.5)
+                                : theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.4),
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            _searchController.clear();
+                            notifier.setSearchQuery('');
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          _buildFilterButton(theme, isGlassy, filter),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterButton(
+    ThemeData theme,
+    bool isGlassy,
+    TransactionFilter filter,
+  ) {
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: isGlassy
+                ? Colors.white.withValues(alpha: 0.1)
+                : theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: isGlassy
+                ? Border.all(color: Colors.white.withValues(alpha: 0.1))
+                : null,
+            boxShadow: isGlassy
+                ? null
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+          ),
+          child: IconButton(
+            icon: Icon(
+              Icons.tune_rounded,
+              size: 22,
+              color: filter.hasActiveFilters
+                  ? theme.primaryColor
+                  : (isGlassy
+                      ? Colors.white.withValues(alpha: 0.7)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+            ),
+            onPressed: () => _showFilterSheet(),
+          ),
+        ),
+        if (filter.hasActiveFilters)
+          Positioned(
+            top: 6,
+            right: 6,
+            child: Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: theme.primaryColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _showFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        maxChildSize: 0.9,
+        minChildSize: 0.4,
+        builder: (context, scrollController) {
+          return const TransactionFilterSheet();
+        },
+      ),
+    );
+  }
+
+  Widget _buildFilterEmptyState(
+    AppLocalizations l10n,
+    ThemeData theme,
+    bool isGlassy,
+    double totalIncome,
+    double totalExpense,
+  ) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      children: [
+        _buildSummaryRow(context, l10n, totalIncome, totalExpense, theme, isGlassy),
+        const SizedBox(height: 64),
+        Center(
+          child: Column(
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: isGlassy
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.search_off_rounded,
+                  size: 40,
+                  color: isGlassy
+                      ? Colors.white.withValues(alpha: 0.2)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.15),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.noMatchingTransactions,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: isGlassy ? Colors.white : theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.tryAdjustingFilters,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: isGlassy
+                      ? Colors.white.withValues(alpha: 0.6)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -262,7 +513,7 @@ class _TransactionHistoryScreenState
                   ),
                 ),
                 Text(
-                  'Transaction History',
+                  l10n.transactionHistory,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: isGlassy
                         ? Colors.white.withValues(alpha: 0.7)
@@ -440,7 +691,8 @@ class _TransactionHistoryScreenState
 
     if (checkDate == today) return l10n.today;
     if (checkDate == yesterday) return l10n.yesterday;
-    return DateFormat.yMMMd().format(date);
+    final locale = Localizations.localeOf(context).toString();
+    return DateFormat.yMMMd(locale).format(date);
   }
 
   Widget _buildTransactionItem(
@@ -459,9 +711,11 @@ class _TransactionHistoryScreenState
         ? tx.titleAr!
         : tx.title;
 
-    final displayCategory = TranslationHelper.getCategoryName(
+    final categoryNameArMap = ref.watch(categoryNameArMapProvider);
+    final displayCategory = TranslationHelper.getCategoryDisplayName(
       context,
       tx.categoryName,
+      categoryNameArMap,
     );
 
     return Container(
@@ -549,7 +803,7 @@ class _TransactionHistoryScreenState
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      DateFormat.jm().format(tx.createdAt),
+                      DateFormat.jm(locale).format(tx.createdAt),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: isGlassy
                             ? Colors.white.withValues(alpha: 0.4)

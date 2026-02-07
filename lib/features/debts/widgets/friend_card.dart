@@ -14,6 +14,14 @@ class FriendCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context);
+    
+    // Get display name based on locale
+    final displayName = (locale.languageCode == 'ar' &&
+            friend.nameAr != null &&
+            friend.nameAr!.isNotEmpty)
+        ? friend.nameAr!
+        : friend.name;
 
     final currencyFormatter = NumberFormat.currency(
       symbol: '₪',
@@ -60,7 +68,7 @@ class FriendCard extends ConsumerWidget {
                 shape: BoxShape.circle,
               ),
               child: Text(
-                friend.name.isNotEmpty ? friend.name[0].toUpperCase() : '?',
+                displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
                 style: TextStyle(
                   color: theme.primaryColor,
                   fontWeight: FontWeight.bold,
@@ -74,7 +82,7 @@ class FriendCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    friend.name,
+                    displayName,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),

@@ -156,7 +156,7 @@ class _AddDebtTransactionScreenState
             children: [
               // Friend Name Display
               Text(
-                '${l10n.friendName}: ${widget.friend.name}',
+                '${l10n.friendName}: ${(Localizations.localeOf(context).languageCode == 'ar' && widget.friend.nameAr != null && widget.friend.nameAr!.isNotEmpty) ? widget.friend.nameAr! : widget.friend.name}',
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: Colors.grey,
                 ),
@@ -278,7 +278,7 @@ class _AddDebtTransactionScreenState
                       const Icon(Icons.calendar_today, color: Colors.grey),
                       const SizedBox(width: 12),
                       Text(
-                        DateFormat.yMMMd().format(_selectedDate),
+                        DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(_selectedDate),
                         style: theme.textTheme.bodyLarge,
                       ),
                       const Spacer(),

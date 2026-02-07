@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../data/repositories/transaction_repository.dart';
+import '../../../services/auth_service.dart';
 import '../../home/providers/home_stats_provider.dart';
+import '../../reports/pdf_generator.dart';
 import '../models/friend_model.dart';
 import '../models/debt_transaction_model.dart';
 import '../providers/debts_provider.dart';
@@ -20,6 +25,7 @@ class FriendDetailsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context);
 
     // Watch fresh data - use reactive data for UI updates
     final friendAsync = ref.watch(friendDetailsProvider(friend.id));
@@ -27,11 +33,19 @@ class FriendDetailsScreen extends ConsumerWidget {
     
     // Get current friend data (reactive) or fallback to initial
     final currentFriend = friendAsync.value ?? friend;
+    
+    // Get display name based on locale
+    final isArabic = locale.languageCode == 'ar';
+    final displayName = (isArabic &&
+            currentFriend.nameAr != null &&
+            currentFriend.nameAr!.isNotEmpty)
+        ? currentFriend.nameAr!
+        : currentFriend.name;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          currentFriend.name,
+          displayName,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -41,6 +55,11 @@ class FriendDetailsScreen extends ConsumerWidget {
         elevation: 0,
         leading: BackButton(color: theme.colorScheme.onSurface),
         actions: [
+          IconButton(
+            icon: Icon(Icons.picture_as_pdf_outlined, color: Colors.purple),
+            onPressed: () => _generateAndSharePdf(context, ref, currentFriend),
+            tooltip: l10n.exportPdf,
+          ),
           IconButton(
             icon: Icon(Icons.edit_outlined, color: theme.primaryColor),
             onPressed: () => _showEditFriendDialog(context, ref, currentFriend),
@@ -258,9 +277,9 @@ class FriendDetailsScreen extends ConsumerWidget {
       symbol: '₪',
       decimalDigits: 2,
     );
-    final dateFormatter = DateFormat.yMMMd();
-    final dateTimeFormatter = DateFormat.yMMMd().add_jm();
-    final isArabic = l10n.localeName == 'ar';
+    final localeStr = l10n.localeName;
+    final dateFormatter = DateFormat.yMMMd(localeStr);
+    final dateTimeFormatter = DateFormat.yMMMd(localeStr).add_jm();
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -321,7 +340,7 @@ class FriendDetailsScreen extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              isArabic ? 'مسدد' : 'Settled',
+                              l10n.settled,
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: Colors.green,
                                 fontWeight: FontWeight.bold,
@@ -347,7 +366,7 @@ class FriendDetailsScreen extends ConsumerWidget {
                       ),
                     if (isSettled && tx.settledAt != null)
                       Text(
-                        '${isArabic ? "تمت التسوية:" : "Settled on:"} ${dateFormatter.format(tx.settledAt!)}',
+                        '${l10n.settledOn} ${dateFormatter.format(tx.settledAt!)}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.green[600],
                           fontSize: 11,
@@ -495,7 +514,6 @@ class FriendDetailsScreen extends ConsumerWidget {
   void _showEditFriendDialog(BuildContext context, WidgetRef ref, FriendModel currentFriend) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isArabic = l10n.localeName == 'ar';
     
     final nameController = TextEditingController(text: currentFriend.name);
     final nameArController = TextEditingController(text: currentFriend.nameAr ?? '');
@@ -536,7 +554,7 @@ class FriendDetailsScreen extends ConsumerWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                isArabic ? 'تعديل معلومات الصديق' : 'Edit Friend Info',
+                l10n.editFriendInfo,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -610,7 +628,7 @@ class FriendDetailsScreen extends ConsumerWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      isArabic ? 'تم تحديث معلومات الصديق' : 'Friend info updated',
+                      l10n.friendInfoUpdated,
                     ),
                     backgroundColor: Colors.green,
                     behavior: SnackBarBehavior.floating,
@@ -643,7 +661,6 @@ class FriendDetailsScreen extends ConsumerWidget {
   ) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isArabic = l10n.localeName == 'ar';
     final currencyFormatter = NumberFormat.currency(
       symbol: '₪',
       decimalDigits: 2,
@@ -668,7 +685,7 @@ class FriendDetailsScreen extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  isArabic ? 'تأكيد السداد' : 'Confirm Settlement',
+                  l10n.confirmSettlement,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -681,9 +698,7 @@ class FriendDetailsScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                isArabic
-                    ? 'هل تريد تسجيل سداد هذا الدين؟'
-                    : 'Do you want to mark this debt as paid?',
+                l10n.confirmSettlementMessage,
                 style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
@@ -697,7 +712,7 @@ class FriendDetailsScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      isArabic ? 'المبلغ:' : 'Amount:',
+                      l10n.amountLabel,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: Colors.grey[600],
                       ),
@@ -740,8 +755,8 @@ class FriendDetailsScreen extends ConsumerWidget {
                           const SizedBox(height: 4),
                           Text(
                             tx.type == DebtEventType.lend
-                                ? (isArabic ? 'سيُضاف المبلغ إلى رصيدك الرئيسي' : 'Amount will be added to your main balance')
-                                : (isArabic ? 'سيُخصم المبلغ من رصيدك الرئيسي' : 'Amount will be deducted from your main balance'),
+                                ? l10n.amountAddedToBalance
+                                : l10n.amountDeductedFromBalance,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: Colors.grey[600],
                             ),
@@ -763,9 +778,7 @@ class FriendDetailsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                isArabic
-                    ? 'سيتم تسوية هذا الدين وإزالته من الحسابات النشطة.'
-                    : 'This debt will be marked as settled and removed from active balances.',
+                l10n.debtSettledMessage,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: Colors.grey[600],
                   fontStyle: FontStyle.italic,
@@ -786,7 +799,7 @@ class FriendDetailsScreen extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        isArabic ? 'تم تسوية الدين بنجاح' : 'Debt settled successfully',
+                        l10n.debtSettledSuccess,
                       ),
                       backgroundColor: Colors.green,
                       behavior: SnackBarBehavior.floating,
@@ -841,6 +854,123 @@ class FriendDetailsScreen extends ConsumerWidget {
         return l10n.settlePay;
       case DebtEventType.settleReceive:
         return l10n.settleReceive;
+    }
+  }
+
+  Future<void> _generateAndSharePdf(
+    BuildContext context,
+    WidgetRef ref,
+    FriendModel currentFriend,
+  ) async {
+    final locale = Localizations.localeOf(context);
+    final isArabic = locale.languageCode == 'ar';
+    final l10n = AppLocalizations.of(context);
+    
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Center(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(
+                l10n.generatingReport,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      // Get transactions from the provider
+      final transactionsAsync = ref.read(friendTransactionsProvider(currentFriend.id));
+      final transactions = transactionsAsync.value ?? <DebtTransactionModel>[];
+      
+      // Calculate totals from unsettled transactions
+      double owesMe = 0;
+      double iOwe = 0;
+      final unsettledTransactions = transactions.where((t) => !t.settled);
+      for (var t in unsettledTransactions) {
+        switch (t.type) {
+          case DebtEventType.lend:
+            owesMe += t.amount;
+            break;
+          case DebtEventType.borrow:
+            iOwe += t.amount;
+            break;
+          case DebtEventType.settlePay:
+            iOwe -= t.amount;
+            break;
+          case DebtEventType.settleReceive:
+            owesMe -= t.amount;
+            break;
+        }
+      }
+      owesMe = owesMe > 0 ? owesMe : 0;
+      iOwe = iOwe > 0 ? iOwe : 0;
+
+      // Get user name
+      final user = ref.read(authStateProvider).value;
+      final userName = user?.displayName ?? user?.email ?? 'User';
+
+      // Generate PDF
+      final pdfBytes = await PdfGenerator.generateFriendDebtReport(
+        friend: currentFriend,
+        transactions: transactions,
+        owesMe: owesMe,
+        iOwe: iOwe,
+        userName: userName,
+        isArabic: isArabic,
+      );
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Get display name for filename
+      final displayName = (isArabic &&
+              currentFriend.nameAr != null &&
+              currentFriend.nameAr!.isNotEmpty)
+          ? currentFriend.nameAr!
+          : currentFriend.name;
+
+      // Save to temp file and share
+      final tempDir = await getTemporaryDirectory();
+      final fileName = 'debt_report_${displayName.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsBytes(pdfBytes);
+
+      // Share the file
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: '${l10n.debtReport} - $displayName',
+      );
+    } catch (e) {
+      // Close loading dialog if still open
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${l10n.failedToGenerateReport}: $e',
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 }

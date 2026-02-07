@@ -799,4 +799,109 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get debtSettled => 'تمت تسوية الدين';
+
+  @override
+  String get transactionHistory => 'سجل المعاملات';
+
+  @override
+  String get settledOn => 'تمت التسوية:';
+
+  @override
+  String get exportPdf => 'تصدير PDF';
+
+  @override
+  String get editFriendInfo => 'تعديل معلومات الصديق';
+
+  @override
+  String get friendInfoUpdated => 'تم تحديث معلومات الصديق';
+
+  @override
+  String get confirmSettlement => 'تأكيد السداد';
+
+  @override
+  String get confirmSettlementMessage => 'هل تريد تسجيل سداد هذا الدين؟';
+
+  @override
+  String get amountLabel => 'المبلغ:';
+
+  @override
+  String get amountAddedToBalance => 'سيُضاف المبلغ إلى رصيدك الرئيسي';
+
+  @override
+  String get amountDeductedFromBalance => 'سيُخصم المبلغ من رصيدك الرئيسي';
+
+  @override
+  String get debtSettledMessage =>
+      'سيتم تسوية هذا الدين وإزالته من الحسابات النشطة.';
+
+  @override
+  String get debtSettledSuccess => 'تم تسوية الدين بنجاح';
+
+  @override
+  String get generatingReport => 'جاري إنشاء التقرير...';
+
+  @override
+  String get debtReport => 'تقرير الديون';
+
+  @override
+  String get failedToGenerateReport => 'فشل في إنشاء التقرير';
+
+  @override
+  String get searchTransactions => 'ابحث في المعاملات...';
+
+  @override
+  String get filterTransactions => 'تصفية المعاملات';
+
+  @override
+  String get transactionType => 'نوع المعاملة';
+
+  @override
+  String get allTypes => 'الكل';
+
+  @override
+  String get dateRange => 'الفترة الزمنية';
+
+  @override
+  String get customRange => 'فترة مخصصة';
+
+  @override
+  String get amountRange => 'نطاق المبلغ';
+
+  @override
+  String get minAmount => 'الحد الأدنى';
+
+  @override
+  String get maxAmount => 'الحد الأقصى';
+
+  @override
+  String get selectCategories => 'اختر التصنيفات';
+
+  @override
+  String activeFilters(int count) {
+    return '$count نشط';
+  }
+
+  @override
+  String get clearFilters => 'مسح الفلاتر';
+
+  @override
+  String get noMatchingTransactions => 'لا توجد معاملات مطابقة';
+
+  @override
+  String get tryAdjustingFilters => 'حاول تعديل البحث أو الفلاتر';
+
+  @override
+  String get last7Days => 'آخر 7 أيام';
+
+  @override
+  String get last30DaysFilter => 'آخر 30 يوم';
+
+  @override
+  String get thisMonthFilter => 'هذا الشهر';
+
+  @override
+  String get thisYearFilter => 'هذه السنة';
+
+  @override
+  String get choosePdfLanguage => 'اختر لغة التقرير';
 }
